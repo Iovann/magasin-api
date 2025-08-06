@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IProductRepository } from './product.repository';
 import { PostgresProduct } from '../entities/postgres-product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { Product } from '../entities/product.entity';
+import { UpdateProductDto } from '../dto/update-product.dto';
 
 @Injectable()
 export class PostgresProductRepository implements IProductRepository {
@@ -30,11 +31,24 @@ export class PostgresProductRepository implements IProductRepository {
     await this.productRepository.delete(id);
   }
 
-  async countAll(): Promise<number> {
+  async count(): Promise<number> {
     return this.productRepository.count();
   }
 
-  async countByModel(modelName: string): Promise<number> {
+  async countByModelName(modelName: string): Promise<number> {
     return this.productRepository.count({ where: { modelName } });
+  }
+
+  async countByName(name: string): Promise<number> {
+    return this.productRepository.count({ where: { name } });
+  }
+
+  async update(id: string, updateData: Partial<Product>): Promise<Product | null> {
+    const product = await this.productRepository.findOneBy({ id });
+    if (!product) {
+      return null;
+    }
+    Object.assign(product, updateData);
+    return this.productRepository.save(product);
   }
 }

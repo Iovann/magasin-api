@@ -69,11 +69,30 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
     }
   }
 
-  async countAll(): Promise<number> {
+  async count(): Promise<number> {
     return this.data.length;
   }
 
-  async countByModel(modelName: string): Promise<number> {
+  async countByModelName(modelName: string): Promise<number> {
     return this.data.filter(p => p.modelName === modelName).length;
+  }
+
+  async countByName(name: string): Promise<number> {
+    return this.data.filter(p => p.name === name).length;
+  }
+
+  async update(id: string, updateData: Partial<Product>): Promise<Product | null> {
+    const index = this.data.findIndex(p => p.id === id);
+    if (index === -1) {
+      return null;
+    }
+
+    this.data[index] = {
+      ...this.data[index],
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    await this.persist();
+    return this.data[index];
   }
 }

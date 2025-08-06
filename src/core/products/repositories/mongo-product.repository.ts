@@ -5,6 +5,8 @@ import { IProductRepository } from './product.repository';
 import { MongoProduct } from '../entities/mongo-product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { Product } from '../entities/product.entity';
+import { UpdateProductDto } from '../dto/update-product.dto';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class MongoProductRepository implements IProductRepository {
@@ -30,11 +32,24 @@ export class MongoProductRepository implements IProductRepository {
     await this.productModel.findByIdAndDelete(id).exec();
   }
 
-  async countAll(): Promise<number> {
+  async count(): Promise<number> {
     return this.productModel.countDocuments().exec();
   }
 
-  async countByModel(model: string): Promise<number> {
-    return this.productModel.countDocuments({ model }).exec();
+  async countByModelName(modelName: string): Promise<number> {
+    return this.productModel.countDocuments({ modelName }).exec();
+  }
+
+  async countByName(name: string): Promise<number> {
+    return this.productModel.countDocuments({ name }).exec();
+  }
+
+  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+    const product = await this.productModel.findById(id).exec();
+    if (!product) {
+      throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
+    }
+    product.quantity = updateProductDto.quantity;
+    return product.save();
   }
 }

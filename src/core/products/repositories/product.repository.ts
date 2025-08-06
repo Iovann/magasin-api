@@ -6,7 +6,8 @@ export abstract class IProductRepository {
   abstract findById(id: string): Promise<Product | null>;
   abstract findAll(): Promise<Product[]>;
   abstract delete(id: string): Promise<void>;
-  abstract countAll(): Promise<number>;
-  abstract countByModel(model: string): Promise<number>;
-  // On pourrait ajouter une méthode update plus générique plus tard si besoin
+  abstract count(): Promise<number>;
+  abstract countByModelName(modelName: string): Promise<number>;
+  abstract countByName(name: string): Promise<number>;
+  abstract update(id: string, updateData: Partial<Product>): Promise<Product | null>;
 }

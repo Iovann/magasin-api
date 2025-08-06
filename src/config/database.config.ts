@@ -33,12 +33,14 @@ export class DatabaseConfig {
     @Value('DB_HOST')
     dbHost: string;
 
-    @ValidateIf(o => o.dbType !== 'txt' )
-    @IsNotEmpty({ message: 'DB port should not be empty' })
-    @Transform(({ value }) => parseInt(value, 10))
-    @Min(1, { message: 'DB port should be at least 1' })
-    @Max(65535, { message: 'DB port should be at most 65535' })
     @Value('DB_PORT')
+    @Transform(({ value }) => {
+        console.log('DB_PORT from env:', value);
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? undefined : parsed;
+    })
+    // @Min(1, { message: 'DB port should be at least 1' })
+    // @Max(65535, { message: 'DB port should be at most 65535' })
     dbPort: number;
 
     @ValidateIf(o => o.dbType !== 'txt' )
