@@ -34,7 +34,7 @@ export class PostgresProductRepository implements IProductRepository {
     return this.productRepository.count();
   }
 
-  async countByModel(model: string): Promise<number> {
-    return this.productRepository.count({ where: { model } });
+  async countByModel(modelName: string): Promise<number> {
+    return this.productRepository.count({ where: { modelName } });
   }
 }

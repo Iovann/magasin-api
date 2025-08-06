@@ -1,9 +1,9 @@
 import { Role } from '../../../common/enum/role.enum';
 
-export class User {
+export interface User {
   id: string;
   email: string;
-  passwordHash: string; // Important: ne jamais stocker le mot de passe en clair
+  passwordHash: string;
   roles: Role[];
   createdAt: Date;
 }

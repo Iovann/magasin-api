@@ -5,8 +5,7 @@ import { Role } from '../../../common/enum/role.enum';
 
 @Schema({ timestamps: true, collection: 'users' })
 export class MongoUser extends Document implements User {
-  id: string; // virtual getter
-
+  declare id: string;
   @Prop({ required: true, unique: true, index: true })
   email: string;
 
@@ -21,8 +20,8 @@ export class MongoUser extends Document implements User {
 
 export const MongoUserSchema = SchemaFactory.createForClass(MongoUser);
 
-MongoUserSchema.virtual('id').get(function() {
-  return this._id.toHexString();
+MongoUserSchema.virtual('id').get(function () {
+  return (this._id as any).toHexString();
 });
 
 MongoUserSchema.set('toJSON', { virtuals: true });

@@ -45,8 +45,8 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
     const newProduct: Product = {
       id: randomUUID(),
       ...productDto,
-      isSold: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.data.push(newProduct);
     await this.persist();
@@ -73,7 +73,7 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
     return this.data.length;
   }
 
-  async countByModel(model: string): Promise<number> {
-    return this.data.filter(p => p.model === model).length;
+  async countByModel(modelName: string): Promise<number> {
+    return this.data.filter(p => p.modelName === modelName).length;
   }
 }

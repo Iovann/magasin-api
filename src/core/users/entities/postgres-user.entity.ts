@@ -3,7 +3,7 @@ import { User } from './user.entity';
 import { Role } from '../../../common/enum/role.enum';
 
 @Entity('users')
-export class PostgresUser extends User {
+export class PostgresUser implements User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

@@ -7,7 +7,7 @@ export class CreateProductDto {
 
   @IsNotEmpty()
   @IsString()
-  model: string;
+  modelName: string;
 
   @IsNotEmpty()
   @IsInt()

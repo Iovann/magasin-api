@@ -59,7 +59,7 @@ describe('FsProductRepository', () => {
     it('should create a new product, add it to the data array, and persist', async () => {
       const createDto: CreateProductDto = {
         name: 'Water Gun 5000',
-        model: 'WG5K',
+        modelName: 'WG5K',
         quantity: 10,
       };
 
@@ -85,8 +85,8 @@ describe('FsProductRepository', () => {
     it('should return all products from the data file', async () => {
       // On simule un fichier contenant deux produits
       const mockData = [
-        { id: '1', name: 'Product 1', model: 'A', quantity: 1, isSold: false, createdAt: new Date() },
-        { id: '2', name: 'Product 2', model: 'B', quantity: 2, isSold: false, createdAt: new Date() },
+        { id: '1', name: 'Product 1', modelName: 'A', quantity: 1, createdAt: new Date() },
+        { id: '2', name: 'Product 2', modelName: 'B', quantity: 2, createdAt: new Date() },
       ];
       (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockData));
 
@@ -102,7 +102,7 @@ describe('FsProductRepository', () => {
 
   describe('findById', () => {
     it('should return a product if found', async () => {
-        const mockData = [{ id: 'abc', name: 'Found Me', model: 'A', quantity: 1, isSold: false, createdAt: new Date() }];
+        const mockData = [{ id: 'abc', name: 'Found Me', modelName: 'A', quantity: 1, createdAt: new Date() }];
         (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockData));
         await repository.onModuleInit();
 
@@ -119,7 +119,7 @@ describe('FsProductRepository', () => {
 
   describe('delete', () => {
     it('should remove a product and persist the changes', async () => {
-        const mockData = [{ id: 'to-delete', name: 'Delete Me', model: 'A', quantity: 1, isSold: false, createdAt: new Date() }];
+        const mockData = [{ id: 'to-delete', name: 'Delete Me', modelName: 'A', quantity: 1, createdAt: new Date() }];
         (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockData));
         await repository.onModuleInit();
 

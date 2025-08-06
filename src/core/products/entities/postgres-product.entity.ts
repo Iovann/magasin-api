@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Product } from './product.entity';
 
 @Entity('products')
-export class PostgresProduct extends Product {
+export class PostgresProduct implements Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -10,14 +10,14 @@ export class PostgresProduct extends Product {
   name: string;
 
   @Column()
-  model: string;
+  modelName: string;
 
   @Column({ type: 'int' })
   quantity: number;
 
-  @Column({ default: false })
-  isSold: boolean;
-
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

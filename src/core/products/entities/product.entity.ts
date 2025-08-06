@@ -1,7 +1,8 @@
-export class Product {
+export interface Product {
   id: string;
   name: string;
-  model: string;
+  modelName: string;
   quantity: number;
   createdAt: Date;
+  updatedAt: Date;
 }
