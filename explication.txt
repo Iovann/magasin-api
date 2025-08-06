@@ -1,0 +1,113 @@
+Absolument. C'est une excellente question, et c'est le cœur de l'architecture que nous mettons en place.
+
+  Imaginez que vous construisez une cuisine de restaurant.
+
+   * Le Chef Cuisinier (notre ProductService) sait ce qu'il veut faire (créer un plat, en supprimer un, etc.), mais
+     il ne veut pas se soucier de savoir s'il doit utiliser un four à gaz, un four électrique ou un barbecue au
+     charbon.
+   * Il a un Livre de Recettes (IProductRepository) qui dit simplement : "Pour faire ce plat, tu as besoin d'une
+     fonction cuire(), d'une fonction couper() et d'une fonction dresser()". C'est un contrat.
+   * Vous avez ensuite des Cuisiniers Spécialisés :
+       * Un spécialiste du grill (PostgresProductRepository) qui sait utiliser le four à gaz.
+       * Un spécialiste de la pâtisserie (MongoProductRepository) qui sait utiliser le four électrique.
+       * Un traiteur (FsProductRepository) qui sait utiliser le barbecue.
+
+  Chacun de ces spécialistes respecte le contrat du livre de recettes, mais avec ses propres outils.
+
+  Maintenant, voici le rôle de chaque fichier que nous avons créé, en suivant cette analogie :
+
+  ---
+
+  1. Les Fichiers de "Définition" (Les concepts de base)
+
+  src/core/products/entities/product.entity.ts
+   * Rôle : Le Plan Directeur.
+   * Description : C'est la définition la plus simple et la plus pure de ce qu'est un "Pistolet à eau" dans notre
+     application. C'est une simple classe TypeScript, sans aucune information sur une base de données. Elle définit
+     les champs que tous nos produits auront, peu importe où ils sont stockés.
+   * Analogie : L'idée abstraite du "plat du jour" dans l'esprit du chef.
+
+  src/core/products/dto/create-product.dto.ts
+   * Rôle : Le Formulaire de Commande.
+   * Description : DTO signifie "Data Transfer Object". Ce fichier définit à quoi doivent ressembler les données quand
+      un utilisateur essaie de créer un nouveau produit via l'API. Grâce aux décorateurs @IsNotEmpty, @IsString, etc.,
+      il agit comme un garde du corps qui valide les données entrantes avant même que notre logique métier ne les
+     voie.
+   * Analogie : Le bon de commande que le serveur remplit. Il doit contenir un nom de plat et une quantité, sinon il
+     est refusé.
+
+  ---
+
+  2. Le Contrat (La pièce maîtresse de notre architecture)
+
+  src/core/products/repositories/product.repository.ts
+   * Rôle : Le Contrat / Le Livre de Recettes.
+   * Description : C'est le fichier le plus important pour l'interchangeabilité. En utilisant export abstract class 
+     IProductRepository, nous créons un "contrat". Nous disons : "N'importe quelle classe qui se prétendra être un
+     repository de produits DOIT OBLIGATOIREMENT avoir ces méthodes : create, findById, findAll, etc.". Elle ne dit
+     pas comment ces méthodes fonctionnent, juste qu'elles doivent exister.
+   * Analogie : Le livre de recettes qui liste les compétences requises pour être un cuisinier dans ce restaurant
+     (cuire, couper, dresser).
+
+  ---
+
+  3. Les Implémentations Spécifiques (Les spécialistes)
+
+  src/core/products/entities/postgres-product.entity.ts
+   * Rôle : Les Instructions pour le Spécialiste PostgreSQL.
+   * Description : Ce fichier prend notre Product de base et lui ajoute des "instructions" spécifiques pour TypeORM
+     (PostgreSQL) avec les décorateurs @Entity, @Column, @PrimaryGeneratedColumn. C'est ce qui permet à TypeORM de
+     savoir comment créer la table products en SQL.
+   * Analogie : La recette détaillée pour le four à gaz (température, temps de cuisson, etc.).
+
+  src/core/products/repositories/postgres-product.repository.ts
+   * Rôle : Le Spécialiste PostgreSQL.
+   * Description : Cette classe implémente notre contrat IProductRepository. Elle dit : "Ok, je respecte le contrat.
+     Voici comment je réalise la méthode create : j'utilise les fonctions de TypeORM pour insérer une ligne dans la
+     base de données PostgreSQL". Le @InjectRepository(PostgresProduct) est la façon dont NestJS lui donne son outil
+     (le repository TypeORM).
+   * Analogie : Le cuisinier spécialiste du grill qui exécute les ordres du chef en utilisant son four à gaz.
+
+  ---
+
+  src/core/products/entities/mongo-product.entity.ts
+   * Rôle : Les Instructions pour le Spécialiste MongoDB.
+   * Description : Similaire à la version Postgres, mais pour Mongoose (MongoDB). Les décorateurs @Schema et @Prop
+     sont les instructions qui expliquent à Mongoose comment structurer les documents dans la collection MongoDB.
+   * Analogie : La recette détaillée pour le four électrique.
+
+  src/core/products/repositories/mongo-product.repository.ts
+   * Rôle : Le Spécialiste MongoDB.
+   * Description : Implémente le même contrat IProductRepository, mais cette fois, ses méthodes utilisent les
+     fonctions de Mongoose (this.productModel.save(), this.productModel.findById(), etc.) pour parler à la base de
+     données MongoDB.
+   * Analogie : Le pâtissier qui exécute les ordres du chef en utilisant son four électrique.
+
+  ---
+
+  src/core/products/repositories/fs-product.repository.ts
+   * Rôle : Le Spécialiste "Fichier Texte".
+   * Description : C'est notre implémentation la plus manuelle. Elle respecte toujours le contrat IProductRepository,
+     mais au lieu d'un ORM, elle utilise le module fs de Node.js pour lire et écrire dans un fichier products.json.
+     Elle gère elle-même la lecture du fichier au démarrage (loadData), l'ajout de données et la sauvegarde (persist).
+
+   * Analogie : Le traiteur qui exécute les ordres du chef en utilisant son barbecue et ses tupperwares.
+
+  Comment ça fonctionne ensemble ?
+
+   1. Au démarrage de l'application, notre futur ProductsModule va lire votre fichier database.config.ts.
+   2. Disons que la variable DB_TYPE est "postgres".
+   3. Le module va dire : "Pour toute l'application, à chaque fois que quelqu'un demandera une injection de dépendance
+      pour IProductRepository (le contrat), je lui fournirai une instance de PostgresProductRepository (le
+      spécialiste)".
+   4. Quand le ProductService (le chef) sera initialisé, il demandera : "J'ai besoin d'un repository qui respecte le
+      contrat IProductRepository". NestJS lui donnera alors le PostgresProductRepository.
+   5. Le ProductService appellera this.productRepository.create(...). Il ne sait pas quelle base de données est
+      derrière, il ne fait qu'appeler la méthode du contrat. C'est le PostgresProductRepository qui exécutera le vrai
+      code pour PostgreSQL.
+
+  Si demain vous changez DB_TYPE en "mongodb", la seule chose qui change est l'étape 3. Le ProductService recevra
+  le MongoProductRepository, mais comme les deux spécialistes respectent le même contrat, le code du 
+  `ProductService` n'a absolument pas besoin d'être modifié.
+
+  C'est ça, la puissance de cette architecture.
