@@ -1,0 +1,78 @@
+root/
+├── src/
+│   ├── common/                        # Éléments partagés
+│   │   ├── decorators/                # Décorateurs personnalisés
+│   │   ├── guards/                    # Guards d'authentification
+│   │   ├── interceptors/              # Intercepteurs HTTP
+│   │   ├── response/                  # Formattage des réponses
+│   │   └── enum/                      # Enumération des types
+│   │
+│   ├── config/                        # Configuration de l'application
+│   │
+│   ├── core/                          # Modules principaux
+│   │   ├── [module]/
+│   │   │   ├── dto/           # Objets de transfert
+│   │   │   ├── entities/      # Modèles de données
+│   │   │   ├── services/      # Logique métier
+│   │   │   ├── [module].controller.ts
+│   │   │   ├── [module].module.ts
+│   │   │   └── [module].repository.ts
+│   │   └── ...                        # Autres modules
+│   │
+│   ├── helpers/                       # Utilitaires
+│   │
+│   ├── libs/                          # Bibliothèques personnalisées
+│   │
+│   ├── app.controller.ts              # Contrôleur racine
+│   ├── app.module.ts                  # Module racine
+│   └── main.ts                        # Point d'entrée
+├── 
+├── test/                              # Tests
+├── .env                               # Variables d'environnement
+├── package.json                       # Dépendances
+└── tsconfig.json                      # Configuration TypeScript
+
+
+Détail du répertoire src/
+
+1. common/: Il contient le code qui est partagé à travers différents modules de votre application.  Permet d'éviter la duplication
+
+        decorators/: Pour les décorateurs personnalisés
+
+        guards/: Pour les "guards" qui protègent les routes 
+
+        interceptors/: Pour les intercepteurs qui modifient les requêtes/réponses 
+
+        response/: Spécifiquement pour la standardisation des réponses de l'API.
+        
+        enum/: Pour les énumérations (types, statuts, etc.),
+
+2. config/: Centralise toute la configuration de l'application (base de données, clés d'API, ports, etc.).
+         Utiliser le module ConfigModule de NestJS permet de charger ces configurations à partir de variables d'environnement (.env)
+
+3. core/: Contient tous les  modules  du  projet 
+
+    Structure d'un module (ex: `users/`) :
+        dto/ (Data Transfer Objects) : Définit la structure des données qui entrent et sortent de votre API. 
+        
+        entities/ : Définit la structure des tables de base de données (avec TypeORM).
+        
+        services/ : Contient la logique métier complexe.
+        
+        controller.ts : Définit les routes de l'API (endpoints) et gère les requêtes HTTP. 
+
+        module.ts : Lie tous les composants du module (contrôleur, service, repository) ensemble.
+        
+
+4. helpers/ et libs/ : Ils servent à isoler et organiser le code qui n'est pas directement de la logique métier, mais 
+    plutôt des utilitaires ou des intégrations avec des services tiers.
+    
+    helpers/ : Pour des fonctions utilitaires plus petites et spécifiques au projet (ex: intégration Cognito, gestion des
+    WebSockets).
+    
+    libs/ : Pour des "bibliothèques" plus larges, souvent des wrappers autour d'outils externes (ex: Mailer, Storage).
+
+5. Fichiers racines de src/
+    main.ts : Le point d'entrée de l'application.
+    app.module.ts : Le module racine qui importe tous les autres modules principaux de l'application.
+    app.controller.ts et app.service.ts : Souvent utilisés pour des routes de base comme un endpoint de statut.
