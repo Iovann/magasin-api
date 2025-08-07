@@ -161,12 +161,12 @@ describe('ProductsService', () => {
 
     it('should successfully update product stock', async () => {
       mockProductRepository.findById.mockResolvedValue(product);
-      mockProductRepository.update.mockResolvedValue({ ...product, quantity: 20 });
-
+      mockProductRepository.update.mockResolvedValue({ ...product, quantity: 30 });
+    
       const result = await service.updateStock(productId, 20);
-
+    
       expect(mockProductRepository.findById).toHaveBeenCalledWith(productId);
-      expect(mockProductRepository.update).toHaveBeenCalledWith(productId, { quantity: 20 });
+      expect(mockProductRepository.update).toHaveBeenCalledWith(productId, { quantity: 30 });
       expect(result.quantity).toBe(30);
     });
 
@@ -192,7 +192,7 @@ describe('ProductsService', () => {
   describe('remove', () => {
     it('should call repository.delete with the correct id', async () => {
       const productId = 'some-uuid';
-      mockProductRepository.delete.mockResolvedValue(undefined); // La méthode ne retourne rien
+      mockProductRepository.delete.mockResolvedValue(undefined);
 
       await service.remove(productId);
 

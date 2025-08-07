@@ -12,5 +12,5 @@ export class CreateUserDto {
 
   @IsString()
   @IsEnum(Role)
-  roles: Role;
+  role: Role;
 }

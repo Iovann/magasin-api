@@ -16,7 +16,7 @@ export class UsersService {
     console.log('🔍 UsersService.create called with:', JSON.stringify(createUserDto, null, 2));
     console.log('🔍 Email field:', createUserDto.email);
     console.log('🔍 Password field:', createUserDto.password ? '[SET]' : '[NOT SET]');
-    console.log('🔍 Roles field:', createUserDto.roles);
+    console.log('🔍 Role field:', createUserDto.role);
     
     // Vérifier si l'email existe déjà
     const existingUser = await this.userRepository.findByEmail(createUserDto.email);
@@ -33,7 +33,7 @@ export class UsersService {
     const userData = {
       email: createUserDto.email,
       passwordHash,
-      roles: createUserDto.roles,
+      role: createUserDto.role,
     };
 
     return this.userRepository.create(userData);
@@ -88,7 +88,7 @@ export class UsersService {
     };
 
     users.forEach(user => {
-      stats.byRole[user.roles] = (stats.byRole[user.roles] || 0) + 1;
+      stats.byRole[user.role] = (stats.byRole[user.role] || 0) + 1;
     });
 
     return stats;

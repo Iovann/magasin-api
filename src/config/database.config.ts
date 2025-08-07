@@ -5,8 +5,6 @@ import {
     IsBoolean,
     IsIn,
     ValidateIf,
-    Min,
-    Max,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -35,7 +33,6 @@ export class DatabaseConfig {
 
     @Value('DB_PORT')
     @Transform(({ value }) => {
-        console.log('DB_PORT from env:', value);
         const parsed = parseInt(value, 10);
         return isNaN(parsed) ? undefined : parsed;
     })

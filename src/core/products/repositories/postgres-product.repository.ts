@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IProductRepository } from './product.repository';
@@ -43,7 +43,7 @@ export class PostgresProductRepository implements IProductRepository {
     return this.productRepository.count({ where: { name } });
   }
 
-  async update(id: string, updateData: Partial<Product>): Promise<Product | null> {
+  async update(id: string, updateData: UpdateProductDto): Promise<Product | null> {
     const product = await this.productRepository.findOneBy({ id });
     if (!product) {
       return null;

@@ -38,9 +38,9 @@ POST http://localhost:3000/users
 Content-Type: application/json
 
 {
-    "username": "testuser",
+    "email": "testuser@gmail.com",
     "password": "password",
-    "role": "user"
+    "role": "vendeur"
 }
 
 ###
@@ -50,10 +50,10 @@ GET http://localhost:3000/users
 GET http://localhost:3000/users/stats
 
 ###
-GET http://localhost:3000/users/60f7e1b3b3f3b3f3b3f3b3f3
+GET http://localhost:3000/users/689483734ad650a87efc47e0
 
 ###
-DELETE http://localhost:3000/users/60f7e1b3b3f3b3f3b3f3b3f3
+DELETE http://localhost:3000/users/689483734ad650a87efc47e0
 
 
 ###

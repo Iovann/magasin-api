@@ -18,7 +18,7 @@ export class PostgresUser implements User {
     enum: Role,
     default: Role,
   })
-  roles: Role;
+  role: Role;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -47,7 +47,7 @@ describe('FsUserRepository', () => {
       const userData: Omit<User, 'id' | 'createdAt'> = {
         email: 'test@example.com',
         passwordHash: 'hashedpassword',
-        roles: [Role.Vendeur],
+        role: Role.Vendeur,
       };
 
       const result = await repository.create(userData);
@@ -70,7 +70,7 @@ describe('FsUserRepository', () => {
         id: '123',
         email: 'findme@example.com',
         passwordHash: 'hash',
-        roles: [],
+        role: Role.Vendeur,
         createdAt: new Date(),
       };
       (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUser]));
@@ -91,8 +91,8 @@ describe('FsUserRepository', () => {
   describe('findAll', () => {
     it('should return all users', async () => {
         const mockUsers: User[] = [
-            { id: '1', email: 'a@a.com', passwordHash: 'h1', roles: [], createdAt: new Date() },
-            { id: '2', email: 'b@b.com', passwordHash: 'h2', roles: [], createdAt: new Date() },
+            { id: '1', email: 'a@a.com', passwordHash: 'h1', role: Role.Vendeur, createdAt: new Date() },
+            { id: '2', email: 'b@b.com', passwordHash: 'h2', role: Role.Magasinier, createdAt: new Date() },
         ];
         (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockUsers));
         await repository.onModuleInit();

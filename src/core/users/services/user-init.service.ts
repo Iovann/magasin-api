@@ -17,7 +17,7 @@ export class UserInitService implements OnApplicationBootstrap {
       // Vérifier si un Super Admin existe déjà
       const users = await this.usersService.findAll();
       const superAdminExists = users.some(user => 
-        user.roles.includes(Role.SuperAdmin)
+        user.role === Role.SuperAdmin
       );
 
       if (superAdminExists) {
@@ -29,7 +29,7 @@ export class UserInitService implements OnApplicationBootstrap {
       const defaultAdmin = {
         email: 'admin@gunshop.com',
         password: 'SuperAdmin123!',
-        roles: Role.SuperAdmin
+        role: Role.SuperAdmin
       };
 
       const createdAdmin = await this.usersService.create(defaultAdmin);

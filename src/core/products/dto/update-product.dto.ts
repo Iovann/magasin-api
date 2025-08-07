@@ -1,10 +1,6 @@
-import { IsNotEmpty, IsInt, Min, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsInt, Min } from 'class-validator';
 
 export class UpdateProductDto {
-  @IsNotEmpty()
-  @IsUUID()
-  id: string;
-
   @IsNotEmpty()
   @IsInt()
   @Min(1)

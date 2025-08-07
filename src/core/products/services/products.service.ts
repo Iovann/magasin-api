@@ -6,7 +6,7 @@ import { Product } from '../entities/product.entity';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly productRepository: IProductRepository) {}
+  constructor(private readonly productRepository: IProductRepository) { }
 
   async create(createProductDto: CreateProductDto) {
     const existingProductByModelName = await this.productRepository.countByModelName(
@@ -55,9 +55,7 @@ export class ProductsService {
         `Quantité insuffisante en stock pour le produit ${product.name}. Stock actuel: ${product.quantity}`,
       );
     }
-    const updatedProduct = await this.productRepository.update(id, {
-      quantity: product.quantity - quantity,
-    });
+    const updatedProduct = await this.productRepository.update(id, { quantity: product.quantity - quantity });
 
     if (!updatedProduct) {
       throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
@@ -65,30 +63,24 @@ export class ProductsService {
     return updatedProduct;
   }
 
-  async updateStock(id: string, quantity: number, increment: boolean = true): Promise<Product> {
+  async updateStock(id: string, quantity: number): Promise<Product> {
     const product = await this.productRepository.findById(id);
     if (!product) {
       throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
     }
-    
-    const newQuantity = increment 
-      ? product.quantity + quantity 
-      : product.quantity - quantity;
 
-    if (newQuantity < 0) {
+    if (quantity < 0) {
       throw new BadRequestException(`La quantité ne peut pas être négative`);
     }
 
-    const updatedProduct = await this.productRepository.update(id, { 
-      quantity: newQuantity 
-    });
+    const newQuantity = product.quantity + quantity;
+    const updatedProduct = await this.productRepository.update(id, { quantity: newQuantity });
 
     if (!updatedProduct) {
       throw new NotFoundException(`Produit avec l'ID ${id} non trouvé lors de la mise à jour`);
     }
     return updatedProduct;
-}
-
+  }
   remove(id: string) {
     return this.productRepository.delete(id);
   }

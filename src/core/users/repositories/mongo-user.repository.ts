@@ -20,22 +20,51 @@ export class MongoUserRepository implements IUserRepository {
     const newUser = new this.userModel(user);
     console.log('🍃 Created Mongoose document:', JSON.stringify(newUser.toObject(), null, 2));
     
-    return newUser.save();
+    const savedUser = await newUser.save();
+    return this.toUserEntity(savedUser);
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.userModel.findById(id).exec();
+    const user = await this.userModel.findById(id).exec();
+    return user ? this.toUserEntity(user) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).exec();
+    const user = await this.userModel.findOne({ email }).exec();
+    return user ? this.toUserEntity(user) : null;
   }
 
   async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    const users = await this.userModel.find().exec();
+    return users.map(user => this.toUserEntity(user));
   }
 
   async delete(id: string): Promise<void> {
     await this.userModel.findByIdAndDelete(id).exec();
+  }
+
+  // Méthode spéciale pour l'authentification - inclut le passwordHash
+  async findByEmailWithPassword(email: string): Promise<(User & { passwordHash: string }) | null> {
+    const user = await this.userModel.findOne({ email }).select('+passwordHash').exec();
+    if (!user || !user.passwordHash) return null;
+    
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      passwordHash: user.passwordHash,
+    };
+  }
+
+  // Méthode privée pour transformer un document Mongoose en entité User (sans passwordHash)
+  private toUserEntity(mongoUser: MongoUser): User {
+    return {
+      id: mongoUser.id,
+      email: mongoUser.email,
+      role: mongoUser.role,
+      createdAt: mongoUser.createdAt,
+      // passwordHash est intentionnellement omis pour la sécurité
+    };
   }
 }

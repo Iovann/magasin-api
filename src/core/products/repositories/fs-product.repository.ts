@@ -6,6 +6,7 @@ import { IProductRepository } from './product.repository';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { Product } from '../entities/product.entity';
 import { DatabaseConfig } from '../../../config/database.config';
+import { UpdateProductDto } from '../dto/update-product.dto';
 
 @Injectable()
 export class FsProductRepository implements IProductRepository, OnModuleInit {
@@ -58,7 +59,6 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
   }
 
   async findAll(): Promise<Product[]> {
-    console.log("azertyuiopqsdfghjklwxcvbn")
     return [...this.data];
   }
 
@@ -82,7 +82,7 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
     return this.data.filter(p => p.name === name).length;
   }
 
-  async update(id: string, updateData: Partial<Product>): Promise<Product | null> {
+  async update(id: string, updateData: UpdateProductDto): Promise<Product | null> {
     const index = this.data.findIndex(p => p.id === id);
     if (index === -1) {
       return null;
