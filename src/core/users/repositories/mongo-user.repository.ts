@@ -13,7 +13,13 @@ export class MongoUserRepository implements IUserRepository {
   ) {}
 
   async create(user: Omit<User, 'id' | 'createdAt'>): Promise<User> {
+    console.log('🍃 MongoUserRepository.create called with:', JSON.stringify(user, null, 2));
+    console.log('🍃 User data keys:', Object.keys(user));
+    console.log('🍃 Email value:', user.email);
+    
     const newUser = new this.userModel(user);
+    console.log('🍃 Created Mongoose document:', JSON.stringify(newUser.toObject(), null, 2));
+    
     return newUser.save();
   }
 

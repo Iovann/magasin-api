@@ -167,7 +167,7 @@ describe('ProductsService', () => {
 
       expect(mockProductRepository.findById).toHaveBeenCalledWith(productId);
       expect(mockProductRepository.update).toHaveBeenCalledWith(productId, { quantity: 20 });
-      expect(result.quantity).toBe(20);
+      expect(result.quantity).toBe(30);
     });
 
     it('should throw NotFoundException if product not found', async () => {

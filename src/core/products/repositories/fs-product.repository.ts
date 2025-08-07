@@ -58,6 +58,7 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
   }
 
   async findAll(): Promise<Product[]> {
+    console.log("azertyuiopqsdfghjklwxcvbn")
     return [...this.data];
   }
 

@@ -1,0 +1,61 @@
+### Test création d'un Super Admin (exemple - ne pas utiliser après le premier démarrage)
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "admin@gunshop.com",
+  "password": "SuperAdmin123!",
+  "roles": ["super-admin"]
+}
+
+### Test création d'un Magasinier
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "magasinier@gunshop.com",
+  "password": "Magasinier123!",
+  "roles": ["magasinier"]
+}
+
+### Test création d'un Vendeur
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "vendeur@gunshop.com",
+  "password": "Vendeur123!",
+  "roles": ["vendeur"]
+}
+
+### Test création d'un utilisateur avec plusieurs rôles
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "multi@gunshop.com",
+  "password": "MultiRole123!",
+  "roles": ["magasinier", "vendeur"]
+}
+
+### Obtenir tous les utilisateurs
+GET http://localhost:3000/users
+
+### Obtenir les statistiques des utilisateurs
+GET http://localhost:3000/users/stats
+
+### Obtenir un utilisateur par ID (remplacer {id} par un vrai ID)
+GET http://localhost:3000/users/{id}
+
+### Supprimer un utilisateur (remplacer {id} par un vrai ID)
+DELETE http://localhost:3000/users/{id}
+
+### Test erreur - données invalides
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "username": "wrong_field",
+  "email": "invalid-email",
+  "role": "wrong_format"
+}

@@ -9,27 +9,52 @@ Content-Type: application/json
 }
 
 ###
-
 PUT http://localhost:3000/products/1fac625e-a81e-4fe2-9da8-ee4d4ecea5e0/
 Content-Type: application/json
+
 {
     "quantity": 52
 }
 
 ###
-
 GET http://localhost:3000/products/
 
 ###
-
 GET http://localhost:3000/products/stock
 
 
 ###
-
 GET http://localhost:3000/products/stock/WG5K
 
 
 ###
-
 DELETE http://localhost:3000/products/1fac625e-a81e-4fe2-9da8-ee4d4ecea5e0/
+
+###
+GET http://localhost:3000/products/1fac625e-a81e-4fe2-9da8-ee4d4ecea5e0/
+
+### test users ###
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "password",
+    "role": "user"
+}
+
+###
+GET http://localhost:3000/users
+
+###
+GET http://localhost:3000/users/stats
+
+###
+GET http://localhost:3000/users/60f7e1b3b3f3b3f3b3f3b3f3
+
+###
+DELETE http://localhost:3000/users/60f7e1b3b3f3b3f3b3f3b3f3
+
+
+###
+GET http://localhost:3000/

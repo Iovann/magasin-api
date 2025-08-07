@@ -54,16 +54,16 @@ export class DatabaseConfig {
     @Value('DB_PATH', { default: './data' })
     dbPath: string = './data';
 
-    @ValidateIf(o => o.dbType !== 'txt' )
-    @IsNotEmpty({ message: 'DB user should not be empty' })
+    @ValidateIf(o => o.dbType === 'postgres')
+    @IsNotEmpty({ message: 'DB user should not be empty for PostgreSQL' })
     @IsString({ message: 'DB user should be a string' })
-    @Value('DB_USER')
+    @Value('DB_USER', { default: '' })
     dbUser: string;
 
-    @ValidateIf(o => o.dbType !== 'txt' )
-    @IsNotEmpty({ message: 'DB password should not be empty' })
+    @ValidateIf(o => o.dbType === 'postgres')
+    @IsNotEmpty({ message: 'DB password should not be empty for PostgreSQL' })
     @IsString({ message: 'DB password should be a string' })
-    @Value('DB_PASSWORD')
+    @Value('DB_PASSWORD', { default: '' })
     dbPassword: string;
 
     @IsBoolean({ message: 'DB sync should be a boolean' })

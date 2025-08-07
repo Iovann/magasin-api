@@ -12,8 +12,8 @@ export class MongoUser extends Document implements User {
   @Prop({ required: true })
   passwordHash: string;
 
-  @Prop({ type: [String], enum: Role, default: [] })
-  roles: Role[];
+  @Prop({ type: [String], enum: Role })
+  roles: Role;
 
   createdAt: Date;
 }

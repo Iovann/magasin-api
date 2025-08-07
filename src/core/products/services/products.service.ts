@@ -70,7 +70,7 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
     }
-
+    
     const newQuantity = increment 
       ? product.quantity + quantity 
       : product.quantity - quantity;

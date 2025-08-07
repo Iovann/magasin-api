@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsArray, IsEnum } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum } from 'class-validator';
 import { Role } from '../../../common/enum/role.enum';
 
 export class CreateUserDto {
@@ -10,7 +10,7 @@ export class CreateUserDto {
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
 
-  @IsArray()
-  @IsEnum(Role, { each: true })
-  roles: Role[];
+  @IsString()
+  @IsEnum(Role)
+  roles: Role;
 }

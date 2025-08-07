@@ -4,6 +4,6 @@ export interface User {
   id: string;
   email: string;
   passwordHash: string;
-  roles: Role[];
+  roles: Role;
   createdAt: Date;
 }
