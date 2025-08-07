@@ -81,6 +81,23 @@ export class ProductsService {
     }
     return updatedProduct;
   }
+
+  async getProductsByModelName(modelName: string): Promise<Product[]> {
+    return this.productRepository.findByModelName(modelName);
+  }
+
+  async getProductsByName(name: string): Promise<Product[]> {
+    return this.productRepository.findByName(name);
+  }
+
+  async countProductsByModelName(modelName: string): Promise<number> {
+    return this.productRepository.countByModelName(modelName);
+  }
+
+  async countProductsByName(name: string): Promise<number> {
+    return this.productRepository.countByName(name);
+  }
+
   remove(id: string) {
     return this.productRepository.delete(id);
   }

@@ -52,4 +52,12 @@ export class MongoProductRepository implements IProductRepository {
     product.quantity = updateProductDto.quantity;
     return product.save();
   }
+
+  async findByModelName(modelName: string): Promise<Product[]> {
+    return this.productModel.find({ modelName }).exec();
+  }
+
+  async findByName(name: string): Promise<Product[]> {
+    return this.productModel.find({ name }).exec();
+  }
 }

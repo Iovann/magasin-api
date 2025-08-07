@@ -51,4 +51,12 @@ export class PostgresProductRepository implements IProductRepository {
     Object.assign(product, updateData);
     return this.productRepository.save(product);
   }
+
+  async findByModelName(modelName: string): Promise<Product[]> {
+    return this.productRepository.find({ where: { modelName } });
+  }
+
+  async findByName(name: string): Promise<Product[]> {
+    return this.productRepository.find({ where: { name } });
+  }
 }

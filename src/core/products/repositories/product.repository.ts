@@ -10,4 +10,6 @@ export abstract class IProductRepository {
   abstract countByModelName(modelName: string): Promise<number>;
   abstract countByName(name: string): Promise<number>;
   abstract update(id: string, updateData: Partial<Product>): Promise<Product | null>;
+  abstract findByModelName(modelName: string): Promise<Product[]>;
+  abstract findByName(name: string): Promise<Product[]>;
 }

@@ -96,4 +96,12 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
     await this.persist();
     return this.data[index];
   }
+
+  async findByModelName(modelName: string): Promise<Product[]> {
+    return this.data.filter(p => p.modelName === modelName);
+  }
+
+  async findByName(name: string): Promise<Product[]> {
+    return this.data.filter(p => p.name === name);
+  }
 }
