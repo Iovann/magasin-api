@@ -3,7 +3,7 @@ services:
   - name: docker:dind
     alias: docker
     command: ["--insecure-registry=127.0.0.0/8"]
-  
+
 stages:
   - check
   - build
@@ -12,7 +12,7 @@ stages:
   - deploy
   - cleanup
 
-variables: 
+variables:
   DOCKER_DRIVER: overlay2
   FF_NETWORK_PER_BUILD: "true"
   HARBOR_REGISTRY: labor.hwegbe.com/labors
@@ -21,8 +21,8 @@ variables:
   COSIGN_PASSWORD: $COSIGN_PASSWORD
 
 before_script:
-    - LOWERCASE_PROJECT_NAME=$(echo $CI_PROJECT_NAME | tr '[:upper:]' '[:lower:]')
-    - HARBOR_IMAGE=$HARBOR_REGISTRY/$LOWERCASE_PROJECT_NAME:latest
+  - LOWERCASE_PROJECT_NAME=$(echo $CI_PROJECT_NAME | tr '[:upper:]' '[:lower:]')
+  - HARBOR_IMAGE=$HARBOR_REGISTRY/$LOWERCASE_PROJECT_NAME:latest
 
 check_dockerfile:
   stage: check
@@ -36,17 +36,17 @@ check_dockerfile:
 
 sonarqube-checker:
   stage: check
-  image: 
+  image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
   variables:
-    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
+    GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
-  script: 
+  script:
     - sonar-scanner -X -Dsonar.projectKey=$CI_PROJECT_NAME -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=admin -Dsonar.password=$SONAR_PASSWORD
   tags:
     - runnertwo
@@ -106,7 +106,7 @@ sign:
   only:
     - main
   dependencies:
-    - push    
+    - push
 
 deploy:
   stage: deploy
