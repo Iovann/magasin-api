@@ -1,18 +1,18 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigifyModule } from '@itgorillaz/configify';
-import { ProductsModule } from './core/products/products.module';
-import { UsersModule } from './core/users/users.module';
-import { DatabaseModule } from './database/database.module';
-import { ConfigModule } from '@nestjs/config';
+import { Module } from "@nestjs/common";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { ConfigifyModule } from "@itgorillaz/configify";
+import { ProductsModule } from "./core/products/products.module";
+import { UsersModule } from "./core/users/users.module";
+import { DatabaseModule } from "./database/database.module";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
     ConfigifyModule.forRootAsync(),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ".env",
     }),
     DatabaseModule.forRootAsync(),
     ProductsModule.forRoot(),

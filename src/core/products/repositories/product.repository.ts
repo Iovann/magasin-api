@@ -1,5 +1,5 @@
-import { CreateProductDto } from '../dto/create-product.dto';
-import { Product } from '../entities/product.entity';
+import { CreateProductDto } from "../dto/create-product.dto";
+import { Product } from "../entities/product.entity";
 
 export abstract class IProductRepository {
   abstract create(product: CreateProductDto): Promise<Product>;
@@ -9,7 +9,10 @@ export abstract class IProductRepository {
   abstract count(): Promise<number>;
   abstract countByModelName(modelName: string): Promise<number>;
   abstract countByName(name: string): Promise<number>;
-  abstract update(id: string, updateData: Partial<Product>): Promise<Product | null>;
+  abstract update(
+    id: string,
+    updateData: Partial<Product>,
+  ): Promise<Product | null>;
   abstract findByModelName(modelName: string): Promise<Product[]>;
   abstract findByName(name: string): Promise<Product[]>;
 }

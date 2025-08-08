@@ -1,8 +1,8 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { Product } from './product.entity';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document } from "mongoose";
+import { Product } from "./product.entity";
 
-@Schema({ timestamps: true, collection: 'products' })
+@Schema({ timestamps: true, collection: "products" })
 export class MongoProduct extends Document implements Product {
   declare id: string;
   @Prop({ required: true })
@@ -24,15 +24,15 @@ export class MongoProduct extends Document implements Product {
 export const MongoProductSchema = SchemaFactory.createForClass(MongoProduct);
 
 // Create a virtual 'id' field that gets the string representation of '_id'
-MongoProductSchema.virtual('id').get(function (this: Document) {
+MongoProductSchema.virtual("id").get(function (this: Document) {
   return (this._id as any).toHexString();
 });
 
 // Ensure virtuals are included in toJSON and toObject outputs
-MongoProductSchema.set('toJSON', {
+MongoProductSchema.set("toJSON", {
   virtuals: true,
 });
 
-MongoProductSchema.set('toObject', {
+MongoProductSchema.set("toObject", {
   virtuals: true,
 });

@@ -1,8 +1,12 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { IUserRepository } from '../repositories/user.repository';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { User } from '../entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
+import { IUserRepository } from "../repositories/user.repository";
+import { CreateUserDto } from "../dto/create-user.dto";
+import { User } from "../entities/user.entity";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UsersService {
@@ -14,10 +18,12 @@ export class UsersService {
    */
   async create(createUserDto: CreateUserDto): Promise<User> {
     // Vérifier si l'email existe déjà
-    const existingUser = await this.userRepository.findByEmail(createUserDto.email);
+    const existingUser = await this.userRepository.findByEmail(
+      createUserDto.email,
+    );
     if (existingUser) {
       throw new ConflictException(
-        `Un utilisateur avec l'email ${createUserDto.email} existe déjà`
+        `Un utilisateur avec l'email ${createUserDto.email} existe déjà`,
       );
     }
 
@@ -75,14 +81,17 @@ export class UsersService {
   /**
    * Compter le nombre d'utilisateurs par rôle
    */
-  async getUserStats(): Promise<{ total: number; byRole: Record<string, number> }> {
+  async getUserStats(): Promise<{
+    total: number;
+    byRole: Record<string, number>;
+  }> {
     const users = await this.userRepository.findAll();
     const stats = {
       total: users.length,
       byRole: {} as Record<string, number>,
     };
 
-    users.forEach(user => {
+    users.forEach((user) => {
       stats.byRole[user.role] = (stats.byRole[user.role] || 0) + 1;
     });
 

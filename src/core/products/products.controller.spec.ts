@@ -1,8 +1,7 @@
-
-import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsController } from './products.controller';
-import { ProductsService } from './services/products.service';
-import { CreateProductDto } from './dto/create-product.dto';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ProductsController } from "./products.controller";
+import { ProductsService } from "./services/products.service";
+import { CreateProductDto } from "./dto/create-product.dto";
 
 // Mock du service pour isoler le contrôleur
 const mockProductsService = {
@@ -12,7 +11,7 @@ const mockProductsService = {
   remove: jest.fn(),
 };
 
-describe('ProductsController', () => {
+describe("ProductsController", () => {
   let controller: ProductsController;
 
   beforeEach(async () => {
@@ -29,20 +28,25 @@ describe('ProductsController', () => {
     controller = module.get<ProductsController>(ProductsController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should call service.create with the correct DTO', async () => {
-      const createProductDto: CreateProductDto = { name: 'WaterBlaster', modelName: 'WB-1', quantity: 50 ,price: 50};
+  describe("create", () => {
+    it("should call service.create with the correct DTO", async () => {
+      const createProductDto: CreateProductDto = {
+        name: "WaterBlaster",
+        modelName: "WB-1",
+        quantity: 50,
+        price: 50,
+      };
       await controller.create(createProductDto);
       expect(mockProductsService.create).toHaveBeenCalledWith(createProductDto);
     });
   });
 
-  describe('getTotalStock', () => {
-    it('should call service.getTotalStock', async () => {
+  describe("getTotalStock", () => {
+    it("should call service.getTotalStock", async () => {
       await controller.getTotalStock();
       expect(mockProductsService.getTotalStock).toHaveBeenCalled();
     });
@@ -56,9 +60,9 @@ describe('ProductsController', () => {
   //   });
   // });
 
-  describe('remove', () => {
-    it('should call service.remove with the correct id', async () => {
-      const productId = 'some-id';
+  describe("remove", () => {
+    it("should call service.remove with the correct id", async () => {
+      const productId = "some-id";
       await controller.remove(productId);
       expect(mockProductsService.remove).toHaveBeenCalledWith(productId);
     });

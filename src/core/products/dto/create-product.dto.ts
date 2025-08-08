@@ -1,28 +1,28 @@
-import { IsNotEmpty, IsString, IsInt, Min, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsInt, Min, IsNumber } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateProductDto {
   @ApiProperty({
-    description: 'Nom du produit',
-    example: 'Glock',
+    description: "Nom du produit",
+    example: "Glock",
   })
   @IsNotEmpty()
   @IsString()
   name: string;
 
   @ApiProperty({
-    description: 'Nom du modèle du produit',
-    example: 'Glock 17',
+    description: "Nom du modèle du produit",
+    example: "Glock 17",
   })
   @IsNotEmpty()
   @IsString()
   modelName: string;
 
   @ApiProperty({
-    description: 'Quantité en stock',
+    description: "Quantité en stock",
     example: 5,
     minimum: 1,
-    type: 'integer',
+    type: "integer",
   })
   @IsNotEmpty()
   @IsInt()
@@ -30,10 +30,10 @@ export class CreateProductDto {
   quantity: number;
 
   @ApiProperty({
-    description: 'Prix du produit',
+    description: "Prix du produit",
     example: 29.99,
     minimum: 0,
-    type: 'number',
+    type: "number",
   })
   @IsNotEmpty()
   @IsNumber()

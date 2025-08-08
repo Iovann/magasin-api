@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { IProductRepository } from './product.repository';
-import { PostgresProduct } from '../entities/postgres-product.entity';
-import { CreateProductDto } from '../dto/create-product.dto';
-import { Product } from '../entities/product.entity';
-import { UpdateProductDto } from '../dto/update-product.dto';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { IProductRepository } from "./product.repository";
+import { PostgresProduct } from "../entities/postgres-product.entity";
+import { CreateProductDto } from "../dto/create-product.dto";
+import { Product } from "../entities/product.entity";
+import { UpdateProductDto } from "../dto/update-product.dto";
 
 @Injectable()
 export class PostgresProductRepository implements IProductRepository {
@@ -43,7 +43,10 @@ export class PostgresProductRepository implements IProductRepository {
     return this.productRepository.count({ where: { name } });
   }
 
-  async update(id: string, updateData: UpdateProductDto): Promise<Product | null> {
+  async update(
+    id: string,
+    updateData: UpdateProductDto,
+  ): Promise<Product | null> {
     const product = await this.productRepository.findOneBy({ id });
     if (!product) {
       return null;

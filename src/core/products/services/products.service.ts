@@ -1,17 +1,20 @@
-
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateProductDto } from '../dto/create-product.dto';
-import { IProductRepository } from '../repositories/product.repository';
-import { Product } from '../entities/product.entity';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { CreateProductDto } from "../dto/create-product.dto";
+import { IProductRepository } from "../repositories/product.repository";
+import { Product } from "../entities/product.entity";
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly productRepository: IProductRepository) { }
+  constructor(private readonly productRepository: IProductRepository) {}
 
   async create(createProductDto: CreateProductDto) {
-    const existingProductByModelName = await this.productRepository.countByModelName(
-      createProductDto.modelName,
-    );
+    const existingProductByModelName =
+      await this.productRepository.countByModelName(createProductDto.modelName);
     if (existingProductByModelName > 0) {
       throw new ConflictException(
         `Un produit avec le model ${createProductDto.modelName} existe déjà`,
@@ -55,7 +58,9 @@ export class ProductsService {
         `Quantité insuffisante en stock pour le produit ${product.name}. Stock actuel: ${product.quantity}`,
       );
     }
-    const updatedProduct = await this.productRepository.update(id, { quantity: product.quantity - quantity });
+    const updatedProduct = await this.productRepository.update(id, {
+      quantity: product.quantity - quantity,
+    });
 
     if (!updatedProduct) {
       throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
@@ -74,10 +79,14 @@ export class ProductsService {
     }
 
     const newQuantity = product.quantity + quantity;
-    const updatedProduct = await this.productRepository.update(id, { quantity: newQuantity });
+    const updatedProduct = await this.productRepository.update(id, {
+      quantity: newQuantity,
+    });
 
     if (!updatedProduct) {
-      throw new NotFoundException(`Produit avec l'ID ${id} non trouvé lors de la mise à jour`);
+      throw new NotFoundException(
+        `Produit avec l'ID ${id} non trouvé lors de la mise à jour`,
+      );
     }
     return updatedProduct;
   }

@@ -1,12 +1,12 @@
-import { IsNotEmpty, IsInt, Min, IsNumber, IsOptional } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsInt, Min, IsNumber, IsOptional } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class UpdateProductDto {
   @ApiProperty({
-    description: 'Nouvelle quantité en stock',
+    description: "Nouvelle quantité en stock",
     example: 10,
     minimum: 1,
-    type: 'integer',
+    type: "integer",
   })
   @IsNotEmpty()
   @IsInt()
@@ -14,10 +14,10 @@ export class UpdateProductDto {
   quantity: number;
 
   @ApiProperty({
-    description: 'Nouveau prix du produit',
+    description: "Nouveau prix du produit",
     example: 39.99,
     minimum: 0,
-    type: 'number',
+    type: "number",
     required: false,
   })
   @IsOptional()

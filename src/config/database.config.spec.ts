@@ -1,74 +1,73 @@
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import { DatabaseConfig } from './database.config';
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
+import { DatabaseConfig } from "./database.config";
 
-describe('DatabaseConfig', () => {
-  describe('Validation de base', () => {
-    it('devrait être défini', () => {
+describe("DatabaseConfig", () => {
+  describe("Validation de base", () => {
+    it("devrait être défini", () => {
       const config = new DatabaseConfig();
       expect(config).toBeDefined();
     });
 
-    it('devrait avoir une valeur par défaut pour dbPath', () => {
+    it("devrait avoir une valeur par défaut pour dbPath", () => {
       const config = new DatabaseConfig();
-      expect(config.dbPath).toBe('./data');
+      expect(config.dbPath).toBe("./data");
     });
   });
 
-  describe('Validation des champs obligatoires', () => {
-    it('devrait valider nodeEnv', async () => {
+  describe("Validation des champs obligatoires", () => {
+    it("devrait valider nodeEnv", async () => {
       const config = plainToInstance(DatabaseConfig, {});
       const errors = await validate(config);
-      expect(errors.some(e => e.property === 'nodeEnv')).toBeTruthy();
+      expect(errors.some((e) => e.property === "nodeEnv")).toBeTruthy();
     });
 
-    it('devrait valider dbType', async () => {
-      const config = plainToInstance(DatabaseConfig, { nodeEnv: 'test' });
+    it("devrait valider dbType", async () => {
+      const config = plainToInstance(DatabaseConfig, { nodeEnv: "test" });
       const errors = await validate(config);
-      expect(errors.some(e => e.property === 'dbType')).toBeTruthy();
+      expect(errors.some((e) => e.property === "dbType")).toBeTruthy();
     });
   });
 
-  describe('Validation des types', () => {
-    it('devrait accepter un type de base de données valide', async () => {
+  describe("Validation des types", () => {
+    it("devrait accepter un type de base de données valide", async () => {
       const config = plainToInstance(DatabaseConfig, {
-        nodeEnv: 'test',
-        dbType: 'postgres'
+        nodeEnv: "test",
+        dbType: "postgres",
       });
       const errors = await validate(config);
-      expect(errors.some(e => e.property === 'dbType')).toBeFalsy();
+      expect(errors.some((e) => e.property === "dbType")).toBeFalsy();
     });
 
-    it('devrait rejeter un type de base de données invalide', async () => {
+    it("devrait rejeter un type de base de données invalide", async () => {
       const config = plainToInstance(DatabaseConfig, {
-        nodeEnv: 'test',
-        dbType: 'oracle'
+        nodeEnv: "test",
+        dbType: "oracle",
       });
       const errors = await validate(config);
-      expect(errors.some(e => 
-        e.property === 'dbType' && 
-        e.constraints?.isIn
-      )).toBeTruthy();
+      expect(
+        errors.some((e) => e.property === "dbType" && e.constraints?.isIn),
+      ).toBeTruthy();
     });
   });
 
-  describe('Configuration pour base de données distante', () => {
-    it('devrait valider une configuration complète', async () => {
+  describe("Configuration pour base de données distante", () => {
+    it("devrait valider une configuration complète", async () => {
       const config = plainToInstance(
         DatabaseConfig,
         {
-          nodeEnv: 'test',
-          dbType: 'postgres',
-          dbHost: 'localhost',
-          dbPort: '5432',
-          dbName: 'testdb',
-          dbUser: 'user',
-          dbPassword: 'password',
-          dbSync: 'true'
+          nodeEnv: "test",
+          dbType: "postgres",
+          dbHost: "localhost",
+          dbPort: "5432",
+          dbName: "testdb",
+          dbUser: "user",
+          dbPassword: "password",
+          dbSync: "true",
         },
-        { enableImplicitConversion: true }
+        { enableImplicitConversion: true },
       );
-      
+
       const errors = await validate(config);
       expect(errors.length).toBe(0);
       expect(config.dbPort).toBe(5432);
@@ -85,84 +84,82 @@ describe('DatabaseConfig', () => {
     //     },
     //     { enableImplicitConversion: true }
     //   );
-      
+
     //   const errors = await validate(config);
     //   const portError = errors.find(e => e.property === 'dbPort');
     //   expect(portError?.constraints?.max).toBeDefined();
     // });
   });
 
-  describe('Configuration pour stockage fichier', () => {
+  describe("Configuration pour stockage fichier", () => {
     const validTxtConfig = {
-      nodeEnv: 'test',
-      dbType: 'txt',
-      dbPath: './custom-data',
-      dbSync: 'true'
+      nodeEnv: "test",
+      dbType: "txt",
+      dbPath: "./custom-data",
+      dbSync: "true",
     };
 
-    it('devrait accepter une configuration minimale', async () => {
-      const config = plainToInstance(
-        DatabaseConfig, 
-        validTxtConfig,
-        { enableImplicitConversion: true }
-      );
-      
+    it("devrait accepter une configuration minimale", async () => {
+      const config = plainToInstance(DatabaseConfig, validTxtConfig, {
+        enableImplicitConversion: true,
+      });
+
       const errors = await validate(config);
       expect(errors.length).toBe(0);
-      expect(config.dbPath).toBe('./custom-data');
+      expect(config.dbPath).toBe("./custom-data");
       expect(config.dbSync).toBe(true);
     });
 
-    it('devrait utiliser le chemin par défaut si non spécifié', async () => {
-        const config = plainToInstance(
-          DatabaseConfig, 
-          {
-            nodeEnv: 'test',
-            dbType: 'txt',
-            dbSync: 'true'
-          },
-          { enableImplicitConversion: true }
-        );
-        
-        const errors = await validate(config);
-        expect(errors.length).toBe(0);
-        expect(config.dbPath).toBe('./data');
-      });
+    it("devrait utiliser le chemin par défaut si non spécifié", async () => {
+      const config = plainToInstance(
+        DatabaseConfig,
+        {
+          nodeEnv: "test",
+          dbType: "txt",
+          dbSync: "true",
+        },
+        { enableImplicitConversion: true },
+      );
+
+      const errors = await validate(config);
+      expect(errors.length).toBe(0);
+      expect(config.dbPath).toBe("./data");
+    });
   });
 
-  describe('Transformation des types', () => {
-    it('devrait convertir les booléens', async () => {
+  describe("Transformation des types", () => {
+    it("devrait convertir les booléens", async () => {
       const config = plainToInstance(
         DatabaseConfig,
         {
-          nodeEnv: 'test',
-          dbType: 'txt',
-          dbSync: '1'
+          nodeEnv: "test",
+          dbType: "txt",
+          dbSync: "1",
         },
-        { enableImplicitConversion: true }
+        { enableImplicitConversion: true },
       );
-      
+
       const errors = await validate(config);
       expect(errors.length).toBe(0);
       expect(config.dbSync).toBe(true);
     });
 
-    it('devrait convertir les nombres', async () => {
+    it("devrait convertir les nombres", async () => {
       const config = plainToInstance(
         DatabaseConfig,
         {
-            nodeEnv: 'test',
-            dbType: 'postgres',
-            dbHost: 'localhost',
-            dbPort: '5432',
-            dbName: 'testdb',
-            dbUser: 'user',
-            dbPassword: 'password',
-            dbSync: 'true'
-          },
-        { enableImplicitConversion: true }
+          nodeEnv: "test",
+          dbType: "postgres",
+          dbHost: "localhost",
+          dbPort: "5432",
+          dbName: "testdb",
+          dbUser: "user",
+          dbPassword: "password",
+          dbSync: "true",
+        },
+        { enableImplicitConversion: true },
       );
-      
+
       const errors = await validate(config);
       expect(errors.length).toBe(0);
       expect(config.dbPort).toBe(5432);

@@ -1,31 +1,145 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+```
+image: docker:stable
+services:
+  - name: docker:dind
+    alias: docker
+    command: ["--insecure-registry=127.0.0.0/8"]
+  
 stages:
-- build
-- test
-- deploy
-- review
-- dast
-- staging
-- canary
-- production
-- incremental rollout 10%
-- incremental rollout 25%
-- incremental rollout 50%
-- incremental rollout 100%
-- performance
-- cleanup
-- secret-detection
-sast:
-  stage: test
-include:
-- template: Auto-DevOps.gitlab-ci.yml
-variables:
-  SECRET_DETECTION_ENABLED: 'true'
-secret_detection:
-  stage: secret-detection
+  - check
+  - build
+  - push
+  - sign
+  - deploy
+  - cleanup
+
+variables: 
+  DOCKER_DRIVER: overlay2
+  FF_NETWORK_PER_BUILD: "true"
+  HARBOR_REGISTRY: labor.hwegbe.com/labors
+  HARBOR_IMAGE: $HARBOR_REGISTRY/$CI_PROJECT_NAME:latest
+  COSIGN_KEY: $COSIGN_PRIVATE_KEY
+  COSIGN_PASSWORD: $COSIGN_PASSWORD
+
+before_script:
+    - LOWERCASE_PROJECT_NAME=$(echo $CI_PROJECT_NAME | tr '[:upper:]' '[:lower:]')
+    - HARBOR_IMAGE=$HARBOR_REGISTRY/$LOWERCASE_PROJECT_NAME:latest
+
+check_dockerfile:
+  stage: check
+  script:
+    - if [ ! -f Dockerfile ]; then echo "Dockerfile not found, skipping build and deploy"; exit 1; fi
+  tags:
+    - runnerone
+  only:
+    - main
+    - dev
+
+sonarqube-checker:
+  stage: check
+  image: 
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script: 
+    - sonar-scanner -X -Dsonar.projectKey=$CI_PROJECT_NAME -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=admin -Dsonar.password=$SONAR_PASSWORD
+  tags:
+    - runnertwo
+  allow_failure: true
+  only:
+    - main
+    - dev
+  needs: ["check_dockerfile"]
+  dependencies:
+    - check_dockerfile
+
+build:
+  stage: build
+  script:
+    - echo $HARBOR_PASSWORD | docker login -u $HARBOR_USERNAME --password-stdin $HARBOR_REGISTRY
+    - docker build --no-cache -t $HARBOR_IMAGE .
+  tags:
+    - runnerthree
+  only:
+    - main
+  dependencies:
+    - sonarqube-checker
+
+push:
+  stage: push
+  script:
+    - echo $HARBOR_PASSWORD | docker login -u $HARBOR_USERNAME --password-stdin $HARBOR_REGISTRY
+    - docker images | grep $HARBOR_IMAGE || echo "Image not found locally before push!"
+    - docker push $HARBOR_IMAGE
+    - IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $HARBOR_IMAGE)
+    - echo "IMAGE_DIGEST=$IMAGE_DIGEST" > image_digest.env
+  artifacts:
+    paths:
+      - image_digest.env
+  tags:
+    - runnerfour
+  only:
+    - main
+  dependencies:
+    - build
+
+sign:
+  stage: sign
+  script:
+    - echo $HARBOR_PASSWORD | docker login -u $HARBOR_USERNAME --password-stdin $HARBOR_REGISTRY
+    - docker images | grep $HARBOR_IMAGE || echo "Image not found locally before push!"
+    - source image_digest.env
+    - apt-get update && apt-get install -y wget
+    - wget https://github.com/sigstore/cosign/releases/download/v1.13.1/cosign-linux-amd64
+    - mv cosign-linux-amd64 /usr/local/bin/cosign
+    - chmod +x /usr/local/bin/cosign
+    - echo "$COSIGN_PRIVATE_KEY" > cosign.key
+    - cosign sign --key cosign.key $HARBOR_IMAGE
+    - rm cosign.key
+  tags:
+    - runnerfive
+  only:
+    - main
+  dependencies:
+    - push    
+
+deploy:
+  stage: deploy
+  script:
+    - echo $HARBOR_PASSWORD | docker login -u $HARBOR_USERNAME --password-stdin $HARBOR_REGISTRY
+    - docker images | grep $HARBOR_IMAGE || echo "Image not found locally before push!"
+    - docker push $HARBOR_IMAGE
+    - if [ $? -eq 0 ]; then echo "Deployment successful, cleaning up image"; docker rmi $HARBOR_IMAGE; else echo "Deployment failed, cleaning up image"; docker rmi $HARBOR_IMAGE; exit 1; fi
+  tags:
+    - harborunner
+  only:
+    - main
+  dependencies:
+    - sign
+
+cleanup:
+  stage: cleanup
+  script:
+    - docker images -q | grep -v $(docker images -q --filter "reference=docker:stable") | xargs docker rmi -f || true
+    - docker container prune -f
+    - docker volume prune -f
+    - docker network prune -f
+    - docker system prune -a
+    - docker builder prune -af
+    - rm -rf /builds/*
+    - rm -rf /cache/*
+    - docker images
+  tags:
+    - runnersix
+  only:
+    - main
+  dependencies:
+    - deploy
+
+```

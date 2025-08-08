@@ -1,12 +1,12 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { randomUUID } from 'crypto';
-import { IProductRepository } from './product.repository';
-import { CreateProductDto } from '../dto/create-product.dto';
-import { Product } from '../entities/product.entity';
-import { DatabaseConfig } from '../../../config/database.config';
-import { UpdateProductDto } from '../dto/update-product.dto';
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import { promises as fs } from "fs";
+import * as path from "path";
+import { randomUUID } from "crypto";
+import { IProductRepository } from "./product.repository";
+import { CreateProductDto } from "../dto/create-product.dto";
+import { Product } from "../entities/product.entity";
+import { DatabaseConfig } from "../../../config/database.config";
+import { UpdateProductDto } from "../dto/update-product.dto";
 
 @Injectable()
 export class FsProductRepository implements IProductRepository, OnModuleInit {
@@ -15,7 +15,7 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
 
   constructor(private readonly dbConfig: DatabaseConfig) {
     // We get the path from the injected config
-    this.dbPath = path.resolve(this.dbConfig.dbPath, 'products.json');
+    this.dbPath = path.resolve(this.dbConfig.dbPath, "products.json");
   }
 
   async onModuleInit() {
@@ -25,10 +25,10 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
   private async loadData(): Promise<void> {
     try {
       await fs.mkdir(path.dirname(this.dbPath), { recursive: true });
-      const fileContent = await fs.readFile(this.dbPath, 'utf-8');
+      const fileContent = await fs.readFile(this.dbPath, "utf-8");
       this.data = JSON.parse(fileContent);
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         // File doesn't exist, initialize with empty array
         this.data = [];
         await this.persist();
@@ -55,7 +55,7 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
   }
 
   async findById(id: string): Promise<Product | null> {
-    return this.data.find(p => p.id === id) || null;
+    return this.data.find((p) => p.id === id) || null;
   }
 
   async findAll(): Promise<Product[]> {
@@ -64,7 +64,7 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
 
   async delete(id: string): Promise<void> {
     const initialLength = this.data.length;
-    this.data = this.data.filter(p => p.id !== id);
+    this.data = this.data.filter((p) => p.id !== id);
     if (this.data.length < initialLength) {
       await this.persist();
     }
@@ -75,15 +75,18 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
   }
 
   async countByModelName(modelName: string): Promise<number> {
-    return this.data.filter(p => p.modelName === modelName).length;
+    return this.data.filter((p) => p.modelName === modelName).length;
   }
 
   async countByName(name: string): Promise<number> {
-    return this.data.filter(p => p.name === name).length;
+    return this.data.filter((p) => p.name === name).length;
   }
 
-  async update(id: string, updateData: UpdateProductDto): Promise<Product | null> {
-    const index = this.data.findIndex(p => p.id === id);
+  async update(
+    id: string,
+    updateData: UpdateProductDto,
+  ): Promise<Product | null> {
+    const index = this.data.findIndex((p) => p.id === id);
     if (index === -1) {
       return null;
     }
@@ -98,10 +101,10 @@ export class FsProductRepository implements IProductRepository, OnModuleInit {
   }
 
   async findByModelName(modelName: string): Promise<Product[]> {
-    return this.data.filter(p => p.modelName === modelName);
+    return this.data.filter((p) => p.modelName === modelName);
   }
 
   async findByName(name: string): Promise<Product[]> {
-    return this.data.filter(p => p.name === name);
+    return this.data.filter((p) => p.name === name);
   }
 }

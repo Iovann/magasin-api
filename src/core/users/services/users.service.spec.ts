@@ -1,30 +1,30 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { IUserRepository } from '../repositories/user.repository';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { Role } from '../../../common/enum/role.enum';
-import { User } from '../entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ConflictException, NotFoundException } from "@nestjs/common";
+import { UsersService } from "./users.service";
+import { IUserRepository } from "../repositories/user.repository";
+import { CreateUserDto } from "../dto/create-user.dto";
+import { Role } from "../../../common/enum/role.enum";
+import { User } from "../entities/user.entity";
+import * as bcrypt from "bcrypt";
 
 // Mock bcrypt
-jest.mock('bcrypt');
+jest.mock("bcrypt");
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
-describe('UsersService', () => {
+describe("UsersService", () => {
   let service: UsersService;
   let userRepository: jest.Mocked<IUserRepository>;
 
   const mockUser: User = {
-    id: '1',
-    email: 'test@example.com',
+    id: "1",
+    email: "test@example.com",
     role: Role.Vendeur,
-    createdAt: new Date('2024-01-01T00:00:00.000Z'),
+    createdAt: new Date("2024-01-01T00:00:00.000Z"),
   };
 
   const mockCreateUserDto: CreateUserDto = {
-    email: 'new@example.com',
-    password: 'password123',
+    email: "new@example.com",
+    password: "password123",
     role: Role.Magasinier,
   };
 
@@ -52,15 +52,15 @@ describe('UsersService', () => {
 
     // Reset mocks
     jest.clearAllMocks();
-    (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword123');
+    (mockedBcrypt.hash as jest.Mock).mockResolvedValue("hashedPassword123");
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should create a new user successfully', async () => {
+  describe("create", () => {
+    it("should create a new user successfully", async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(null);
       userRepository.create.mockResolvedValue(mockUser);
@@ -69,29 +69,38 @@ describe('UsersService', () => {
       const result = await service.create(mockCreateUserDto);
 
       // Assert
-      expect(userRepository.findByEmail).toHaveBeenCalledWith(mockCreateUserDto.email);
-      expect(mockedBcrypt.hash).toHaveBeenCalledWith(mockCreateUserDto.password, 10);
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(
+        mockCreateUserDto.email,
+      );
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith(
+        mockCreateUserDto.password,
+        10,
+      );
       expect(userRepository.create).toHaveBeenCalledWith({
         email: mockCreateUserDto.email,
-        passwordHash: 'hashedPassword123',
+        passwordHash: "hashedPassword123",
         role: mockCreateUserDto.role,
       });
       expect(result).toEqual(mockUser);
     });
 
-    it('should throw ConflictException if user with email already exists', async () => {
+    it("should throw ConflictException if user with email already exists", async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(service.create(mockCreateUserDto)).rejects.toThrow(
-        new ConflictException(`Un utilisateur avec l'email ${mockCreateUserDto.email} existe déjà`)
+        new ConflictException(
+          `Un utilisateur avec l'email ${mockCreateUserDto.email} existe déjà`,
+        ),
       );
-      expect(userRepository.findByEmail).toHaveBeenCalledWith(mockCreateUserDto.email);
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(
+        mockCreateUserDto.email,
+      );
       expect(userRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should handle bcrypt hashing correctly', async () => {
+    it("should handle bcrypt hashing correctly", async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(null);
       userRepository.create.mockResolvedValue(mockUser);
@@ -100,14 +109,17 @@ describe('UsersService', () => {
       await service.create(mockCreateUserDto);
 
       // Assert
-      expect(mockedBcrypt.hash).toHaveBeenCalledWith('password123', 10);
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith("password123", 10);
     });
   });
 
-  describe('findAll', () => {
-    it('should return all users', async () => {
+  describe("findAll", () => {
+    it("should return all users", async () => {
       // Arrange
-      const mockUsers = [mockUser, { ...mockUser, id: '2', email: 'user2@example.com' }];
+      const mockUsers = [
+        mockUser,
+        { ...mockUser, id: "2", email: "user2@example.com" },
+      ];
       userRepository.findAll.mockResolvedValue(mockUsers);
 
       // Act
@@ -118,7 +130,7 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUsers);
     });
 
-    it('should return empty array when no users exist', async () => {
+    it("should return empty array when no users exist", async () => {
       // Arrange
       userRepository.findAll.mockResolvedValue([]);
 
@@ -130,92 +142,96 @@ describe('UsersService', () => {
     });
   });
 
-  describe('findOne', () => {
-    it('should return user when found', async () => {
+  describe("findOne", () => {
+    it("should return user when found", async () => {
       // Arrange
       userRepository.findById.mockResolvedValue(mockUser);
 
       // Act
-      const result = await service.findOne('1');
+      const result = await service.findOne("1");
 
       // Assert
-      expect(userRepository.findById).toHaveBeenCalledWith('1');
+      expect(userRepository.findById).toHaveBeenCalledWith("1");
       expect(result).toEqual(mockUser);
     });
 
-    it('should throw NotFoundException when user not found', async () => {
+    it("should throw NotFoundException when user not found", async () => {
       // Arrange
       userRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.findOne('999')).rejects.toThrow(
-        new NotFoundException(`Utilisateur avec l'ID 999 non trouvé`)
+      await expect(service.findOne("999")).rejects.toThrow(
+        new NotFoundException(`Utilisateur avec l'ID 999 non trouvé`),
       );
-      expect(userRepository.findById).toHaveBeenCalledWith('999');
+      expect(userRepository.findById).toHaveBeenCalledWith("999");
     });
   });
 
-  describe('findByEmail', () => {
-    it('should return user when found by email', async () => {
+  describe("findByEmail", () => {
+    it("should return user when found by email", async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(mockUser);
 
       // Act
-      const result = await service.findByEmail('test@example.com');
+      const result = await service.findByEmail("test@example.com");
 
       // Assert
-      expect(userRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(
+        "test@example.com",
+      );
       expect(result).toEqual(mockUser);
     });
 
-    it('should return null when user not found by email', async () => {
+    it("should return null when user not found by email", async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(null);
 
       // Act
-      const result = await service.findByEmail('notfound@example.com');
+      const result = await service.findByEmail("notfound@example.com");
 
       // Assert
-      expect(userRepository.findByEmail).toHaveBeenCalledWith('notfound@example.com');
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(
+        "notfound@example.com",
+      );
       expect(result).toBeNull();
     });
   });
 
-  describe('remove', () => {
-    it('should remove user successfully', async () => {
+  describe("remove", () => {
+    it("should remove user successfully", async () => {
       // Arrange
       userRepository.findById.mockResolvedValue(mockUser);
       userRepository.delete.mockResolvedValue(undefined);
 
       // Act
-      await service.remove('1');
+      await service.remove("1");
 
       // Assert
-      expect(userRepository.findById).toHaveBeenCalledWith('1');
-      expect(userRepository.delete).toHaveBeenCalledWith('1');
+      expect(userRepository.findById).toHaveBeenCalledWith("1");
+      expect(userRepository.delete).toHaveBeenCalledWith("1");
     });
 
-    it('should throw NotFoundException when trying to remove non-existent user', async () => {
+    it("should throw NotFoundException when trying to remove non-existent user", async () => {
       // Arrange
       userRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.remove('999')).rejects.toThrow(
-        new NotFoundException(`Utilisateur avec l'ID 999 non trouvé`)
+      await expect(service.remove("999")).rejects.toThrow(
+        new NotFoundException(`Utilisateur avec l'ID 999 non trouvé`),
       );
-      expect(userRepository.findById).toHaveBeenCalledWith('999');
+      expect(userRepository.findById).toHaveBeenCalledWith("999");
       expect(userRepository.delete).not.toHaveBeenCalled();
     });
   });
 
-  describe('getUserStats', () => {
-    it('should return user statistics correctly', async () => {
+  describe("getUserStats", () => {
+    it("should return user statistics correctly", async () => {
       // Arrange
       const mockUsers = [
         { ...mockUser, role: Role.SuperAdmin },
-        { ...mockUser, id: '2', role: Role.Magasinier },
-        { ...mockUser, id: '3', role: Role.Vendeur },
-        { ...mockUser, id: '4', role: Role.Vendeur },
+        { ...mockUser, id: "2", role: Role.Magasinier },
+        { ...mockUser, id: "3", role: Role.Vendeur },
+        { ...mockUser, id: "4", role: Role.Vendeur },
       ];
       userRepository.findAll.mockResolvedValue(mockUsers);
 
@@ -234,7 +250,7 @@ describe('UsersService', () => {
       });
     });
 
-    it('should return empty stats when no users exist', async () => {
+    it("should return empty stats when no users exist", async () => {
       // Arrange
       userRepository.findAll.mockResolvedValue([]);
 
@@ -248,7 +264,7 @@ describe('UsersService', () => {
       });
     });
 
-    it('should handle single user stats correctly', async () => {
+    it("should handle single user stats correctly", async () => {
       // Arrange
       const mockUsers = [mockUser];
       userRepository.findAll.mockResolvedValue(mockUsers);
