@@ -16,7 +16,7 @@ export class PostgresUser implements User {
   @Column({
     type: 'enum',
     enum: Role,
-    default: Role,
+    default: Role.Magasinier,
   })
   role: Role;
 
