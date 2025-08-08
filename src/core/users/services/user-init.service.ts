@@ -21,7 +21,7 @@ export class UserInitService implements OnApplicationBootstrap {
       );
 
       if (superAdminExists) {
-        // this.logger.log('✅ Super Admin already exists');
+        this.logger.log('✅ Super Admin already exists');
         return;
       }
 
@@ -38,7 +38,7 @@ export class UserInitService implements OnApplicationBootstrap {
       this.logger.log(`   Email: ${createdAdmin.email}`);
       this.logger.log(`   ID: ${createdAdmin.id}`);
       this.logger.log(`   Password: ${defaultAdmin.password}`);
-      // this.logger.warn('⚠️  CHANGE THE DEFAULT PASSWORD IMMEDIATELY!');
+      this.logger.warn('⚠️  CHANGE THE DEFAULT PASSWORD IMMEDIATELY!');
 
     } catch (error) {
       this.logger.error('❌ Failed to create default Super Admin:', error.message);
