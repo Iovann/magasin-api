@@ -52,7 +52,7 @@ describe('UsersService', () => {
 
     // Reset mocks
     jest.clearAllMocks();
-    mockedBcrypt.hash.mockResolvedValue('hashedPassword123');
+    (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword123');
   });
 
   it('should be defined', () => {
