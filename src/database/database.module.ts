@@ -27,7 +27,6 @@ export class DatabaseModule {
               database: configService.getOrThrow('DB_NAME'),
               entities: [PostgresProduct, PostgresUser],
               synchronize: configService.get('DB_SYNC') === 'true',
-              logging: true,
             };
             
             return config;
