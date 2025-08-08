@@ -26,7 +26,6 @@ export class ProductsModule {
         providers.push({
           provide: IProductRepository,
           useFactory: (repository: Repository<PostgresProduct>) => {
-            console.log('✅ PostgreSQL repository injected successfully');
             return new PostgresProductRepository(repository);
           },
           inject: [getRepositoryToken(PostgresProduct)],
@@ -43,7 +42,6 @@ export class ProductsModule {
         providers.push({
           provide: IProductRepository,
           useFactory: (model: Model<MongoProduct>) => {
-            console.log('✅ MongoDB model injected successfully');
             return new MongoProductRepository(model);
           },
           inject: [getModelToken(MongoProduct.name)],
@@ -54,7 +52,6 @@ export class ProductsModule {
         providers.push({
           provide: IProductRepository,
           useFactory: (config: DatabaseConfig) => {
-            console.log('✅ FileSystem repository injected successfully');
             return new FsProductRepository(config);
           },
           inject: [DatabaseConfig],

@@ -27,7 +27,6 @@ export class UsersModule {
         providers.push({
           provide: IUserRepository,
           useFactory: (repository: Repository<PostgresUser>) => {
-            console.log('✅ PostgreSQL User repository injected successfully');
             return new PostgresUserRepository(repository);
           },
           inject: [getRepositoryToken(PostgresUser)],
@@ -44,7 +43,6 @@ export class UsersModule {
         providers.push({
           provide: IUserRepository,
           useFactory: (model: Model<MongoUser>) => {
-            console.log('✅ MongoDB User model injected successfully');
             return new MongoUserRepository(model);
           },
           inject: [getModelToken(MongoUser.name)],
@@ -55,7 +53,6 @@ export class UsersModule {
         providers.push({
           provide: IUserRepository,
           useFactory: (config: DatabaseConfig) => {
-            console.log('✅ FileSystem User repository injected successfully');
             return new FsUserRepository(config);
           },
           inject: [DatabaseConfig],

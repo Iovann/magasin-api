@@ -13,11 +13,6 @@ export class UsersService {
    * Seul le SuperAdmin peut créer des utilisateurs
    */
   async create(createUserDto: CreateUserDto): Promise<User> {
-    console.log('🔍 UsersService.create called with:', JSON.stringify(createUserDto, null, 2));
-    console.log('🔍 Email field:', createUserDto.email);
-    console.log('🔍 Password field:', createUserDto.password ? '[SET]' : '[NOT SET]');
-    console.log('🔍 Role field:', createUserDto.role);
-    
     // Vérifier si l'email existe déjà
     const existingUser = await this.userRepository.findByEmail(createUserDto.email);
     if (existingUser) {
