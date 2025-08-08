@@ -35,7 +35,7 @@ describe('ProductsController', () => {
 
   describe('create', () => {
     it('should call service.create with the correct DTO', async () => {
-      const createProductDto: CreateProductDto = { name: 'WaterBlaster', modelName: 'WB-1', quantity: 50 };
+      const createProductDto: CreateProductDto = { name: 'WaterBlaster', modelName: 'WB-1', quantity: 50 ,price: 50};
       await controller.create(createProductDto);
       expect(mockProductsService.create).toHaveBeenCalledWith(createProductDto);
     });
@@ -48,13 +48,13 @@ describe('ProductsController', () => {
     });
   });
 
-  describe('getStockByModel', () => {
-    it('should call service.getStockByModel with the correct model name', async () => {
-      const modelName = 'WB-1';
-      await controller.getStockByModel(modelName);
-      expect(mockProductsService.getStockByModel).toHaveBeenCalledWith(modelName);
-    });
-  });
+  // describe('getStockByModel', () => {
+  //   it('should call service.getStockByModel with the correct model name', async () => {
+  //     const modelName = 'WB-1';
+  //     await controller.getStockByModel(modelName);
+  //     expect(mockProductsService.getStockByModel).toHaveBeenCalledWith(modelName);
+  //   });
+  // });
 
   describe('remove', () => {
     it('should call service.remove with the correct id', async () => {

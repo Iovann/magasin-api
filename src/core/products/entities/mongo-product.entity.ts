@@ -14,6 +14,9 @@ export class MongoProduct extends Document implements Product {
   @Prop({ required: true, type: Number })
   quantity: number;
 
+  @Prop({ required: true, type: Number })
+  price: number;
+
   createdAt: Date;
   updatedAt: Date;
 }

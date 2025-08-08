@@ -49,7 +49,12 @@ export class MongoProductRepository implements IProductRepository {
     if (!product) {
       throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
     }
-    product.quantity = updateProductDto.quantity;
+    if (updateProductDto.quantity !== undefined) {
+      product.quantity = updateProductDto.quantity;
+    }
+    if (updateProductDto.price !== undefined) {
+      product.price = updateProductDto.price;
+    }
     return product.save();
   }
 

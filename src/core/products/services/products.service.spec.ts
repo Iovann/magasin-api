@@ -70,7 +70,7 @@ describe('ProductsService', () => {
     });
 
     it('should throw a ConflictException if the product name already exists', async () => {
-      const createProductDto: CreateProductDto = { name: 'WaterGun 5000', modelName: 'WG5001', quantity: 100 };
+      const createProductDto: CreateProductDto = { name: 'WaterGun 5000', modelName: 'WG5001', quantity: 100, price: 10 };
       
       mockProductRepository.countByModelName.mockResolvedValue(0);
       mockProductRepository.countByName.mockResolvedValue(1);
@@ -155,6 +155,7 @@ describe('ProductsService', () => {
       name: 'Test Product',
       modelName: 'TP100',
       quantity: 10,
+      price: 20,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

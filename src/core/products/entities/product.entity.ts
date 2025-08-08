@@ -27,6 +27,13 @@ export class Product {
   quantity: number;
 
   @ApiProperty({
+    description: 'Prix du produit',
+    example: 29.99,
+    type: 'number',
+  })
+  price: number;
+
+  @ApiProperty({
     description: 'Date de création du produit',
     example: '2024-01-01T00:00:00.000Z',
     type: 'string',

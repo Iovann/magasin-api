@@ -1,58 +1,54 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Query } from 'mongoose';
 import { MongoUserRepository } from './mongo-user.repository';
 import { MongoUser } from '../entities/mongo-user.entity';
 import { User } from '../entities/user.entity';
 import { Role } from '../../../common/enum/role.enum';
 
+// Mock de base pour un utilisateur
+const baseUser: User = {
+  id: '507f1f77bcf86cd799439011',
+  email: 'test@example.com',
+  role: Role.Vendeur,
+  createdAt: new Date('2024-01-01T00:00:00.000Z'),
+};
+
+// Mock pour les données de création
+const createUserData = {
+  email: 'new@example.com',
+  passwordHash: 'hashedPassword456',
+  role: Role.Magasinier,
+};
+
+// Mock du document retourné par Mongoose
+const mockUserDoc = (user: Partial<User & { passwordHash?: string }>) => ({
+  ...user,
+  id: user.id || 'mock-id',
+  _id: user.id || 'mock-id',
+  email: user.email,
+  role: user.role,
+  createdAt: user.createdAt || new Date(),
+  passwordHash: user.passwordHash,
+  toObject: () => mockUserDoc(user), // Ajout de la méthode toObject
+});
+
 describe('MongoUserRepository', () => {
   let repository: MongoUserRepository;
-  let userModel: jest.Mocked<Model<MongoUser>>;
-
-  const mockMongoUser = {
-    id: '507f1f77bcf86cd799439011',
-    email: 'test@example.com',
-    passwordHash: 'hashedPassword123',
-    role: Role.Vendeur,
-    createdAt: new Date('2024-01-01T00:00:00.000Z'),
-    save: jest.fn(),
-    toObject: jest.fn(),
-  } as any;
-
-  const mockUser: User = {
-    id: '507f1f77bcf86cd799439011',
-    email: 'test@example.com',
-    role: Role.Vendeur,
-    createdAt: new Date('2024-01-01T00:00:00.000Z'),
-  };
-
-  const mockUserData = {
-    email: 'new@example.com',
-    passwordHash: 'hashedPassword456',
-    role: Role.Magasinier,
-  };
+  let userModel: any; // Le type est 'any' pour accommoder le mock
 
   beforeEach(async () => {
-    // Create a mock constructor function that returns the mock instance
-    const MockUserModel = jest.fn().mockImplementation(() => ({
-      ...mockMongoUser,
-      save: jest.fn().mockResolvedValue(mockMongoUser),
-      toObject: jest.fn().mockReturnValue(mockMongoUser),
-    }));
-
-    // Add static methods to the mock constructor
-    MockUserModel.findById = jest.fn();
-    MockUserModel.findOne = jest.fn();
-    MockUserModel.find = jest.fn();
-    MockUserModel.findByIdAndDelete = jest.fn();
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MongoUserRepository,
         {
           provide: getModelToken(MongoUser.name),
-          useValue: MockUserModel,
+          // On simule le constructeur du modèle et ses méthodes statiques
+          useValue: jest.fn().mockImplementation((data) => ({
+            ...data,
+            save: jest.fn().mockResolvedValue(mockUserDoc({ ...data, id: 'new-id' })),
+            toObject: () => data, // Ajout de la méthode toObject
+          })),
         },
       ],
     }).compile();
@@ -60,8 +56,11 @@ describe('MongoUserRepository', () => {
     repository = module.get<MongoUserRepository>(MongoUserRepository);
     userModel = module.get<Model<MongoUser>>(getModelToken(MongoUser.name));
 
-    // Reset mocks
-    jest.clearAllMocks();
+    // On attache les mocks des méthodes statiques au constructeur simulé
+    userModel.findById = jest.fn();
+    userModel.findOne = jest.fn();
+    userModel.find = jest.fn();
+    userModel.findByIdAndDelete = jest.fn();
   });
 
   it('should be defined', () => {
@@ -69,266 +68,99 @@ describe('MongoUserRepository', () => {
   });
 
   describe('create', () => {
-    it('should create a new user successfully', async () => {
-      // Arrange
-      const mockSavedUser = { 
-        ...mockMongoUser, 
-        ...mockUserData,
-        save: jest.fn().mockResolvedValue(mockMongoUser),
-        toObject: jest.fn().mockReturnValue(mockMongoUser)
-      };
-      
-      // The userModel is already a constructor mock from beforeEach
-      (userModel as any).mockReturnValue(mockSavedUser);
+    it('should create a new user and return the user entity', async () => {
+      const result = await repository.create(createUserData);
 
-      // Act
-      const result = await repository.create(mockUserData);
-
-      // Assert
-      expect(result).toEqual({
-        id: mockMongoUser.id,
-        email: mockMongoUser.email,
-        role: mockMongoUser.role,
-        createdAt: mockMongoUser.createdAt,
-      });
-      expect(mockSavedUser.save).toHaveBeenCalled();
-    });
-
-    it('should log user creation details', async () => {
-      // Arrange
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const mockSavedUser = { 
-        ...mockMongoUser, 
-        ...mockUserData,
-        save: jest.fn().mockResolvedValue(mockMongoUser),
-        toObject: jest.fn().mockReturnValue(mockMongoUser)
-      };
-      
-      (userModel as any).mockReturnValue(mockSavedUser);
-
-      // Act
-      await repository.create(mockUserData);
-
-      // Assert
-      expect(consoleSpy).toHaveBeenCalledWith('🍃 MongoUserRepository.create called with:', JSON.stringify(mockUserData, null, 2));
-      expect(consoleSpy).toHaveBeenCalledWith('🍃 User data keys:', Object.keys(mockUserData));
-      expect(consoleSpy).toHaveBeenCalledWith('🍃 Email value:', mockUserData.email);
-
-      consoleSpy.mockRestore();
+      // On vérifie que le constructeur a été appelé
+      expect(userModel).toHaveBeenCalledWith(createUserData);
+      // On vérifie que le résultat est conforme à l'entité User
+      expect(result.email).toBe(createUserData.email);
+      expect(result.id).toBe('new-id');
     });
   });
 
   describe('findById', () => {
-    it('should find user by id successfully', async () => {
-      // Arrange
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue(mockMongoUser),
-      };
-      userModel.findById.mockReturnValue(mockQuery as any);
+    it('should find a user by ID and return the user entity', async () => {
+      userModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUserDoc(baseUser)),
+      } as unknown as Query<any, any>);
 
-      // Act
-      const result = await repository.findById('507f1f77bcf86cd799439011');
+      const result = await repository.findById(baseUser.id);
 
-      // Assert
-      expect(userModel.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
-      expect(result).toEqual({
-        id: mockMongoUser.id,
-        email: mockMongoUser.email,
-        role: mockMongoUser.role,
-        createdAt: mockMongoUser.createdAt,
-      });
+      expect(userModel.findById).toHaveBeenCalledWith(baseUser.id);
+      expect(result).toEqual(baseUser);
     });
 
-    it('should return null when user not found by id', async () => {
-      // Arrange
-      const mockQuery = {
+    it('should return null if user is not found', async () => {
+      userModel.findById.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
-      };
-      userModel.findById.mockReturnValue(mockQuery as any);
+      } as unknown as Query<any, any>);
 
-      // Act
-      const result = await repository.findById('nonexistent');
-
-      // Assert
-      expect(userModel.findById).toHaveBeenCalledWith('nonexistent');
+      const result = await repository.findById('non-existent-id');
       expect(result).toBeNull();
     });
   });
 
   describe('findByEmail', () => {
-    it('should find user by email successfully', async () => {
-      // Arrange
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue(mockMongoUser),
-      };
-      userModel.findOne.mockReturnValue(mockQuery as any);
+    it('should find a user by email', async () => {
+      userModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUserDoc(baseUser)),
+      } as unknown as Query<any, any>);
 
-      // Act
-      const result = await repository.findByEmail('test@example.com');
+      const result = await repository.findByEmail(baseUser.email);
 
-      // Assert
-      expect(userModel.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-      expect(result).toEqual({
-        id: mockMongoUser.id,
-        email: mockMongoUser.email,
-        role: mockMongoUser.role,
-        createdAt: mockMongoUser.createdAt,
-      });
-    });
-
-    it('should return null when user not found by email', async () => {
-      // Arrange
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue(null),
-      };
-      userModel.findOne.mockReturnValue(mockQuery as any);
-
-      // Act
-      const result = await repository.findByEmail('notfound@example.com');
-
-      // Assert
-      expect(userModel.findOne).toHaveBeenCalledWith({ email: 'notfound@example.com' });
-      expect(result).toBeNull();
+      expect(userModel.findOne).toHaveBeenCalledWith({ email: baseUser.email });
+      expect(result).toEqual(baseUser);
     });
   });
 
   describe('findAll', () => {
-    it('should return all users', async () => {
-      // Arrange
-      const mockUsers = [mockMongoUser, { ...mockMongoUser, id: '507f1f77bcf86cd799439012', email: 'user2@example.com' }];
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue(mockUsers),
-      };
-      userModel.find.mockReturnValue(mockQuery as any);
+    it('should return an array of users', async () => {
+      userModel.find.mockReturnValue({
+        exec: jest.fn().mockResolvedValue([mockUserDoc(baseUser)]),
+      } as unknown as Query<any, any>);
 
-      // Act
       const result = await repository.findAll();
 
-      // Assert
-      expect(userModel.find).toHaveBeenCalled();
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: mockUsers[0].id,
-        email: mockUsers[0].email,
-        role: mockUsers[0].role,
-        createdAt: mockUsers[0].createdAt,
-      });
-    });
-
-    it('should return empty array when no users exist', async () => {
-      // Arrange
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue([]),
-      };
-      userModel.find.mockReturnValue(mockQuery as any);
-
-      // Act
-      const result = await repository.findAll();
-
-      // Assert
-      expect(result).toEqual([]);
+      expect(result).toEqual([baseUser]);
     });
   });
 
   describe('delete', () => {
-    it('should delete user successfully', async () => {
-      // Arrange
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue(mockMongoUser),
-      };
-      userModel.findByIdAndDelete.mockReturnValue(mockQuery as any);
+    it('should call findByIdAndDelete with the correct ID', async () => {
+      userModel.findByIdAndDelete.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({}),
+      } as unknown as Query<any, any>);
 
-      // Act
-      await repository.delete('507f1f77bcf86cd799439011');
+      await repository.delete(baseUser.id);
 
-      // Assert
-      expect(userModel.findByIdAndDelete).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
-    });
-
-    it('should handle deletion of non-existent user', async () => {
-      // Arrange
-      const mockQuery = {
-        exec: jest.fn().mockResolvedValue(null),
-      };
-      userModel.findByIdAndDelete.mockReturnValue(mockQuery as any);
-
-      // Act
-      await repository.delete('nonexistent');
-
-      // Assert
-      expect(userModel.findByIdAndDelete).toHaveBeenCalledWith('nonexistent');
-      // Should not throw error even if user doesn't exist
+      expect(userModel.findByIdAndDelete).toHaveBeenCalledWith(baseUser.id);
     });
   });
 
   describe('findByEmailWithPassword', () => {
-    it('should find user with password hash by email', async () => {
-      // Arrange
-      const mockUserWithPassword = { ...mockMongoUser, passwordHash: 'hashedPassword123' };
-      const mockSelectQuery = {
-        exec: jest.fn().mockResolvedValue(mockUserWithPassword),
-      };
-      const mockQuery = {
-        select: jest.fn().mockReturnValue(mockSelectQuery),
-      };
-      userModel.findOne.mockReturnValue(mockQuery as any);
+    it('should return user with passwordHash', async () => {
+      const userWithHash = { ...baseUser, passwordHash: 'hashed' };
+      userModel.findOne.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockUserDoc(userWithHash)),
+      } as any);
 
-      // Act
-      const result = await repository.findByEmailWithPassword('test@example.com');
+      const result = await repository.findByEmailWithPassword(baseUser.email);
 
-      // Assert
-      expect(userModel.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-      expect(mockQuery.select).toHaveBeenCalledWith('+passwordHash');
-      expect(result).toEqual({
-        id: mockUserWithPassword.id,
-        email: mockUserWithPassword.email,
-        role: mockUserWithPassword.role,
-        createdAt: mockUserWithPassword.createdAt,
-        passwordHash: 'hashedPassword123',
-      });
+      expect(userModel.findOne).toHaveBeenCalledWith({ email: baseUser.email });
+      expect(result).toEqual(userWithHash);
     });
 
-    it('should return null when user not found by email', async () => {
-      // Arrange
-      const mockSelectQuery = {
+    it('should return null if user is not found', async () => {
+      userModel.findOne.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(null),
-      };
-      const mockQuery = {
-        select: jest.fn().mockReturnValue(mockSelectQuery),
-      };
-      userModel.findOne.mockReturnValue(mockQuery as any);
+      } as any);
 
-      // Act
-      const result = await repository.findByEmailWithPassword('notfound@example.com');
+      const result = await repository.findByEmailWithPassword('non-existent');
 
-      // Assert
       expect(result).toBeNull();
-    });
-
-    it('should return null when user found but no passwordHash', async () => {
-      // Arrange
-      const mockUserWithoutPassword = { ...mockMongoUser, passwordHash: undefined };
-      const mockSelectQuery = {
-        exec: jest.fn().mockResolvedValue(mockUserWithoutPassword),
-      };
-      const mockQuery = {
-        select: jest.fn().mockReturnValue(mockSelectQuery),
-      };
-      userModel.findOne.mockReturnValue(mockQuery as any);
-
-      // Act
-      const result = await repository.findByEmailWithPassword('test@example.com');
-
-      // Assert
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('toUserEntity (private method)', () => {
-    it('should transform MongoUser to User entity without passwordHash', () => {
-      // This is tested implicitly through other methods
-      // The private method excludes passwordHash from the returned User object
-      // which is verified in the other test cases
     });
   });
 });

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, Min } from 'class-validator';
+import { IsNotEmpty, IsInt, Min, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateProductDto {
@@ -12,4 +12,16 @@ export class UpdateProductDto {
   @IsInt()
   @Min(1)
   quantity: number;
+
+  @ApiProperty({
+    description: 'Nouveau prix du produit',
+    example: 39.99,
+    minimum: 0,
+    type: 'number',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
 }

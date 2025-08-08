@@ -61,6 +61,7 @@ describe('FsProductRepository', () => {
         name: 'Water Gun 5000',
         modelName: 'WG5K',
         quantity: 10,
+        price: 25.50,
       };
 
       const result = await repository.create(createDto);
