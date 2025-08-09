@@ -6,7 +6,7 @@ import * as path from "path";
 import { User } from "../entities/user.entity";
 import { Role } from "../../../common/enum/role.enum";
 
-// Mocking des modules 'fs' et 'crypto'
+// Mocking the 'fs' and 'crypto' modules
 jest.mock("fs", () => ({
   promises: {
     mkdir: jest.fn().mockResolvedValue(undefined),
@@ -64,6 +64,30 @@ describe("FsUserRepository", () => {
     });
   });
 
+  describe("findById", () => {
+    it("should return a user if id is found", async () => {
+      const mockUser: User = {
+        id: "mocked-user-uuid-456",
+        email: "findme@example.com",
+        passwordHash: "hash",
+        role: Role.Vendeur,
+        createdAt: new Date(),
+      };
+      (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUser]));
+      await repository.onModuleInit();
+
+      const result = await repository.findById("mocked-user-uuid-456");
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe("mocked-user-uuid-456");
+    });
+
+    it("should return null if id is not found", async () => {
+      const result = await repository.findById("not-found-id");
+      expect(result).toBeNull();
+    });
+  });
+
   describe("findByEmail", () => {
     it("should return a user if email is found", async () => {
       const mockUser: User = {
@@ -112,6 +136,27 @@ describe("FsUserRepository", () => {
       const result = await repository.findAll();
       expect(result).toHaveLength(2);
       expect(result[1].email).toBe("b@b.com");
+    });
+  });
+
+  describe("delete", () => {
+    it("should remove a user and persist the changes", async () => {
+      const mockUser: User = {
+        id: "to-delete",
+        email: "delete@me.com",
+        passwordHash: "h",
+        role: Role.Vendeur,
+        createdAt: new Date(),
+      };
+      (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUser]));
+      await repository.onModuleInit();
+
+      await repository.delete("to-delete");
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.any(String),
+        JSON.stringify([], null, 2),
+      );
     });
   });
 });

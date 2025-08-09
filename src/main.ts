@@ -3,7 +3,7 @@ import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
-async function bootstrap() {
+async function bootstrap()  {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
@@ -21,8 +21,6 @@ async function bootstrap() {
       "API pour la gestion de magasin de pistolet à eau - Système de gestion des produits et utilisateurs",
     )
     .setVersion("1.0")
-    // .addTag('users', 'Gestion des utilisateurs')
-    // .addTag('auth', 'Authentification et autorisation')
     .addBearerAuth(
       {
         type: "http",
@@ -53,4 +51,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();

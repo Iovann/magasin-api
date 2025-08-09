@@ -15,6 +15,9 @@ import {
 } from "../../common/decorators/permissions.decorator";
 import { UserAction } from "../../common/enum/permission.enum";
 
+/**
+ * Controller for handling user-related API requests.
+ */
 @ApiTags("users")
 // @UseGuards(AuthGuard, RolesGuard)
 @Controller("users")
@@ -22,63 +25,74 @@ import { UserAction } from "../../common/enum/permission.enum";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  /**
+   * Creates a new user.
+   * @param createUserDto - The user data to create.
+   * @returns The newly created user.
+   */
   @ApiOperation({
-    summary: "Créer un nouvel utilisateur",
+    summary: "Create a new user",
     description:
-      "Seul le SuperAdmin peut créer des utilisateurs. Nécessite une authentification JWT.",
+      "Only SuperAdmins can create users. Requires JWT authentication.",
   })
   @ApiResponse({
     status: 201,
-    description: "Utilisateur créé avec succès",
+    description: "User created successfully",
     type: User,
   })
-  @ApiResponse({ status: 400, description: "Données invalides" })
-  @ApiResponse({ status: 401, description: "Non autorisé" })
+  @ApiResponse({ status: 400, description: "Invalid data" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Accès interdit - SuperAdmin requis",
+    description: "Forbidden - SuperAdmin access required",
   })
   @ApiResponse({
     status: 409,
-    description: "Utilisateur avec cet email existe déjà",
+    description: "User with this email already exists",
   })
   @Post()
   @SuperAdminOnly()
   @UserPermissions([UserAction.CREATE])
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    return await this.usersService.create(createUserDto);
   }
 
+  /**
+   * Finds all users.
+   * @returns A list of all users.
+   */
   @ApiOperation({
-    summary: "Obtenir tous les utilisateurs",
-    description:
-      "Seul le SuperAdmin peut voir la liste complète des utilisateurs.",
+    summary: "Get all users",
+    description: "Only SuperAdmins can view the full list of users.",
   })
   @ApiResponse({
     status: 200,
-    description: "Liste des utilisateurs récupérée avec succès",
+    description: "User list retrieved successfully",
     type: [User],
   })
-  @ApiResponse({ status: 401, description: "Non autorisé" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Accès interdit - SuperAdmin requis",
+    description: "Forbidden - SuperAdmin access required",
   })
   @Get()
   @SuperAdminOnly()
   @UserPermissions([UserAction.VIEW])
-  findAll() {
-    return this.usersService.findAll();
+  async findAll() {
+    return await this.usersService.findAll();
   }
 
+  /**
+   * Gets user statistics.
+   * @returns An object with total users and a count by role.
+   */
   @ApiOperation({
-    summary: "Obtenir les statistiques des utilisateurs",
-    description:
-      "Récupère le nombre total d'utilisateurs et la répartition par rôle.",
+    summary: "Get user statistics",
+    description: "Retrieves the total number of users and the distribution by role.",
   })
   @ApiResponse({
     status: 200,
-    description: "Statistiques récupérées avec succès",
+    description: "Statistics retrieved successfully",
     schema: {
       type: "object",
       properties: {
@@ -87,72 +101,71 @@ export class UsersController {
           type: "object",
           example: {
             "super-admin": 1,
-            magasinier: 2,
-            vendeur: 2,
+            storekeeper: 2,
+            salesperson: 2,
           },
         },
       },
     },
   })
-  @ApiResponse({ status: 401, description: "Non autorisé" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Accès interdit - SuperAdmin requis",
+    description: "Forbidden - SuperAdmin access required",
   })
   @Get("stats")
   @SuperAdminOnly()
   @UserPermissions([UserAction.VIEW])
-  getStats() {
-    return this.usersService.getUserStats();
+  async getStats() {
+    return await this.usersService.getUserStats();
   }
 
-  @ApiOperation({
-    summary: "Obtenir un utilisateur par ID",
-    description: "Récupère les détails d'un utilisateur spécifique.",
-  })
+  /**
+   * Finds a single user by their ID.
+   * @param id - The ID of the user to find.
+   * @returns The user.
+   */
+  @ApiOperation({ summary: "Get a user by ID" })
   @ApiParam({
     name: "id",
-    description: "ID de l'utilisateur",
+    description: "User ID",
     example: "507f1f77bcf86cd799439011",
   })
-  @ApiResponse({
-    status: 200,
-    description: "Utilisateur trouvé",
-    type: User,
-  })
-  @ApiResponse({ status: 401, description: "Non autorisé" })
+  @ApiResponse({ status: 200, description: "User found", type: User })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Accès interdit - SuperAdmin requis",
+    description: "Forbidden - SuperAdmin access required",
   })
-  @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
+  @ApiResponse({ status: 404, description: "User not found" })
   @Get(":id")
   @SuperAdminOnly()
   @UserPermissions([UserAction.VIEW])
-  findOne(@Param("id") id: string) {
-    return this.usersService.findOne(id);
+  async findOne(@Param("id") id: string) {
+    return await this.usersService.findOne(id);
   }
 
-  @ApiOperation({
-    summary: "Supprimer un utilisateur",
-    description: "Seul le SuperAdmin peut supprimer des utilisateurs.",
-  })
+  /**
+   * Deletes a user by their ID.
+   * @param id - The ID of the user to delete.
+   */
+  @ApiOperation({ summary: "Delete a user" })
   @ApiParam({
     name: "id",
-    description: "ID de l'utilisateur à supprimer",
+    description: "ID of the user to delete",
     example: "507f1f77bcf86cd799439011",
   })
-  @ApiResponse({ status: 200, description: "Utilisateur supprimé avec succès" })
-  @ApiResponse({ status: 401, description: "Non autorisé" })
+  @ApiResponse({ status: 200, description: "User deleted successfully" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiResponse({
     status: 403,
-    description: "Accès interdit - SuperAdmin requis",
+    description: "Forbidden - SuperAdmin access required",
   })
-  @ApiResponse({ status: 404, description: "Utilisateur non trouvé" })
+  @ApiResponse({ status: 404, description: "User not found" })
   @Delete(":id")
   @SuperAdminOnly()
   @UserPermissions([UserAction.DELETE])
-  remove(@Param("id") id: string) {
-    return this.usersService.remove(id);
+  async remove(@Param("id") id: string) {
+    return await this.usersService.remove(id);
   }
 }

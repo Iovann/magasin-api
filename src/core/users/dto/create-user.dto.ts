@@ -8,9 +8,16 @@ import {
 import { ApiProperty } from "@nestjs/swagger";
 import { Role } from "../../../common/enum/role.enum";
 
+/**
+ * Data transfer object for creating a new user.
+ */
 export class CreateUserDto {
+  /**
+   * The unique email address of the user.
+   * @example "admin@gunshop.com"
+   */
   @ApiProperty({
-    description: "Adresse email unique de l'utilisateur",
+    description: "The unique email address of the user",
     example: "admin@gunshop.com",
     format: "email",
   })
@@ -18,8 +25,12 @@ export class CreateUserDto {
   @IsNotEmpty()
   email: string;
 
+  /**
+   * The user's password (minimum 8 characters).
+   * @example "SuperAdmin123!"
+   */
   @ApiProperty({
-    description: "Mot de passe de l'utilisateur (minimum 8 caractères)",
+    description: "The user's password (minimum 8 characters)",
     example: "SuperAdmin123!",
     minLength: 8,
     format: "password",
@@ -28,8 +39,12 @@ export class CreateUserDto {
   @MinLength(8, { message: "Password must be at least 8 characters long" })
   password: string;
 
+  /**
+   * The user's role in the system.
+   * @example "magasinier"
+   */
   @ApiProperty({
-    description: "Rôle de l'utilisateur dans le système",
+    description: "The user's role in the system",
     enum: Role,
     example: Role.Magasinier,
   })

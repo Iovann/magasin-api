@@ -1,25 +1,40 @@
 import { IsNotEmpty, IsString, IsInt, Min, IsNumber } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
+/**
+ * Data transfer object for creating a new product.
+ */
 export class CreateProductDto {
+  /**
+   * The name of the product.
+   * @example "Glock"
+   */
   @ApiProperty({
-    description: "Nom du produit",
+    description: "The name of the product",
     example: "Glock",
   })
   @IsNotEmpty()
   @IsString()
   name: string;
 
+  /**
+   * The model name of the product.
+   * @example "Glock 17"
+   */
   @ApiProperty({
-    description: "Nom du modèle du produit",
+    description: "The model name of the product",
     example: "Glock 17",
   })
   @IsNotEmpty()
   @IsString()
   modelName: string;
 
+  /**
+   * The quantity in stock.
+   * @example 5
+   */
   @ApiProperty({
-    description: "Quantité en stock",
+    description: "The quantity in stock",
     example: 5,
     minimum: 1,
     type: "integer",
@@ -29,8 +44,12 @@ export class CreateProductDto {
   @Min(1)
   quantity: number;
 
+  /**
+   * The price of the product.
+   * @example 29.99
+   */
   @ApiProperty({
-    description: "Prix du produit",
+    description: "The price of the product",
     example: 29.99,
     minimum: 0,
     type: "number",

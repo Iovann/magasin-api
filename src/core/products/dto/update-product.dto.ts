@@ -1,9 +1,16 @@
 import { IsNotEmpty, IsInt, Min, IsNumber, IsOptional } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
+/**
+ * Data transfer object for updating a product.
+ */
 export class UpdateProductDto {
+  /**
+   * The new quantity in stock.
+   * @example 10
+   */
   @ApiProperty({
-    description: "Nouvelle quantité en stock",
+    description: "The new quantity in stock",
     example: 10,
     minimum: 1,
     type: "integer",
@@ -13,8 +20,12 @@ export class UpdateProductDto {
   @Min(1)
   quantity: number;
 
+  /**
+   * The new price of the product.
+   * @example 39.99
+   */
   @ApiProperty({
-    description: "Nouveau prix du produit",
+    description: "The new price of the product",
     example: 39.99,
     minimum: 0,
     type: "number",

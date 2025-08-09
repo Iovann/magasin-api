@@ -9,7 +9,7 @@ import {
 } from "@nestjs/common";
 import { Product } from "../entities/product.entity";
 
-// Création d'un mock pour IProductRepository
+// Mock for IProductRepository
 const mockProductRepository = {
   create: jest.fn(),
   count: jest.fn(),
@@ -88,7 +88,7 @@ describe("ProductsService", () => {
 
       await expect(service.create(createProductDto)).rejects.toThrow(
         new ConflictException(
-          `Un produit avec le model ${createProductDto.modelName} existe déjà`,
+          `A product with the model ${createProductDto.modelName} already exists`,
         ),
       );
       expect(mockProductRepository.countByName).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe("ProductsService", () => {
 
       await expect(service.create(createProductDto)).rejects.toThrow(
         new ConflictException(
-          `Un produit avec le nom ${createProductDto.name} existe déjà`,
+          `A product with the name ${createProductDto.name} already exists`,
         ),
       );
       expect(mockProductRepository.create).not.toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe("ProductsService", () => {
       mockProductRepository.findById.mockResolvedValue(null);
 
       await expect(service.sellProduct(productId, 5)).rejects.toThrow(
-        new NotFoundException(`Produit avec l'ID ${productId} non trouvé`),
+        new NotFoundException(`Product with ID ${productId} not found`),
       );
       expect(mockProductRepository.update).not.toHaveBeenCalled();
     });
@@ -182,7 +182,7 @@ describe("ProductsService", () => {
 
       await expect(service.sellProduct(productId, 15)).rejects.toThrow(
         new BadRequestException(
-          `Quantité insuffisante en stock pour le produit ${product.name}. Stock actuel: ${product.quantity}`,
+          `Insufficient quantity in stock for product ${product.name}. Current stock: ${product.quantity}`,
         ),
       );
       expect(mockProductRepository.update).not.toHaveBeenCalled();
@@ -221,7 +221,7 @@ describe("ProductsService", () => {
       mockProductRepository.findById.mockResolvedValue(null);
 
       await expect(service.updateStock(productId, 5)).rejects.toThrow(
-        new NotFoundException(`Produit avec l'ID ${productId} non trouvé`),
+        new NotFoundException(`Product with ID ${productId} not found`),
       );
       expect(mockProductRepository.update).not.toHaveBeenCalled();
     });
@@ -230,7 +230,7 @@ describe("ProductsService", () => {
       mockProductRepository.findById.mockResolvedValue(product);
 
       await expect(service.updateStock(productId, -5)).rejects.toThrow(
-        new BadRequestException(`La quantité ne peut pas être négative`),
+        new BadRequestException(`Quantity cannot be negative`),
       );
       expect(mockProductRepository.update).not.toHaveBeenCalled();
     });

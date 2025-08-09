@@ -48,7 +48,7 @@ export class DatabaseModule {
             const dbName = configService.getOrThrow("DB_NAME");
 
             // Construire l'URI selon si on a des credentials ou pas
-            let uri;
+            let uri: string;
             if (dbUser && dbPassword) {
               uri = `mongodb://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?authSource=admin`;
             } else {

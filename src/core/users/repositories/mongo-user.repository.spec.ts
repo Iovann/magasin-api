@@ -6,7 +6,7 @@ import { MongoUser } from "../entities/mongo-user.entity";
 import { User } from "../entities/user.entity";
 import { Role } from "../../../common/enum/role.enum";
 
-// Mock de base pour un utilisateur
+// Base mock for a user
 const baseUser: User = {
   id: "507f1f77bcf86cd799439011",
   email: "test@example.com",
@@ -14,14 +14,14 @@ const baseUser: User = {
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
 };
 
-// Mock pour les données de création
+// Mock for creation data
 const createUserData = {
   email: "new@example.com",
   passwordHash: "hashedPassword456",
   role: Role.Magasinier,
 };
 
-// Mock du document retourné par Mongoose
+// Mock of the document returned by Mongoose
 const mockUserDoc = (user: Partial<User & { passwordHash?: string }>) => ({
   ...user,
   id: user.id || "mock-id",
@@ -30,12 +30,13 @@ const mockUserDoc = (user: Partial<User & { passwordHash?: string }>) => ({
   role: user.role,
   createdAt: user.createdAt || new Date(),
   passwordHash: user.passwordHash,
-  toObject: () => mockUserDoc(user), // Ajout de la méthode toObject
+  toObject: () => mockUserDoc(user), // Added the toObject method
 });
 
 describe("MongoUserRepository", () => {
   let repository: MongoUserRepository;
-  let userModel: any; // Le type est 'any' pour accommoder le mock
+  // The type is 'any' to accommodate the mock
+  let userModel: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -43,13 +44,13 @@ describe("MongoUserRepository", () => {
         MongoUserRepository,
         {
           provide: getModelToken(MongoUser.name),
-          // On simule le constructeur du modèle et ses méthodes statiques
+          // We mock the model's constructor and its static methods
           useValue: jest.fn().mockImplementation((data) => ({
             ...data,
             save: jest
               .fn()
               .mockResolvedValue(mockUserDoc({ ...data, id: "new-id" })),
-            toObject: () => data, // Ajout de la méthode toObject
+            toObject: () => data, // Added the toObject method
           })),
         },
       ],
@@ -58,7 +59,7 @@ describe("MongoUserRepository", () => {
     repository = module.get<MongoUserRepository>(MongoUserRepository);
     userModel = module.get<Model<MongoUser>>(getModelToken(MongoUser.name));
 
-    // On attache les mocks des méthodes statiques au constructeur simulé
+    // We attach the static method mocks to the mocked constructor
     userModel.findById = jest.fn();
     userModel.findOne = jest.fn();
     userModel.find = jest.fn();
@@ -73,9 +74,9 @@ describe("MongoUserRepository", () => {
     it("should create a new user and return the user entity", async () => {
       const result = await repository.create(createUserData);
 
-      // On vérifie que le constructeur a été appelé
+      // We check that the constructor was called
       expect(userModel).toHaveBeenCalledWith(createUserData);
-      // On vérifie que le résultat est conforme à l'entité User
+      // We check that the result conforms to the User entity
       expect(result.email).toBe(createUserData.email);
       expect(result.id).toBe("new-id");
     });

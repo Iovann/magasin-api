@@ -91,7 +91,7 @@ describe("UsersService", () => {
       // Act & Assert
       await expect(service.create(mockCreateUserDto)).rejects.toThrow(
         new ConflictException(
-          `Un utilisateur avec l'email ${mockCreateUserDto.email} existe déjà`,
+          `A user with the email ${mockCreateUserDto.email} already exists`,
         ),
       );
       expect(userRepository.findByEmail).toHaveBeenCalledWith(
@@ -161,7 +161,7 @@ describe("UsersService", () => {
 
       // Act & Assert
       await expect(service.findOne("999")).rejects.toThrow(
-        new NotFoundException(`Utilisateur avec l'ID 999 non trouvé`),
+        new NotFoundException(`User with ID 999 not found`),
       );
       expect(userRepository.findById).toHaveBeenCalledWith("999");
     });
@@ -217,7 +217,7 @@ describe("UsersService", () => {
 
       // Act & Assert
       await expect(service.remove("999")).rejects.toThrow(
-        new NotFoundException(`Utilisateur avec l'ID 999 non trouvé`),
+        new NotFoundException(`User with ID 999 not found`),
       );
       expect(userRepository.findById).toHaveBeenCalledWith("999");
       expect(userRepository.delete).not.toHaveBeenCalled();

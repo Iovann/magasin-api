@@ -1,9 +1,16 @@
 import { IsNotEmpty, IsInt, Min } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
+/**
+ * Data transfer object for selling a product.
+ */
 export class SellProductDto {
+  /**
+   * The quantity of the product to sell.
+   * @example 1
+   */
   @ApiProperty({
-    description: "Quantité de produit à vendre",
+    description: "The quantity of the product to sell",
     example: 1,
     minimum: 1,
     type: "integer",
