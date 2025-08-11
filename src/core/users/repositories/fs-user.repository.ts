@@ -38,9 +38,7 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     await fs.writeFile(this.dbPath, JSON.stringify(this.data, null, 2));
   }
 
-  async create(
-    user: Omit<User, "id" | "createdAt">,
-  ): Promise<User> {
+  async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
     // FS repository does not support transactions, session is ignored.
     const newUser: User = {
       id: randomUUID(),
@@ -52,15 +50,11 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     return newUser;
   }
 
-  async findById(
-    id: string,
-  ): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     return this.data.find((u) => u.id === id) || null;
   }
 
-  async findByEmail(
-    email: string,
-  ): Promise<User | null> {
+  async findByEmail(email: string): Promise<User | null> {
     return this.data.find((u) => u.email === email) || null;
   }
 
@@ -78,10 +72,7 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     return [...this.data];
   }
 
-  async update(
-    id: string,
-    userData: Partial<User>,
-  ): Promise<User | null> {
+  async update(id: string, userData: Partial<User>): Promise<User | null> {
     const userIndex = this.data.findIndex((u) => u.id === id);
     if (userIndex === -1) {
       return null;

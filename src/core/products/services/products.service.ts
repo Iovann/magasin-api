@@ -24,11 +24,12 @@ export class ProductsService {
    * @throws {ConflictException} If a product with the same model name or name already exists.
    */
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    this.logger.log({ message: "Attempting to create a new product", ...createProductDto,
+    this.logger.log({
+      message: "Attempting to create a new product",
+      ...createProductDto,
     });
-    const existingProductByModelName = await this.productRepository.countByModelName(
-      createProductDto.modelName,
-    );
+    const existingProductByModelName =
+      await this.productRepository.countByModelName(createProductDto.modelName);
     if (existingProductByModelName > 0) {
       throw this.errorHandlingService.returnErrorOnConflict(
         `[ERR_PROD_CREATE_MODEL_CONFLICT] Model ${createProductDto.modelName} already exists`,
@@ -36,19 +37,12 @@ export class ProductsService {
       );
     }
 
-    const existingProductByName = await this.productRepository.countByName(
-      createProductDto.name,
-    );
-    if (existingProductByName > 0) {
-      throw this.errorHandlingService.returnErrorOnConflict(
-        `[ERR_PROD_CREATE_NAME_CONFLICT] Name ${createProductDto.name} already exists`,
-        "A product with this name already exists",
-      );
-    }
-
     try {
       const product = await this.productRepository.create(createProductDto);
-      this.logger.log({ message: "Product created successfully", id: product.id });
+      this.logger.log({
+        message: "Product created successfully",
+        id: product.id,
+      });
       return product;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -126,7 +120,9 @@ export class ProductsService {
     this.logger.log({ message: `Fetching stock for model: ${modelName}` });
     try {
       const count = await this.productRepository.countByModelName(modelName);
-      this.logger.log({ message: `Stock count for model ${modelName}: ${count}` });
+      this.logger.log({
+        message: `Stock count for model ${modelName}: ${count}`,
+      });
       return { count };
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -169,10 +165,9 @@ export class ProductsService {
     }
 
     try {
-      const updatedProduct = await this.productRepository.update(
-        id,
-        { quantity: product.quantity - quantity },
-      );
+      const updatedProduct = await this.productRepository.update(id, {
+        quantity: product.quantity - quantity,
+      });
 
       if (!updatedProduct) {
         throw this.errorHandlingService.returnErrorOnNotFound(
@@ -181,7 +176,11 @@ export class ProductsService {
         );
       }
 
-      this.logger.log({ message: `Product ${id} sold successfully`, quantitySold: quantity, newStock: updatedProduct.quantity, });
+      this.logger.log({
+        message: `Product ${id} sold successfully`,
+        quantitySold: quantity,
+        newStock: updatedProduct.quantity,
+      });
       return updatedProduct;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -200,7 +199,10 @@ export class ProductsService {
    * @throws {BadRequestException} If the quantity is negative.
    */
   async updateStock(id: string, quantity: number): Promise<Product> {
-    this.logger.log({ message: `Attempting to update stock for product ${id}`, quantityToAdd: quantity, });
+    this.logger.log({
+      message: `Attempting to update stock for product ${id}`,
+      quantityToAdd: quantity,
+    });
     if (quantity < 0) {
       throw this.errorHandlingService.returnErrorOnBadRequest(
         `[ERR_PROD_UPDATE_NEGATIVE_QTY] Negative quantity: ${quantity}`,
@@ -218,16 +220,18 @@ export class ProductsService {
 
     try {
       const newQuantity = product.quantity + quantity;
-      const updatedProduct = await this.productRepository.update(
-        id,
-        { quantity: newQuantity },
-      );
+      const updatedProduct = await this.productRepository.update(id, {
+        quantity: newQuantity,
+      });
 
       if (!updatedProduct) {
         throw new Error("Failed to update product stock");
       }
 
-      this.logger.log({ message: `Stock for product ${id} updated successfully`, newStock: updatedProduct.quantity, });
+      this.logger.log({
+        message: `Stock for product ${id} updated successfully`,
+        newStock: updatedProduct.quantity,
+      });
       return updatedProduct;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -243,10 +247,14 @@ export class ProductsService {
    * @returns A list of products.
    */
   async getProductsByModelName(modelName: string): Promise<Product[]> {
-    this.logger.log({ message: `Fetching products by model name: ${modelName}` });
+    this.logger.log({
+      message: `Fetching products by model name: ${modelName}`,
+    });
     try {
       const products = await this.productRepository.findByModelName(modelName);
-      this.logger.log({ message: `Found ${products.length} products for model ${modelName}` });
+      this.logger.log({
+        message: `Found ${products.length} products for model ${modelName}`,
+      });
       return products;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -265,7 +273,9 @@ export class ProductsService {
     this.logger.log({ message: `Fetching products by name: ${name}` });
     try {
       const products = await this.productRepository.findByName(name);
-      this.logger.log({ message: `Found ${products.length} products for name ${name}` });
+      this.logger.log({
+        message: `Found ${products.length} products for name ${name}`,
+      });
       return products;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -283,7 +293,9 @@ export class ProductsService {
   async countProductsByModelName(
     modelName: string,
   ): Promise<{ count: number }> {
-    this.logger.log({ message: `Counting products by model name: ${modelName}` });
+    this.logger.log({
+      message: `Counting products by model name: ${modelName}`,
+    });
     try {
       const count = await this.productRepository.countByModelName(modelName);
       this.logger.log({ message: `Count for model ${modelName}: ${count}` });

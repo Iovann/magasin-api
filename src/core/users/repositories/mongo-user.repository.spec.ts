@@ -48,7 +48,9 @@ describe("MongoUserRepository", () => {
           provide: getModelToken(MongoUser.name),
           useValue: jest.fn().mockImplementation((data) => ({
             ...data,
-            save: jest.fn().mockResolvedValue(mockUserDoc({ ...data, id: "new-id" })),
+            save: jest
+              .fn()
+              .mockResolvedValue(mockUserDoc({ ...data, id: "new-id" })),
           })),
         },
       ],

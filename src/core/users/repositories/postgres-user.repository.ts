@@ -12,22 +12,16 @@ export class PostgresUserRepository implements IUserRepository {
     private readonly userRepository: Repository<PostgresUser>,
   ) {}
 
-  async create(
-    user: Omit<User, "id" | "createdAt">,
-  ): Promise<User> {
+  async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
     const newUser = this.userRepository.create(user);
     return this.userRepository.save(newUser);
   }
 
-  async findById(
-    id: string,
-  ): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     return this.userRepository.findOneBy({ id });
   }
 
-  async findByEmail(
-    email: string,
-  ): Promise<User | null> {
+  async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOneBy({ email });
   }
 
@@ -45,10 +39,7 @@ export class PostgresUserRepository implements IUserRepository {
     return this.userRepository.find();
   }
 
-  async update(
-    id: string,
-    userData: Partial<User>,
-  ): Promise<User | null> {
+  async update(id: string, userData: Partial<User>): Promise<User | null> {
     await this.userRepository.update(id, userData);
     return this.findById(id);
   }

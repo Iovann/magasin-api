@@ -5,7 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { UsersService } from "../../core/users/services/users.service";
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,

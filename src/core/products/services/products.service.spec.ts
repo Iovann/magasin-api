@@ -147,10 +147,9 @@ describe("ProductsService", () => {
         });
         const result = await service.sellProduct(productId, 5);
         expect(result.quantity).toBe(5);
-        expect(mockProductRepository.update).toHaveBeenCalledWith(
-          productId,
-          { quantity: 5 },
-        );
+        expect(mockProductRepository.update).toHaveBeenCalledWith(productId, {
+          quantity: 5,
+        });
       });
 
       it("should throw an internal server error if repository.findById fails", async () => {
@@ -179,10 +178,9 @@ describe("ProductsService", () => {
         });
         const result = await service.updateStock(productId, 20);
         expect(result.quantity).toBe(30);
-        expect(mockProductRepository.update).toHaveBeenCalledWith(
-          productId,
-          { quantity: 30 },
-        );
+        expect(mockProductRepository.update).toHaveBeenCalledWith(productId, {
+          quantity: 30,
+        });
       });
 
       it("should throw an internal server error if repository.findById fails", async () => {
@@ -200,9 +198,7 @@ describe("ProductsService", () => {
         } as Product);
         mockProductRepository.delete.mockResolvedValue(undefined);
         await service.remove(productId);
-        expect(mockProductRepository.delete).toHaveBeenCalledWith(
-          productId,
-        );
+        expect(mockProductRepository.delete).toHaveBeenCalledWith(productId);
       });
 
       it("should throw an internal server error if repository fails", async () => {
@@ -281,10 +277,9 @@ describe("ProductsService", () => {
         });
         const result = await service.sellProduct(productId, 5);
         expect(result.quantity).toBe(5);
-        expect(mockProductRepository.update).toHaveBeenCalledWith(
-          productId,
-          { quantity: 5 },
-        );
+        expect(mockProductRepository.update).toHaveBeenCalledWith(productId, {
+          quantity: 5,
+        });
       });
 
       it("should throw an internal server error if repository.findById fails", async () => {
@@ -313,10 +308,9 @@ describe("ProductsService", () => {
         });
         const result = await service.updateStock(productId, 20);
         expect(result.quantity).toBe(30);
-        expect(mockProductRepository.update).toHaveBeenCalledWith(
-          productId,
-          { quantity: 30 },
-        );
+        expect(mockProductRepository.update).toHaveBeenCalledWith(productId, {
+          quantity: 30,
+        });
       });
 
       it("should throw an internal server error if repository.findById fails", async () => {
@@ -334,9 +328,7 @@ describe("ProductsService", () => {
         } as Product);
         mockProductRepository.delete.mockResolvedValue(undefined);
         await service.remove(productId);
-        expect(mockProductRepository.delete).toHaveBeenCalledWith(
-          productId,
-        );
+        expect(mockProductRepository.delete).toHaveBeenCalledWith(productId);
       });
 
       it("should throw an internal server error if repository fails", async () => {

@@ -12,29 +12,19 @@ export class MongoUserRepository implements IUserRepository {
     private readonly userModel: Model<MongoUser>,
   ) {}
 
-  async create(
-    user: Omit<User, "id" | "createdAt">,
-  ): Promise<User> {
+  async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
     const newUser = new this.userModel(user);
     const savedUser = await newUser.save();
     return this.toUserEntity(savedUser);
   }
 
-  async findById(
-    id: string,
-  ): Promise<User | null> {
-    const user = await this.userModel
-      .findById(id)
-      .exec();
+  async findById(id: string): Promise<User | null> {
+    const user = await this.userModel.findById(id).exec();
     return user ? this.toUserEntity(user) : null;
   }
 
-  async findByEmail(
-    email: string,
-  ): Promise<User | null> {
-    const user = await this.userModel
-      .findOne({ email })
-      .exec();
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.userModel.findOne({ email }).exec();
     return user ? this.toUserEntity(user) : null;
   }
 
@@ -57,16 +47,11 @@ export class MongoUserRepository implements IUserRepository {
   }
 
   async findAll(): Promise<User[]> {
-    const users = await this.userModel
-      .find()
-      .exec();
+    const users = await this.userModel.find().exec();
     return users.map((user) => this.toUserEntity(user));
   }
 
-  async update(
-    id: string,
-    userData: Partial<User>,
-  ): Promise<User | null> {
+  async update(id: string, userData: Partial<User>): Promise<User | null> {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, userData, { new: true })
       .exec();
@@ -74,9 +59,7 @@ export class MongoUserRepository implements IUserRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.userModel
-      .findByIdAndDelete(id)
-      .exec();
+    await this.userModel.findByIdAndDelete(id).exec();
   }
 
   private toUserEntity(mongoUser: MongoUser): User {

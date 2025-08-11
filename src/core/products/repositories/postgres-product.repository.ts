@@ -13,16 +13,12 @@ export class PostgresProductRepository implements IProductRepository {
     private readonly productRepository: Repository<PostgresProduct>,
   ) {}
 
-  async create(
-    productDto: CreateProductDto,
-  ): Promise<Product> {
+  async create(productDto: CreateProductDto): Promise<Product> {
     const product = this.productRepository.create(productDto);
     return this.productRepository.save(product);
   }
 
-  async findById(
-    id: string,
-  ): Promise<Product | null> {
+  async findById(id: string): Promise<Product | null> {
     return this.productRepository.findOneBy({ id });
   }
 
@@ -38,15 +34,11 @@ export class PostgresProductRepository implements IProductRepository {
     return this.productRepository.count();
   }
 
-  async countByModelName(
-    modelName: string,
-  ): Promise<number> {
+  async countByModelName(modelName: string): Promise<number> {
     return this.productRepository.count({ where: { modelName } });
   }
 
-  async countByName(
-    name: string,
-  ): Promise<number> {
+  async countByName(name: string): Promise<number> {
     return this.productRepository.count({ where: { name } });
   }
 
@@ -62,15 +54,11 @@ export class PostgresProductRepository implements IProductRepository {
     return this.productRepository.save(product);
   }
 
-  async findByModelName(
-    modelName: string,
-  ): Promise<Product[]> {
+  async findByModelName(modelName: string): Promise<Product[]> {
     return this.productRepository.find({ where: { modelName } });
   }
 
-  async findByName(
-    name: string,
-  ): Promise<Product[]> {
+  async findByName(name: string): Promise<Product[]> {
     return this.productRepository.find({ where: { name } });
   }
 }

@@ -15,19 +15,13 @@ export class MongoProductRepository implements IProductRepository {
     private readonly productModel: Model<MongoProduct>,
   ) {}
 
-  async create(
-    productDto: CreateProductDto,
-  ): Promise<Product> {
+  async create(productDto: CreateProductDto): Promise<Product> {
     const newProduct = new this.productModel(productDto);
     return newProduct.save();
   }
 
-  async findById(
-    id: string,
-  ): Promise<Product | null> {
-    return this.productModel
-      .findById(id)
-      .exec();
+  async findById(id: string): Promise<Product | null> {
+    return this.productModel.findById(id).exec();
   }
 
   async findAll(): Promise<Product[]> {
@@ -35,40 +29,26 @@ export class MongoProductRepository implements IProductRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.productModel
-      .findByIdAndDelete(id)
-      .exec();
+    await this.productModel.findByIdAndDelete(id).exec();
   }
 
   async count(): Promise<number> {
-    return this.productModel
-      .countDocuments()
-      .exec();
+    return this.productModel.countDocuments().exec();
   }
 
-  async countByModelName(
-    modelName: string,
-  ): Promise<number> {
-    return this.productModel
-      .countDocuments({ modelName })
-      .exec();
+  async countByModelName(modelName: string): Promise<number> {
+    return this.productModel.countDocuments({ modelName }).exec();
   }
 
-  async countByName(
-    name: string,
-  ): Promise<number> {
-    return this.productModel
-      .countDocuments({ name })
-      .exec();
+  async countByName(name: string): Promise<number> {
+    return this.productModel.countDocuments({ name }).exec();
   }
 
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
   ): Promise<Product> {
-    const product = await this.productModel
-      .findById(id)
-      .exec();
+    const product = await this.productModel.findById(id).exec();
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
@@ -81,19 +61,11 @@ export class MongoProductRepository implements IProductRepository {
     return product.save();
   }
 
-  async findByModelName(
-    modelName: string,
-  ): Promise<Product[]> {
-    return this.productModel
-      .find({ modelName })
-      .exec();
+  async findByModelName(modelName: string): Promise<Product[]> {
+    return this.productModel.find({ modelName }).exec();
   }
 
-  async findByName(
-    name: string,
-  ): Promise<Product[]> {
-    return this.productModel
-      .find({ name })
-      .exec();
+  async findByName(name: string): Promise<Product[]> {
+    return this.productModel.find({ name }).exec();
   }
 }

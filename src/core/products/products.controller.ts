@@ -220,7 +220,8 @@ export class ProductsController {
   @Roles(Role.SuperAdmin, Role.Magasinier)
   @ApiOperation({
     summary: "Update product stock",
-    description: "Updates the stock quantity of a product. Accessible by SuperAdmins and Storekeepers.",
+    description:
+      "Updates the stock quantity of a product. Accessible by SuperAdmins and Storekeepers.",
   })
   @ApiParam({
     name: "id",
@@ -232,21 +233,28 @@ export class ProductsController {
     description: "The stock has been updated successfully.",
     type: Product,
   })
-  @ApiResponse({ status: 400, description: "Invalid data (e.g., negative quantity)." })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid data (e.g., negative quantity).",
+  })
   @ApiResponse({ status: 403, description: "Forbidden resource." })
   @ApiResponse({ status: 404, description: "Product not found." })
   async updateStock(
     @Param("id") id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return await this.productsService.updateStock(id, updateProductDto.quantity);
+    return await this.productsService.updateStock(
+      id,
+      updateProductDto.quantity,
+    );
   }
 
   @Post(":id/sell")
   @Roles(Role.Vendeur)
   @ApiOperation({
     summary: "Sell a product",
-    description: "Sells a specified quantity of a product. Accessible by Salespersons.",
+    description:
+      "Sells a specified quantity of a product. Accessible by Salespersons.",
   })
   @ApiParam({
     name: "id",

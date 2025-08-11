@@ -58,7 +58,8 @@ export class UsersController {
   @UserPermissions([UserAction.VIEW])
   @ApiOperation({
     summary: "Get all users",
-    description: "Retrieves a list of all users. Accessible only by SuperAdmins.",
+    description:
+      "Retrieves a list of all users. Accessible only by SuperAdmins.",
   })
   @ApiResponse({
     status: 200,
@@ -88,7 +89,7 @@ export class UsersController {
         total: { type: "number", example: 10 },
         byRole: {
           type: "object",
-          example: { "super-admin": 1, "storekeeper": 4, "salesperson": 5 },
+          example: { "super-admin": 1, storekeeper: 4, salesperson: 5 },
         },
       },
     },
@@ -104,7 +105,8 @@ export class UsersController {
   @UserPermissions([UserAction.VIEW])
   @ApiOperation({
     summary: "Get a user by ID",
-    description: "Retrieves a single user by their unique ID. Accessible only by SuperAdmins.",
+    description:
+      "Retrieves a single user by their unique ID. Accessible only by SuperAdmins.",
   })
   @ApiParam({
     name: "id",
@@ -130,7 +132,8 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: "Delete a user by ID",
-    description: "Deletes a user by their unique ID. Accessible only by SuperAdmins.",
+    description:
+      "Deletes a user by their unique ID. Accessible only by SuperAdmins.",
   })
   @ApiParam({
     name: "id",
@@ -138,7 +141,10 @@ export class UsersController {
     type: "string",
     example: "a-valid-uuid-or-id",
   })
-  @ApiResponse({ status: 204, description: "The user has been deleted successfully." })
+  @ApiResponse({
+    status: 204,
+    description: "The user has been deleted successfully.",
+  })
   @ApiResponse({ status: 401, description: "Unauthorized." })
   @ApiResponse({ status: 403, description: "Forbidden resource." })
   @ApiResponse({ status: 404, description: "User not found." })

@@ -1,19 +1,19 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { User } from '../core/users/entities/user.entity';
-import { Role } from '../common/enum/role.enum';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+import { LocalAuthGuard } from "./guards/local-auth.guard";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
+import { User } from "../core/users/entities/user.entity";
+import { Role } from "../common/enum/role.enum";
 
-describe('AuthController', () => {
+describe("AuthController", () => {
   let controller: AuthController;
   let authService: jest.Mocked<AuthService>;
 
   const mockUser: User = {
-    id: '1',
-    email: 'test@example.com',
+    id: "1",
+    email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date(),
   };
@@ -44,9 +44,9 @@ describe('AuthController', () => {
     authService = module.get(AuthService);
   });
 
-  describe('login', () => {
-    it('should return tokens when login is successful', async () => {
-      const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+  describe("login", () => {
+    it("should return tokens when login is successful", async () => {
+      const tokens = { accessToken: "access", refreshToken: "refresh" };
       authService.login.mockResolvedValue(tokens);
       const req = { user: mockUser };
 
@@ -57,24 +57,28 @@ describe('AuthController', () => {
     });
   });
 
-  describe('logout', () => {
-    it('should call authService.logout with the userId', async () => {
+  describe("logout", () => {
+    it("should call authService.logout with the userId", async () => {
       const req = { user: mockUser };
       await controller.logout(req as any);
       expect(authService.logout).toHaveBeenCalledWith(mockUser.id);
     });
   });
 
-  describe('refresh', () => {
-    it('should return new tokens', async () => {
-      const tokens = { accessToken: 'new-access', refreshToken: 'new-refresh' };
-      const userWithRefreshToken = { ...mockUser, refreshToken: 'refresh' };
+  describe("refresh", () => {
+    it("should return new tokens", async () => {
+      const tokens = { accessToken: "new-access", refreshToken: "new-refresh" };
+      const userWithRefreshToken = { ...mockUser, refreshToken: "refresh" };
       authService.getTokens.mockResolvedValue(tokens);
       const req = { user: userWithRefreshToken };
 
       const result = await controller.refresh(req as any);
 
-      expect(authService.getTokens).toHaveBeenCalledWith(mockUser.id, mockUser.email, mockUser.role);
+      expect(authService.getTokens).toHaveBeenCalledWith(
+        mockUser.id,
+        mockUser.email,
+        mockUser.role,
+      );
       expect(result).toEqual(tokens);
     });
   });

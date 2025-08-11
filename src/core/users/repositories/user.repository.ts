@@ -10,9 +10,7 @@ export abstract class IUserRepository {
    * @param user - The user data to create, without id and createdAt.
    * @returns The created user.
    */
-  abstract create(
-    user: Omit<User, "id" | "createdAt">,
-  ): Promise<User>;
+  abstract create(user: Omit<User, "id" | "createdAt">): Promise<User>;
 
   /**
    * Finds a user by their ID.
@@ -26,9 +24,7 @@ export abstract class IUserRepository {
    * @param email - The email of the user.
    * @returns The user or null if not found.
    */
-  abstract findByEmail(
-    email: string,
-  ): Promise<User | null>;
+  abstract findByEmail(email: string): Promise<User | null>;
 
   /**
    * Finds a user by email and returns the user object including the password hash.
@@ -51,10 +47,7 @@ export abstract class IUserRepository {
    * @param userData - The data to update.
    * @returns The updated user or null if not found.
    */
-  abstract update(
-    id: string,
-    userData: Partial<User>,
-  ): Promise<User | null>;
+  abstract update(id: string, userData: Partial<User>): Promise<User | null>;
 
   /**
    * Deletes a user by their ID.

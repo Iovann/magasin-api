@@ -1,4 +1,11 @@
-import { Controller, Post, UseGuards, Req, HttpCode, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
+} from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
@@ -16,7 +23,10 @@ export class AuthController {
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Log in a user" })
-  @ApiResponse({ status: 200, description: "Returns the access and refresh tokens." })
+  @ApiResponse({
+    status: 200,
+    description: "Returns the access and refresh tokens.",
+  })
   @ApiResponse({ status: 401, description: "Unauthorized." })
   async login(@Req() req: Request) {
     return this.authService.login(req.user as User);
