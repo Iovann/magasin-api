@@ -1,6 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getModelToken } from "@nestjs/mongoose";
-import { Model } from "mongoose";
 import { MongoProductRepository } from "./mongo-product.repository";
 import { MongoProduct } from "../entities/mongo-product.entity";
 import { CreateProductDto } from "../dto/create-product.dto";

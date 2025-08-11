@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { EntityManager, Repository } from "typeorm";
-import { IUserRepository, TransactionalSession } from "./user.repository";
+import { Repository } from "typeorm";
+import { IUserRepository } from "./user.repository";
 import { PostgresUser } from "../entities/postgres-user.entity";
 import { User } from "../entities/user.entity";
 
@@ -12,44 +12,48 @@ export class PostgresUserRepository implements IUserRepository {
     private readonly userRepository: Repository<PostgresUser>,
   ) {}
 
-  private getRepository(session?: TransactionalSession): Repository<PostgresUser> {
-    return session
-      ? (session as EntityManager).getRepository(PostgresUser)
-      : this.userRepository;
-  }
-
   async create(
     user: Omit<User, "id" | "createdAt">,
-    session?: TransactionalSession,
   ): Promise<User> {
-    const repo = this.getRepository(session);
-    const newUser = repo.create(user);
-    return repo.save(newUser);
+    const newUser = this.userRepository.create(user);
+    return this.userRepository.save(newUser);
   }
 
   async findById(
     id: string,
-    session?: TransactionalSession,
   ): Promise<User | null> {
-    const repo = this.getRepository(session);
-    return repo.findOneBy({ id });
+    return this.userRepository.findOneBy({ id });
   }
 
   async findByEmail(
     email: string,
-    session?: TransactionalSession,
   ): Promise<User | null> {
-    const repo = this.getRepository(session);
-    return repo.findOneBy({ email });
+    return this.userRepository.findOneBy({ email });
   }
 
-  async findAll(session?: TransactionalSession): Promise<User[]> {
-    const repo = this.getRepository(session);
-    return repo.find();
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<(User & { passwordHash: string }) | null> {
+    return this.userRepository
+      .createQueryBuilder("user")
+      .addSelect("user.passwordHash")
+      .where("user.email = :email", { email })
+      .getOne();
   }
 
-  async delete(id: string, session?: TransactionalSession): Promise<void> {
-    const repo = this.getRepository(session);
-    await repo.delete(id);
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find();
+  }
+
+  async update(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<User | null> {
+    await this.userRepository.update(id, userData);
+    return this.findById(id);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.userRepository.delete(id);
   }
 }

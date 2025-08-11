@@ -11,8 +11,6 @@ import { Role } from "../../../common/enum/role.enum";
 import { User } from "../entities/user.entity";
 import * as bcrypt from "bcrypt";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
-import { DataSource } from "typeorm";
-import { getConnectionToken } from "@nestjs/mongoose";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 jest.mock("bcrypt");
@@ -33,30 +31,6 @@ const mockErrorHandlingService = {
   returnErrorOnInternalServerError: jest.fn(
     (log, msg) => new InternalServerErrorException(msg),
   ),
-};
-
-const mockQueryRunner = {
-  connect: jest.fn(),
-  startTransaction: jest.fn(),
-  commitTransaction: jest.fn(),
-  rollbackTransaction: jest.fn(),
-  release: jest.fn(),
-  manager: {},
-};
-
-const mockDataSource = {
-  createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
-};
-
-const mockMongooseSession = {
-  startTransaction: jest.fn(),
-  commitTransaction: jest.fn(),
-  abortTransaction: jest.fn(),
-  endSession: jest.fn(),
-};
-
-const mockMongooseConnection = {
-  startSession: jest.fn().mockResolvedValue(mockMongooseSession),
 };
 
 const mockLogger = {
@@ -93,14 +67,6 @@ describe("UsersService", () => {
           useValue: mockErrorHandlingService,
         },
         {
-          provide: DataSource,
-          useValue: mockDataSource,
-        },
-        {
-          provide: getConnectionToken(),
-          useValue: mockMongooseConnection,
-        },
-        {
           provide: WINSTON_MODULE_PROVIDER,
           useValue: mockLogger,
         },
@@ -125,20 +91,16 @@ describe("UsersService", () => {
 
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
         mockCreateUserDto.email,
-        undefined, // No session for FS repo
       );
       expect(mockedBcrypt.hash).toHaveBeenCalledWith(
         mockCreateUserDto.password,
         10,
       );
-      expect(mockUserRepository.create).toHaveBeenCalledWith(
-        {
-          email: mockCreateUserDto.email,
-          passwordHash: "hashedPassword123",
-          role: mockCreateUserDto.role,
-        },
-        undefined,
-      );
+      expect(mockUserRepository.create).toHaveBeenCalledWith({
+        email: mockCreateUserDto.email,
+        passwordHash: "hashedPassword123",
+        role: mockCreateUserDto.role,
+      });
       expect(result).toEqual(mockUser);
     });
 
@@ -199,7 +161,7 @@ describe("UsersService", () => {
 
       await service.remove("1");
 
-      expect(mockUserRepository.delete).toHaveBeenCalledWith("1", undefined);
+      expect(mockUserRepository.delete).toHaveBeenCalledWith("1");
     });
 
     it("should throw NotFoundException when trying to remove non-existent user", async () => {
@@ -207,56 +169,6 @@ describe("UsersService", () => {
 
       await expect(service.remove("999")).rejects.toThrow(NotFoundException);
       expect(mockErrorHandlingService.returnErrorOnNotFound).toHaveBeenCalled();
-    });
-  });
-
-  describe("with PostgresUserRepository", () => {
-    beforeEach(() => {
-      mockUserRepository.constructor.name = "PostgresUserRepository";
-    });
-
-    it("should commit transaction on successful user creation", async () => {
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-      mockUserRepository.create.mockResolvedValue(mockUser);
-
-      await service.create(mockCreateUserDto);
-
-      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-      expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
-    });
-
-    it("should rollback transaction on failed user creation", async () => {
-      mockUserRepository.findByEmail.mockRejectedValue(new Error("DB Error"));
-
-      await expect(service.create(mockCreateUserDto)).rejects.toThrow();
-
-      expect(mockQueryRunner.commitTransaction).not.toHaveBeenCalled();
-      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-    });
-  });
-
-  describe("with MongoUserRepository", () => {
-    beforeEach(() => {
-      mockUserRepository.constructor.name = "MongoUserRepository";
-    });
-
-    it("should commit transaction on successful user creation", async () => {
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-      mockUserRepository.create.mockResolvedValue(mockUser);
-
-      await service.create(mockCreateUserDto);
-
-      expect(mockMongooseSession.commitTransaction).toHaveBeenCalled();
-      expect(mockMongooseSession.abortTransaction).not.toHaveBeenCalled();
-    });
-
-    it("should rollback transaction on failed user creation", async () => {
-      mockUserRepository.findByEmail.mockRejectedValue(new Error("DB Error"));
-
-      await expect(service.create(mockCreateUserDto)).rejects.toThrow();
-
-      expect(mockMongooseSession.commitTransaction).not.toHaveBeenCalled();
-      expect(mockMongooseSession.abortTransaction).toHaveBeenCalled();
     });
   });
 });

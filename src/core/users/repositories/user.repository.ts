@@ -1,8 +1,4 @@
 import { User } from "../entities/user.entity";
-import { ClientSession } from "mongoose";
-import { EntityManager } from "typeorm";
-
-export type TransactionalSession = ClientSession | EntityManager;
 
 /**
  * Abstract repository for user data access.
@@ -12,44 +8,57 @@ export abstract class IUserRepository {
   /**
    * Creates a new user.
    * @param user - The user data to create, without id and createdAt.
-   * @param session - The transactional session (optional).
    * @returns The created user.
    */
   abstract create(
     user: Omit<User, "id" | "createdAt">,
-    session?: TransactionalSession,
   ): Promise<User>;
 
   /**
    * Finds a user by their ID.
    * @param id - The ID of the user.
-   * @param session - The transactional session (optional).
    * @returns The user or null if not found.
    */
-  abstract findById(id: string, session?: TransactionalSession): Promise<User | null>;
+  abstract findById(id: string): Promise<User | null>;
 
   /**
    * Finds a user by their email address.
    * @param email - The email of the user.
-   * @param session - The transactional session (optional).
    * @returns The user or null if not found.
    */
   abstract findByEmail(
     email: string,
-    session?: TransactionalSession,
   ): Promise<User | null>;
 
   /**
+   * Finds a user by email and returns the user object including the password hash.
+   * @param email - The email of the user.
+   * @returns The user with password hash or null if not found.
+   */
+  abstract findByEmailWithPassword(
+    email: string,
+  ): Promise<(User & { passwordHash: string }) | null>;
+
+  /**
    * Finds all users.
-   * @param session - The transactional session (optional).
    * @returns A list of all users.
    */
-  abstract findAll(session?: TransactionalSession): Promise<User[]>;
+  abstract findAll(): Promise<User[]>;
+
+  /**
+   * Updates a user.
+   * @param id - The ID of the user to update.
+   * @param userData - The data to update.
+   * @returns The updated user or null if not found.
+   */
+  abstract update(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<User | null>;
 
   /**
    * Deletes a user by their ID.
    * @param id - The ID of the user to delete.
-   * @param session - The transactional session (optional).
    */
-  abstract delete(id: string, session?: TransactionalSession): Promise<void>;
+  abstract delete(id: string): Promise<void>;
 }

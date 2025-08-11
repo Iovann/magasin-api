@@ -37,6 +37,12 @@ export class User {
   })
   passwordHash?: string;
 
+  @ApiPropertyOptional({
+    description: "The user's refresh token (never returned in responses)",
+    writeOnly: true,
+  })
+  refreshToken?: string;
+
   /**
    * The user's role.
    * @example "magasinier"

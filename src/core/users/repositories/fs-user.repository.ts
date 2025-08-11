@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { randomUUID } from "crypto";
-import { IUserRepository, TransactionalSession } from "./user.repository";
+import { IUserRepository } from "./user.repository";
 import { User } from "../entities/user.entity";
 import { DatabaseConfig } from "../../../config/database.config";
 
@@ -40,7 +40,6 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
 
   async create(
     user: Omit<User, "id" | "createdAt">,
-    session?: TransactionalSession,
   ): Promise<User> {
     // FS repository does not support transactions, session is ignored.
     const newUser: User = {
@@ -55,23 +54,44 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
 
   async findById(
     id: string,
-    session?: TransactionalSession,
   ): Promise<User | null> {
     return this.data.find((u) => u.id === id) || null;
   }
 
   async findByEmail(
     email: string,
-    session?: TransactionalSession,
   ): Promise<User | null> {
     return this.data.find((u) => u.email === email) || null;
   }
 
-  async findAll(session?: TransactionalSession): Promise<User[]> {
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<(User & { passwordHash: string }) | null> {
+    const user = this.data.find((u) => u.email === email);
+    if (user && user.passwordHash) {
+      return user as User & { passwordHash: string };
+    }
+    return null;
+  }
+
+  async findAll(): Promise<User[]> {
     return [...this.data];
   }
 
-  async delete(id: string, session?: TransactionalSession): Promise<void> {
+  async update(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<User | null> {
+    const userIndex = this.data.findIndex((u) => u.id === id);
+    if (userIndex === -1) {
+      return null;
+    }
+    this.data[userIndex] = { ...this.data[userIndex], ...userData };
+    await this.persist();
+    return this.data[userIndex];
+  }
+
+  async delete(id: string): Promise<void> {
     const initialLength = this.data.length;
     this.data = this.data.filter((u) => u.id !== id);
     if (this.data.length < initialLength) {

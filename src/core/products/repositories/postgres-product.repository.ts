@@ -1,11 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, EntityManager } from "typeorm";
-import { IProductRepository, TransactionalManager } from "./product.repository";
+import { Repository } from "typeorm";
+import { IProductRepository } from "./product.repository";
 import { PostgresProduct } from "../entities/postgres-product.entity";
 import { CreateProductDto } from "../dto/create-product.dto";
 import { Product } from "../entities/product.entity";
-import { UpdateProductDto } from "../dto/update-product.dto";
 
 @Injectable()
 export class PostgresProductRepository implements IProductRepository {
@@ -14,90 +13,64 @@ export class PostgresProductRepository implements IProductRepository {
     private readonly productRepository: Repository<PostgresProduct>,
   ) {}
 
-  private getManager(
-    session?: TransactionalManager,
-  ): Repository<PostgresProduct> {
-    if (session && session instanceof EntityManager) {
-      return session.getRepository(PostgresProduct);
-    }
-    return this.productRepository;
-  }
-
   async create(
     productDto: CreateProductDto,
-    session?: TransactionalManager,
   ): Promise<Product> {
-    const manager = this.getManager(session);
-    const product = manager.create(productDto);
-    return manager.save(product);
+    const product = this.productRepository.create(productDto);
+    return this.productRepository.save(product);
   }
 
   async findById(
     id: string,
-    session?: TransactionalManager,
   ): Promise<Product | null> {
-    const manager = this.getManager(session);
-    return manager.findOneBy({ id });
+    return this.productRepository.findOneBy({ id });
   }
 
-  async findAll(session?: TransactionalManager): Promise<Product[]> {
-    const manager = this.getManager(session);
-    return manager.find();
+  async findAll(): Promise<Product[]> {
+    return this.productRepository.find();
   }
 
-  async delete(id: string, session?: TransactionalManager): Promise<void> {
-    const manager = this.getManager(session);
-    await manager.delete(id);
+  async delete(id: string): Promise<void> {
+    await this.productRepository.delete(id);
   }
 
-  async count(session?: TransactionalManager): Promise<number> {
-    const manager = this.getManager(session);
-    return manager.count();
+  async count(): Promise<number> {
+    return this.productRepository.count();
   }
 
   async countByModelName(
     modelName: string,
-    session?: TransactionalManager,
   ): Promise<number> {
-    const manager = this.getManager(session);
-    return manager.count({ where: { modelName } });
+    return this.productRepository.count({ where: { modelName } });
   }
 
   async countByName(
     name: string,
-    session?: TransactionalManager,
   ): Promise<number> {
-    const manager = this.getManager(session);
-    return manager.count({ where: { name } });
+    return this.productRepository.count({ where: { name } });
   }
 
   async update(
     id: string,
-    updateData: UpdateProductDto,
-    session?: TransactionalManager,
+    updateData: Partial<Product>,
   ): Promise<Product | null> {
-    const manager = this.getManager(session);
-    const product = await manager.findOneBy({ id });
+    const product = await this.productRepository.findOneBy({ id });
     if (!product) {
       return null;
     }
     Object.assign(product, updateData);
-    return manager.save(product);
+    return this.productRepository.save(product);
   }
 
   async findByModelName(
     modelName: string,
-    session?: TransactionalManager,
   ): Promise<Product[]> {
-    const manager = this.getManager(session);
-    return manager.find({ where: { modelName } });
+    return this.productRepository.find({ where: { modelName } });
   }
 
   async findByName(
     name: string,
-    session?: TransactionalManager,
   ): Promise<Product[]> {
-    const manager = this.getManager(session);
-    return manager.find({ where: { name } });
+    return this.productRepository.find({ where: { name } });
   }
 }

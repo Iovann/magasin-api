@@ -3,15 +3,7 @@ import { CreateProductDto } from "../dto/create-product.dto";
 import { IProductRepository } from "../repositories/product.repository";
 import { Product } from "../entities/product.entity";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
-import { DataSource, EntityManager } from "typeorm";
-import { Connection, ClientSession } from "mongoose";
-import { InjectConnection } from "@nestjs/mongoose";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-
-type TransactionalOperation<T> = (
-  repo: IProductRepository,
-  session?: ClientSession | EntityManager,
-) => Promise<T>;
 
 /**
  * Service for handling product-related operations.
@@ -23,59 +15,7 @@ export class ProductsService {
     @Inject(IProductRepository)
     private readonly productRepository: IProductRepository,
     private readonly errorHandlingService: ErrorHandlingService,
-    private readonly dataSource: DataSource,
-    @InjectConnection() private readonly mongooseConnection: Connection,
   ) {}
-
-  private async withTransaction<T>(
-    operation: TransactionalOperation<T>,
-  ): Promise<T> {
-    const repoName = this.productRepository.constructor.name;
-    this.logger.log(`Starting transaction with ${repoName}`);
-
-    if (repoName === "PostgresProductRepository") {
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-      this.logger.log("Postgres transaction started");
-      try {
-        const result = await operation(
-          this.productRepository,
-          queryRunner.manager,
-        );
-        await queryRunner.commitTransaction();
-        this.logger.log("Postgres transaction committed");
-        return result;
-      } catch (error) {
-        this.logger.error("Rolling back Postgres transaction", { error });
-        await queryRunner.rollbackTransaction();
-        throw error;
-      } finally {
-        await queryRunner.release();
-      }
-    } else if (repoName === "MongoProductRepository") {
-      const session = await this.mongooseConnection.startSession();
-      session.startTransaction();
-      this.logger.log("Mongo transaction started");
-      try {
-        const result = await operation(this.productRepository, session);
-        await session.commitTransaction();
-        this.logger.log("Mongo transaction committed");
-        return result;
-      } catch (error) {
-        this.logger.error("Aborting Mongo transaction", { error });
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        session.endSession();
-      }
-    } else {
-      this.logger.log(
-        `Executing operation without transaction for ${repoName}`,
-      );
-      return operation(this.productRepository);
-    }
-  }
 
   /**
    * Creates a new product.
@@ -84,43 +24,38 @@ export class ProductsService {
    * @throws {ConflictException} If a product with the same model name or name already exists.
    */
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    this.logger.log("Attempting to create a new product", {
-      ...createProductDto,
+    this.logger.log({ message: "Attempting to create a new product", ...createProductDto,
     });
-    return this.withTransaction(async (repo, session) => {
-      const existingProductByModelName = await repo.countByModelName(
-        createProductDto.modelName,
-        session,
+    const existingProductByModelName = await this.productRepository.countByModelName(
+      createProductDto.modelName,
+    );
+    if (existingProductByModelName > 0) {
+      throw this.errorHandlingService.returnErrorOnConflict(
+        `[ERR_PROD_CREATE_MODEL_CONFLICT] Model ${createProductDto.modelName} already exists`,
+        "A product with this model already exists",
       );
-      if (existingProductByModelName > 0) {
-        throw this.errorHandlingService.returnErrorOnConflict(
-          `[ERR_PROD_CREATE_MODEL_CONFLICT] Model ${createProductDto.modelName} already exists`,
-          "A product with this model already exists",
-        );
-      }
+    }
 
-      const existingProductByName = await repo.countByName(
-        createProductDto.name,
-        session,
+    const existingProductByName = await this.productRepository.countByName(
+      createProductDto.name,
+    );
+    if (existingProductByName > 0) {
+      throw this.errorHandlingService.returnErrorOnConflict(
+        `[ERR_PROD_CREATE_NAME_CONFLICT] Name ${createProductDto.name} already exists`,
+        "A product with this name already exists",
       );
-      if (existingProductByName > 0) {
-        throw this.errorHandlingService.returnErrorOnConflict(
-          `[ERR_PROD_CREATE_NAME_CONFLICT] Name ${createProductDto.name} already exists`,
-          "A product with this name already exists",
-        );
-      }
+    }
 
-      try {
-        const product = await repo.create(createProductDto, session);
-        this.logger.log("Product created successfully", { id: product.id });
-        return product;
-      } catch (error) {
-        throw this.errorHandlingService.returnErrorOnInternalServerError(
-          `[ERR_PROD_CREATE_CRITICAL] Critical error: ${error.message}`,
-          "Failed to create product",
-        );
-      }
-    });
+    try {
+      const product = await this.productRepository.create(createProductDto);
+      this.logger.log({ message: "Product created successfully", id: product.id });
+      return product;
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_PROD_CREATE_CRITICAL] Critical error: ${error.message}`,
+        "Failed to create product",
+      );
+    }
   }
 
   /**
@@ -128,10 +63,10 @@ export class ProductsService {
    * @returns The total number of products.
    */
   async getTotalStock(): Promise<{ count: number }> {
-    this.logger.log("Fetching total product stock");
+    this.logger.log({ message: "Fetching total product stock" });
     try {
       const count = await this.productRepository.count();
-      this.logger.log(`Total stock count: ${count}`);
+      this.logger.log({ message: `Total stock count: ${count}` });
       return { count };
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -146,10 +81,10 @@ export class ProductsService {
    * @returns A list of all products.
    */
   async getAllProducts(): Promise<Product[]> {
-    this.logger.log("Fetching all products");
+    this.logger.log({ message: "Fetching all products" });
     try {
       const products = await this.productRepository.findAll();
-      this.logger.log(`Found ${products.length} products`);
+      this.logger.log({ message: `Found ${products.length} products` });
       return products;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -165,13 +100,13 @@ export class ProductsService {
    * @returns The product or null if not found.
    */
   async getProductById(id: string): Promise<Product | null> {
-    this.logger.log(`Fetching product by ID: ${id}`);
+    this.logger.log({ message: `Fetching product by ID: ${id}` });
     try {
       const product = await this.productRepository.findById(id);
       if (product) {
-        this.logger.log(`Found product with ID ${id}`, { product });
+        this.logger.log({ message: `Found product with ID ${id}`, product });
       } else {
-        this.logger.log(`Product with ID ${id} not found`);
+        this.logger.log({ message: `Product with ID ${id} not found` });
       }
       return product;
     } catch (error) {
@@ -188,10 +123,10 @@ export class ProductsService {
    * @returns The number of products for the given model name.
    */
   async getStockByModel(modelName: string): Promise<{ count: number }> {
-    this.logger.log(`Fetching stock for model: ${modelName}`);
+    this.logger.log({ message: `Fetching stock for model: ${modelName}` });
     try {
       const count = await this.productRepository.countByModelName(modelName);
-      this.logger.log(`Stock count for model ${modelName}: ${count}`);
+      this.logger.log({ message: `Stock count for model ${modelName}: ${count}` });
       return { count };
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -210,56 +145,50 @@ export class ProductsService {
    * @throws {BadRequestException} If the requested quantity is larger than the stock.
    */
   async sellProduct(id: string, quantity: number): Promise<Product> {
-    this.logger.log(`Attempting to sell product ${id}`, { quantity });
-    return this.withTransaction(async (repo, session) => {
-      if (quantity <= 0) {
-        throw this.errorHandlingService.returnErrorOnBadRequest(
-          `[ERR_PROD_SELL_INVALID_QTY] Invalid quantity: ${quantity}`,
-          "The quantity must be positive",
-        );
-      }
+    this.logger.log({ message: `Attempting to sell product ${id}`, quantity });
+    if (quantity <= 0) {
+      throw this.errorHandlingService.returnErrorOnBadRequest(
+        `[ERR_PROD_SELL_INVALID_QTY] Invalid quantity: ${quantity}`,
+        "The quantity must be positive",
+      );
+    }
 
-      const product = await repo.findById(id, session);
-      if (!product) {
+    const product = await this.productRepository.findById(id);
+    if (!product) {
+      throw this.errorHandlingService.returnErrorOnNotFound(
+        `[ERR_PROD_SELL_NOT_FOUND] Product ${id} not found`,
+        "Product not found",
+      );
+    }
+
+    if (product.quantity < quantity) {
+      throw this.errorHandlingService.returnErrorOnBadRequest(
+        `[ERR_PROD_SELL_INSUFFICIENT_STOCK] Insufficient stock for ${product.name}`,
+        `Insufficient stock for ${product.name}. Available quantity: ${product.quantity}`,
+      );
+    }
+
+    try {
+      const updatedProduct = await this.productRepository.update(
+        id,
+        { quantity: product.quantity - quantity },
+      );
+
+      if (!updatedProduct) {
         throw this.errorHandlingService.returnErrorOnNotFound(
-          `[ERR_PROD_SELL_NOT_FOUND] Product ${id} not found`,
-          "Product not found",
+          `[ERR_PROD_UPDATE_FAILED] Failed to update product ${id}`,
+          "Failed to update product",
         );
       }
 
-      if (product.quantity < quantity) {
-        throw this.errorHandlingService.returnErrorOnBadRequest(
-          `[ERR_PROD_SELL_INSUFFICIENT_STOCK] Insufficient stock for ${product.name}`,
-          `Insufficient stock for ${product.name}. Available quantity: ${product.quantity}`,
-        );
-      }
-
-      try {
-        const updatedProduct = await repo.update(
-          id,
-          { quantity: product.quantity - quantity },
-          session,
-        );
-
-        if (!updatedProduct) {
-          throw this.errorHandlingService.returnErrorOnNotFound(
-            `[ERR_PROD_UPDATE_FAILED] Failed to update product ${id}`,
-            "Failed to update product",
-          );
-        }
-
-        this.logger.log(`Product ${id} sold successfully`, {
-          quantitySold: quantity,
-          newStock: updatedProduct.quantity,
-        });
-        return updatedProduct;
-      } catch (error) {
-        throw this.errorHandlingService.returnErrorOnInternalServerError(
-          `[ERR_PROD_SELL_CRITICAL] Critical error during sale: ${error.message}`,
-          "An error occurred while processing the sale",
-        );
-      }
-    });
+      this.logger.log({ message: `Product ${id} sold successfully`, quantitySold: quantity, newStock: updatedProduct.quantity, });
+      return updatedProduct;
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_PROD_SELL_CRITICAL] Critical error during sale: ${error.message}`,
+        "An error occurred while processing the sale",
+      );
+    }
   }
 
   /**
@@ -271,48 +200,41 @@ export class ProductsService {
    * @throws {BadRequestException} If the quantity is negative.
    */
   async updateStock(id: string, quantity: number): Promise<Product> {
-    this.logger.log(`Attempting to update stock for product ${id}`, {
-      quantityToAdd: quantity,
-    });
-    return this.withTransaction(async (repo, session) => {
-      if (quantity < 0) {
-        throw this.errorHandlingService.returnErrorOnBadRequest(
-          `[ERR_PROD_UPDATE_NEGATIVE_QTY] Negative quantity: ${quantity}`,
-          "Quantity cannot be negative",
-        );
+    this.logger.log({ message: `Attempting to update stock for product ${id}`, quantityToAdd: quantity, });
+    if (quantity < 0) {
+      throw this.errorHandlingService.returnErrorOnBadRequest(
+        `[ERR_PROD_UPDATE_NEGATIVE_QTY] Negative quantity: ${quantity}`,
+        "Quantity cannot be negative",
+      );
+    }
+
+    const product = await this.productRepository.findById(id);
+    if (!product) {
+      throw this.errorHandlingService.returnErrorOnNotFound(
+        `[ERR_PROD_UPDATE_NOT_FOUND] Product ${id} not found`,
+        "Product not found",
+      );
+    }
+
+    try {
+      const newQuantity = product.quantity + quantity;
+      const updatedProduct = await this.productRepository.update(
+        id,
+        { quantity: newQuantity },
+      );
+
+      if (!updatedProduct) {
+        throw new Error("Failed to update product stock");
       }
 
-      const product = await repo.findById(id, session);
-      if (!product) {
-        throw this.errorHandlingService.returnErrorOnNotFound(
-          `[ERR_PROD_UPDATE_NOT_FOUND] Product ${id} not found`,
-          "Product not found",
-        );
-      }
-
-      try {
-        const newQuantity = product.quantity + quantity;
-        const updatedProduct = await repo.update(
-          id,
-          { quantity: newQuantity },
-          session,
-        );
-
-        if (!updatedProduct) {
-          throw new Error("Failed to update product stock");
-        }
-
-        this.logger.log(`Stock for product ${id} updated successfully`, {
-          newStock: updatedProduct.quantity,
-        });
-        return updatedProduct;
-      } catch (error) {
-        throw this.errorHandlingService.returnErrorOnInternalServerError(
-          `[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: ${error.message}`,
-          "An error occurred while updating the stock",
-        );
-      }
-    });
+      this.logger.log({ message: `Stock for product ${id} updated successfully`, newStock: updatedProduct.quantity, });
+      return updatedProduct;
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: ${error.message}`,
+        "An error occurred while updating the stock",
+      );
+    }
   }
 
   /**
@@ -321,12 +243,10 @@ export class ProductsService {
    * @returns A list of products.
    */
   async getProductsByModelName(modelName: string): Promise<Product[]> {
-    this.logger.log(`Fetching products by model name: ${modelName}`);
+    this.logger.log({ message: `Fetching products by model name: ${modelName}` });
     try {
       const products = await this.productRepository.findByModelName(modelName);
-      this.logger.log(
-        `Found ${products.length} products for model ${modelName}`,
-      );
+      this.logger.log({ message: `Found ${products.length} products for model ${modelName}` });
       return products;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -342,10 +262,10 @@ export class ProductsService {
    * @returns A list of products.
    */
   async getProductsByName(name: string): Promise<Product[]> {
-    this.logger.log(`Fetching products by name: ${name}`);
+    this.logger.log({ message: `Fetching products by name: ${name}` });
     try {
       const products = await this.productRepository.findByName(name);
-      this.logger.log(`Found ${products.length} products for name ${name}`);
+      this.logger.log({ message: `Found ${products.length} products for name ${name}` });
       return products;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -363,10 +283,10 @@ export class ProductsService {
   async countProductsByModelName(
     modelName: string,
   ): Promise<{ count: number }> {
-    this.logger.log(`Counting products by model name: ${modelName}`);
+    this.logger.log({ message: `Counting products by model name: ${modelName}` });
     try {
       const count = await this.productRepository.countByModelName(modelName);
-      this.logger.log(`Count for model ${modelName}: ${count}`);
+      this.logger.log({ message: `Count for model ${modelName}: ${count}` });
       return { count };
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -382,10 +302,10 @@ export class ProductsService {
    * @returns The number of products.
    */
   async countProductsByName(name: string): Promise<{ count: number }> {
-    this.logger.log(`Counting products by name: ${name}`);
+    this.logger.log({ message: `Counting products by name: ${name}` });
     try {
       const count = await this.productRepository.countByName(name);
-      this.logger.log(`Count for name ${name}: ${count}`);
+      this.logger.log({ message: `Count for name ${name}: ${count}` });
       return { count };
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -400,25 +320,23 @@ export class ProductsService {
    * @param id - The ID of the product to remove.
    */
   async remove(id: string): Promise<void> {
-    this.logger.log(`Attempting to remove product ${id}`);
-    return this.withTransaction(async (repo, session) => {
-      const product = await repo.findById(id, session);
-      if (!product) {
-        throw this.errorHandlingService.returnErrorOnNotFound(
-          `[ERR_PROD_REMOVE_NOT_FOUND] Product ${id} not found`,
-          "Product not found",
-        );
-      }
+    this.logger.log({ message: `Attempting to remove product ${id}` });
+    const product = await this.productRepository.findById(id);
+    if (!product) {
+      throw this.errorHandlingService.returnErrorOnNotFound(
+        `[ERR_PROD_REMOVE_NOT_FOUND] Product ${id} not found`,
+        "Product not found",
+      );
+    }
 
-      try {
-        await repo.delete(id, session);
-        this.logger.log(`Product ${id} removed successfully`);
-      } catch (error) {
-        throw this.errorHandlingService.returnErrorOnInternalServerError(
-          `[ERR_PROD_REMOVE_CRITICAL] Critical error: ${error.message}`,
-          "Failed to delete product",
-        );
-      }
-    });
+    try {
+      await this.productRepository.delete(id);
+      this.logger.log({ message: `Product ${id} removed successfully` });
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_PROD_REMOVE_CRITICAL] Critical error: ${error.message}`,
+        "Failed to delete product",
+      );
+    }
   }
 }

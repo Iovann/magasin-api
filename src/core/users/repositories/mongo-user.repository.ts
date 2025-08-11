@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { ClientSession, Model } from "mongoose";
-import { IUserRepository, TransactionalSession } from "./user.repository";
+import { Model } from "mongoose";
+import { IUserRepository } from "./user.repository";
 import { MongoUser } from "../entities/mongo-user.entity";
 import { User } from "../entities/user.entity";
 
@@ -14,45 +14,28 @@ export class MongoUserRepository implements IUserRepository {
 
   async create(
     user: Omit<User, "id" | "createdAt">,
-    session?: TransactionalSession,
   ): Promise<User> {
     const newUser = new this.userModel(user);
-    const savedUser = await newUser.save({ session: session as ClientSession });
+    const savedUser = await newUser.save();
     return this.toUserEntity(savedUser);
   }
 
   async findById(
     id: string,
-    session?: TransactionalSession,
   ): Promise<User | null> {
     const user = await this.userModel
       .findById(id)
-      .session(session as ClientSession)
       .exec();
     return user ? this.toUserEntity(user) : null;
   }
 
   async findByEmail(
     email: string,
-    session?: TransactionalSession,
   ): Promise<User | null> {
     const user = await this.userModel
       .findOne({ email })
-      .session(session as ClientSession)
       .exec();
     return user ? this.toUserEntity(user) : null;
-  }
-
-  async findAll(session?: TransactionalSession): Promise<User[]> {
-    const users = await this.userModel.find().session(session as ClientSession).exec();
-    return users.map((user) => this.toUserEntity(user));
-  }
-
-  async delete(id: string, session?: TransactionalSession): Promise<void> {
-    await this.userModel
-      .findByIdAndDelete(id)
-      .session(session as ClientSession)
-      .exec();
   }
 
   async findByEmailWithPassword(
@@ -71,6 +54,29 @@ export class MongoUserRepository implements IUserRepository {
       createdAt: user.createdAt,
       passwordHash: user.passwordHash,
     };
+  }
+
+  async findAll(): Promise<User[]> {
+    const users = await this.userModel
+      .find()
+      .exec();
+    return users.map((user) => this.toUserEntity(user));
+  }
+
+  async update(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<User | null> {
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, userData, { new: true })
+      .exec();
+    return updatedUser ? this.toUserEntity(updatedUser) : null;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.userModel
+      .findByIdAndDelete(id)
+      .exec();
   }
 
   private toUserEntity(mongoUser: MongoUser): User {

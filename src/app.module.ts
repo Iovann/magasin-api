@@ -7,6 +7,7 @@ import { UsersModule } from "./core/users/users.module";
 import { DatabaseModule } from "./database/database.module";
 import { ConfigModule } from "@nestjs/config";
 import { ErrorHandlingModule } from "./common/response/error-handling.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ErrorHandlingModule } from "./common/response/error-handling.module";
     ProductsModule.forRoot(),
     UsersModule.forRoot(),
     ErrorHandlingModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
