@@ -5,6 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Request,
+  Body,
+  BadRequestException,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
@@ -13,6 +15,7 @@ import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { User } from "../core/users/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 
@@ -68,5 +71,28 @@ export class AuthController {
   })
   async refresh(@Request() req: { user: User & { refreshToken: string } }) {
     return this.authService.getTokens(req.user.id, req.user.email, req.user.role);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Changer le mot de passe de l\'utilisateur' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({ status: 200, description: 'Mot de passe changé avec succès' })
+  @ApiResponse({ status: 401, description: 'Mot de passe actuel invalide' })
+  async changePassword(
+    @Request() req: { user: User },
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    if (changePasswordDto.newPassword !== changePasswordDto.confirmNewPassword) {
+      throw new BadRequestException('New password and confirmation do not match.');
+    }
+    await this.authService.changePassword(
+      req.user.id,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword,
+    );
+    return { message: 'Mot de passe changé avec succès' };
   }
 }

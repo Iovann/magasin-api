@@ -36,6 +36,15 @@ export abstract class IUserRepository {
   ): Promise<(User & { passwordHash: string }) | null>;
 
   /**
+   * Finds a user by ID and returns the user object including the password hash.
+   * @param id - The ID of the user.
+   * @returns The user with password hash or null if not found.
+   */
+  abstract findByIdWithPassword(
+    id: string,
+  ): Promise<(User & { passwordHash: string }) | null>;
+
+  /**
    * Finds all users.
    * @returns A list of all users.
    */

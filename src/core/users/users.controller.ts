@@ -23,10 +23,13 @@ import {
   UserPermissions,
 } from "../../common/decorators/permissions.decorator";
 import { UserAction } from "../../common/enum/permission.enum";
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { UseGuards } from "@nestjs/common";
 
 @ApiTags("users")
 @Controller("users")
 @ApiBearerAuth("JWT-auth")
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

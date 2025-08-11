@@ -150,4 +150,27 @@ describe("MongoUserRepository", () => {
       expect(result).toEqual(userWithHash);
     });
   });
+
+  describe("findByIdWithPassword", () => {
+    it("should return user with passwordHash by ID", async () => {
+      const userWithHash = { ...baseUser, passwordHash: "hashed" };
+      mockQuery.exec.mockResolvedValue(mockUserDoc(userWithHash));
+
+      const result = await repository.findByIdWithPassword(baseUser.id);
+
+      expect(userModel.findById).toHaveBeenCalledWith(baseUser.id);
+      expect(mockQuery.select).toHaveBeenCalledWith("+passwordHash");
+      expect(result).toEqual(userWithHash);
+    });
+
+    it("should return null if user not found by ID", async () => {
+      mockQuery.exec.mockResolvedValue(null);
+
+      const result = await repository.findByIdWithPassword("non-existent-id");
+
+      expect(userModel.findById).toHaveBeenCalledWith("non-existent-id");
+      expect(mockQuery.select).toHaveBeenCalledWith("+passwordHash");
+      expect(result).toBeNull();
+    });
+  });
 });

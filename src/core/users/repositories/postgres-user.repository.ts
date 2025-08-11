@@ -35,6 +35,16 @@ export class PostgresUserRepository implements IUserRepository {
       .getOne();
   }
 
+  async findByIdWithPassword(
+    id: string,
+  ): Promise<(User & { passwordHash: string }) | null> {
+    return this.userRepository
+      .createQueryBuilder("user")
+      .addSelect("user.passwordHash")
+      .where("user.id = :id", { id })
+      .getOne();
+  }
+
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
   }

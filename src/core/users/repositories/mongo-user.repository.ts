@@ -46,6 +46,24 @@ export class MongoUserRepository implements IUserRepository {
     };
   }
 
+  async findByIdWithPassword(
+    id: string,
+  ): Promise<(User & { passwordHash: string }) | null> {
+    const user = await this.userModel
+      .findById(id)
+      .select("+passwordHash")
+      .exec();
+    if (!user || !user.passwordHash) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      passwordHash: user.passwordHash,
+    };
+  }
+
   async findAll(): Promise<User[]> {
     const users = await this.userModel.find().exec();
     return users.map((user) => this.toUserEntity(user));

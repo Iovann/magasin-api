@@ -22,6 +22,9 @@ const mockUserRepository = {
   findById: jest.fn(),
   findByEmail: jest.fn(),
   delete: jest.fn(),
+  update: jest.fn(),
+  findByEmailWithPassword: jest.fn(),
+  findByIdWithPassword: jest.fn(),
   constructor: { name: "" },
 };
 
@@ -169,6 +172,27 @@ describe("UsersService", () => {
 
       await expect(service.remove("999")).rejects.toThrow(NotFoundException);
       expect(mockErrorHandlingService.returnErrorOnNotFound).toHaveBeenCalled();
+    });
+  });
+
+  describe("updatePasswordHash", () => {
+    it("should update the user's password hash successfully", async () => {
+      const userId = "1";
+      const newPasswordHash = "newHashedPassword";
+      mockUserRepository.update.mockResolvedValue(mockUser);
+
+      await service.updatePasswordHash(userId, newPasswordHash);
+
+      expect(mockUserRepository.update).toHaveBeenCalledWith(userId, { passwordHash: newPasswordHash });
+    });
+
+    it("should throw InternalServerErrorException on update failure", async () => {
+      const userId = "1";
+      const newPasswordHash = "newHashedPassword";
+      mockUserRepository.update.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.updatePasswordHash(userId, newPasswordHash)).rejects.toThrow(InternalServerErrorException);
+      expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { UsersService } from "../core/users/services/users.service";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
@@ -68,5 +68,23 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByIdWithPassword(userId);
+
+    if (!user) {
+      // This case should ideally not be reached if the user is authenticated via JWT
+      // and the userId comes from the JWT payload.
+      throw new UnauthorizedException('User not found.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash!); // Use '!' for non-null assertion
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid current password.');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.updatePasswordHash(userId, hashedNewPassword);
   }
 }

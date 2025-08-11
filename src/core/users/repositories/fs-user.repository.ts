@@ -68,6 +68,16 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     return null;
   }
 
+  async findByIdWithPassword(
+    id: string,
+  ): Promise<(User & { passwordHash: string }) | null> {
+    const user = this.data.find((u) => u.id === id);
+    if (user && user.passwordHash) {
+      return user as User & { passwordHash: string };
+    }
+    return null;
+  }
+
   async findAll(): Promise<User[]> {
     return [...this.data];
   }

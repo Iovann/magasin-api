@@ -8,6 +8,7 @@ import {
   Put,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from "@nestjs/common";
 import { ProductsService } from "./services/products.service";
 import { CreateProductDto } from "./dto/create-product.dto";
@@ -23,10 +24,13 @@ import {
   ApiParam,
 } from "@nestjs/swagger";
 import { Product } from "./entities/product.entity";
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../../common/guards/roles.guard";
 
 @ApiTags("products")
 @ApiBearerAuth("JWT-auth")
 @Controller("products")
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

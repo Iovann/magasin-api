@@ -107,6 +107,10 @@ export class UsersService {
     return this.userRepository.findByEmailWithPassword(email);
   }
 
+  async findByIdWithPassword(id: string): Promise<(User & { passwordHash: string }) | null> {
+    return this.userRepository.findByIdWithPassword(id);
+  }
+
   async setCurrentRefreshToken(refreshToken: string, userId: string) {
     const salt = await bcrypt.genSalt();
     const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
@@ -135,6 +139,19 @@ export class UsersService {
     return this.userRepository.update(userId, {
       refreshToken: undefined,
     });
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    this.logger.log({ message: `Attempting to update password hash for user ${userId}` });
+    try {
+      await this.userRepository.update(userId, { passwordHash });
+      this.logger.log({ message: `Password hash updated successfully for user ${userId}` });
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_UPDATE_PASSWORD_CRITICAL] Critical error updating password for user ${userId}: ${error.message}`,
+        "Failed to update user password",
+      );
+    }
   }
 
   async remove(id: string): Promise<void> {

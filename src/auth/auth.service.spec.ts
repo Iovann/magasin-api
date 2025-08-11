@@ -6,6 +6,7 @@ import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
 import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
+import { UnauthorizedException } from "@nestjs/common"; // Added import
 
 jest.mock("bcrypt");
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
@@ -32,6 +33,8 @@ describe("AuthService", () => {
             findByEmailWithPassword: jest.fn(),
             setCurrentRefreshToken: jest.fn(),
             removeRefreshToken: jest.fn(),
+            findByIdWithPassword: jest.fn(),
+            updatePasswordHash: jest.fn(),
           },
         },
         {
@@ -139,6 +142,44 @@ describe("AuthService", () => {
         accessToken: "accessToken",
         refreshToken: "refreshToken",
       });
+    });
+  });
+
+  describe("changePassword", () => {
+    const userId = "1";
+    const currentPassword = "oldPassword";
+    const newPassword = "newPassword";
+    const hashedPassword = "hashedNewPassword";
+    const userWithPassword = { ...mockUser, passwordHash: "hashedOldPassword" };
+
+    it("should successfully change the user's password", async () => {
+      usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
+      mockedBcrypt.compare.mockResolvedValue(true as never);
+      mockedBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      usersService.updatePasswordHash.mockResolvedValue(undefined);
+
+      await authService.changePassword(userId, currentPassword, newPassword);
+
+      expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(currentPassword, userWithPassword.passwordHash);
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith(newPassword, 10);
+      expect(usersService.updatePasswordHash).toHaveBeenCalledWith(userId, hashedPassword);
+    });
+
+    it("should throw UnauthorizedException if user is not found", async () => {
+      usersService.findByIdWithPassword.mockResolvedValue(null);
+
+      await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(UnauthorizedException);
+      expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
+    });
+
+    it("should throw UnauthorizedException if current password is invalid", async () => {
+      usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
+      mockedBcrypt.compare.mockResolvedValue(false as never);
+
+      await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(UnauthorizedException);
+      expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(currentPassword, userWithPassword.passwordHash);
     });
   });
 });

@@ -112,6 +112,84 @@ describe("FsUserRepository", () => {
     });
   });
 
+  describe("findByEmailWithPassword", () => {
+    it("should return a user with passwordHash if email is found", async () => {
+      const mockUser: User & { passwordHash: string } = {
+        id: "123",
+        email: "findme@example.com",
+        passwordHash: "hashedPassword123",
+        role: Role.Vendeur,
+        createdAt: new Date(),
+      };
+      (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUser]));
+      await repository.onModuleInit();
+
+      const result = await repository.findByEmailWithPassword("findme@example.com");
+
+      expect(result).toBeDefined();
+      expect(result?.email).toBe("findme@example.com");
+      expect(result?.passwordHash).toBe("hashedPassword123");
+    });
+
+    it("should return null if email is not found", async () => {
+      const result = await repository.findByEmailWithPassword("notfound@example.com");
+      expect(result).toBeNull();
+    });
+
+    it("should return null if user found but no passwordHash", async () => {
+      const mockUserWithoutHash: User = {
+        id: "123",
+        email: "findme@example.com",
+        role: Role.Vendeur,
+        createdAt: new Date(),
+      };
+      (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUserWithoutHash]));
+      await repository.onModuleInit();
+
+      const result = await repository.findByEmailWithPassword("findme@example.com");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findByIdWithPassword", () => {
+    it("should return a user with passwordHash if id is found", async () => {
+      const mockUser: User & { passwordHash: string } = {
+        id: "mocked-user-uuid-456",
+        email: "findme@example.com",
+        passwordHash: "hashedPassword123",
+        role: Role.Vendeur,
+        createdAt: new Date(),
+      };
+      (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUser]));
+      await repository.onModuleInit();
+
+      const result = await repository.findByIdWithPassword("mocked-user-uuid-456");
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe("mocked-user-uuid-456");
+      expect(result?.passwordHash).toBe("hashedPassword123");
+    });
+
+    it("should return null if id is not found", async () => {
+      const result = await repository.findByIdWithPassword("not-found-id");
+      expect(result).toBeNull();
+    });
+
+    it("should return null if user found but no passwordHash", async () => {
+      const mockUserWithoutHash: User = {
+        id: "mocked-user-uuid-456",
+        email: "findme@example.com",
+        role: Role.Vendeur,
+        createdAt: new Date(),
+      };
+      (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([mockUserWithoutHash]));
+      await repository.onModuleInit();
+
+      const result = await repository.findByIdWithPassword("mocked-user-uuid-456");
+      expect(result).toBeNull();
+    });
+  });
+
   describe("findAll", () => {
     it("should return all users", async () => {
       const mockUsers: User[] = [
