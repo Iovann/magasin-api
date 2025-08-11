@@ -1,13 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { IUserRepository } from "./user.repository";
+import { EntityManager, Repository } from "typeorm";
+import { IUserRepository, TransactionalSession } from "./user.repository";
 import { PostgresUser } from "../entities/postgres-user.entity";
 import { User } from "../entities/user.entity";
 
-/**
- * PostgreSQL implementation of the user repository.
- */
 @Injectable()
 export class PostgresUserRepository implements IUserRepository {
   constructor(
@@ -15,47 +12,44 @@ export class PostgresUserRepository implements IUserRepository {
     private readonly userRepository: Repository<PostgresUser>,
   ) {}
 
-  /**
-   * Creates a new user in PostgreSQL.
-   * @param user - The user data to create.
-   * @returns The created user.
-   */
-  async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
-    const newUser = this.userRepository.create(user);
-    return this.userRepository.save(newUser);
+  private getRepository(session?: TransactionalSession): Repository<PostgresUser> {
+    return session
+      ? (session as EntityManager).getRepository(PostgresUser)
+      : this.userRepository;
   }
 
-  /**
-   * Finds a user by their ID in PostgreSQL.
-   * @param id - The ID of the user.
-   * @returns The user or null if not found.
-   */
-  async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOneBy({ id });
+  async create(
+    user: Omit<User, "id" | "createdAt">,
+    session?: TransactionalSession,
+  ): Promise<User> {
+    const repo = this.getRepository(session);
+    const newUser = repo.create(user);
+    return repo.save(newUser);
   }
 
-  /**
-   * Finds a user by their email address in PostgreSQL.
-   * @param email - The email of the user.
-   * @returns The user or null if not found.
-   */
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOneBy({ email });
+  async findById(
+    id: string,
+    session?: TransactionalSession,
+  ): Promise<User | null> {
+    const repo = this.getRepository(session);
+    return repo.findOneBy({ id });
   }
 
-  /**
-   * Finds all users in PostgreSQL.
-   * @returns A list of all users.
-   */
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async findByEmail(
+    email: string,
+    session?: TransactionalSession,
+  ): Promise<User | null> {
+    const repo = this.getRepository(session);
+    return repo.findOneBy({ email });
   }
 
-  /**
-   * Deletes a user by their ID from PostgreSQL.
-   * @param id - The ID of the user to delete.
-   */
-  async delete(id: string): Promise<void> {
-    await this.userRepository.delete(id);
+  async findAll(session?: TransactionalSession): Promise<User[]> {
+    const repo = this.getRepository(session);
+    return repo.find();
+  }
+
+  async delete(id: string, session?: TransactionalSession): Promise<void> {
+    const repo = this.getRepository(session);
+    await repo.delete(id);
   }
 }

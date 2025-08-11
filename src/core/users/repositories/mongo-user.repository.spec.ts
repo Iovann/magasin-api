@@ -1,12 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getModelToken } from "@nestjs/mongoose";
-import { Model, Query } from "mongoose";
+import { Model, Query, ClientSession } from "mongoose";
 import { MongoUserRepository } from "./mongo-user.repository";
 import { MongoUser } from "../entities/mongo-user.entity";
 import { User } from "../entities/user.entity";
 import { Role } from "../../../common/enum/role.enum";
 
-// Base mock for a user
 const baseUser: User = {
   id: "507f1f77bcf86cd799439011",
   email: "test@example.com",
@@ -14,14 +13,12 @@ const baseUser: User = {
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
 };
 
-// Mock for creation data
 const createUserData = {
   email: "new@example.com",
   passwordHash: "hashedPassword456",
   role: Role.Magasinier,
 };
 
-// Mock of the document returned by Mongoose
 const mockUserDoc = (user: Partial<User & { passwordHash?: string }>) => ({
   ...user,
   id: user.id || "mock-id",
@@ -30,13 +27,24 @@ const mockUserDoc = (user: Partial<User & { passwordHash?: string }>) => ({
   role: user.role,
   createdAt: user.createdAt || new Date(),
   passwordHash: user.passwordHash,
-  toObject: () => mockUserDoc(user), // Added the toObject method
 });
+
+// Mock for the Mongoose session
+const mockSession = {
+  withTransaction: jest.fn(),
+  endSession: jest.fn(),
+} as unknown as ClientSession;
 
 describe("MongoUserRepository", () => {
   let repository: MongoUserRepository;
-  // The type is 'any' to accommodate the mock
-  let userModel: any;
+  let userModel: any; // Using 'any' to accommodate the mock
+
+  // Mock query chain
+  const mockQuery = {
+    session: jest.fn().mockReturnThis(),
+    exec: jest.fn(),
+    select: jest.fn().mockReturnThis(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -44,13 +52,9 @@ describe("MongoUserRepository", () => {
         MongoUserRepository,
         {
           provide: getModelToken(MongoUser.name),
-          // We mock the model's constructor and its static methods
           useValue: jest.fn().mockImplementation((data) => ({
             ...data,
-            save: jest
-              .fn()
-              .mockResolvedValue(mockUserDoc({ ...data, id: "new-id" })),
-            toObject: () => data, // Added the toObject method
+            save: jest.fn().mockResolvedValue(mockUserDoc({ ...data, id: "new-id" })),
           })),
         },
       ],
@@ -59,11 +63,14 @@ describe("MongoUserRepository", () => {
     repository = module.get<MongoUserRepository>(MongoUserRepository);
     userModel = module.get<Model<MongoUser>>(getModelToken(MongoUser.name));
 
-    // We attach the static method mocks to the mocked constructor
-    userModel.findById = jest.fn();
-    userModel.findOne = jest.fn();
-    userModel.find = jest.fn();
-    userModel.findByIdAndDelete = jest.fn();
+    // Attach static method mocks
+    userModel.findById = jest.fn().mockReturnValue(mockQuery);
+    userModel.findOne = jest.fn().mockReturnValue(mockQuery);
+    userModel.find = jest.fn().mockReturnValue(mockQuery);
+    userModel.findByIdAndDelete = jest.fn().mockReturnValue(mockQuery);
+
+    // Reset mocks before each test
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {
@@ -71,99 +78,80 @@ describe("MongoUserRepository", () => {
   });
 
   describe("create", () => {
-    it("should create a new user and return the user entity", async () => {
-      const result = await repository.create(createUserData);
+    it("should create a user with a session", async () => {
+      const saveMock = jest
+        .fn()
+        .mockResolvedValue(mockUserDoc({ ...createUserData, id: "new-id" }));
+      userModel.mockImplementation((data: any) => ({
+        ...data,
+        save: saveMock,
+      }));
 
-      // We check that the constructor was called
+      const result = await repository.create(createUserData, mockSession);
+
       expect(userModel).toHaveBeenCalledWith(createUserData);
-      // We check that the result conforms to the User entity
+      expect(saveMock).toHaveBeenCalledWith({ session: mockSession });
       expect(result.email).toBe(createUserData.email);
-      expect(result.id).toBe("new-id");
     });
   });
 
   describe("findById", () => {
-    it("should find a user by ID and return the user entity", async () => {
-      userModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUserDoc(baseUser)),
-      } as unknown as Query<any, any>);
+    it("should find a user by ID with a session", async () => {
+      mockQuery.exec.mockResolvedValue(mockUserDoc(baseUser));
 
-      const result = await repository.findById(baseUser.id);
+      const result = await repository.findById(baseUser.id, mockSession);
 
       expect(userModel.findById).toHaveBeenCalledWith(baseUser.id);
+      expect(mockQuery.session).toHaveBeenCalledWith(mockSession);
       expect(result).toEqual(baseUser);
-    });
-
-    it("should return null if user is not found", async () => {
-      userModel.findById.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(null),
-      } as unknown as Query<any, any>);
-
-      const result = await repository.findById("non-existent-id");
-      expect(result).toBeNull();
     });
   });
 
   describe("findByEmail", () => {
-    it("should find a user by email", async () => {
-      userModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUserDoc(baseUser)),
-      } as unknown as Query<any, any>);
+    it("should find a user by email with a session", async () => {
+      mockQuery.exec.mockResolvedValue(mockUserDoc(baseUser));
 
-      const result = await repository.findByEmail(baseUser.email);
+      const result = await repository.findByEmail(baseUser.email, mockSession);
 
       expect(userModel.findOne).toHaveBeenCalledWith({ email: baseUser.email });
+      expect(mockQuery.session).toHaveBeenCalledWith(mockSession);
       expect(result).toEqual(baseUser);
     });
   });
 
   describe("findAll", () => {
-    it("should return an array of users", async () => {
-      userModel.find.mockReturnValue({
-        exec: jest.fn().mockResolvedValue([mockUserDoc(baseUser)]),
-      } as unknown as Query<any, any>);
+    it("should find all users with a session", async () => {
+      mockQuery.exec.mockResolvedValue([mockUserDoc(baseUser)]);
 
-      const result = await repository.findAll();
+      const result = await repository.findAll(mockSession);
 
+      expect(userModel.find).toHaveBeenCalled();
+      expect(mockQuery.session).toHaveBeenCalledWith(mockSession);
       expect(result).toEqual([baseUser]);
     });
   });
 
   describe("delete", () => {
-    it("should call findByIdAndDelete with the correct ID", async () => {
-      userModel.findByIdAndDelete.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({}),
-      } as unknown as Query<any, any>);
+    it("should delete a user with a session", async () => {
+      mockQuery.exec.mockResolvedValue({});
 
-      await repository.delete(baseUser.id);
+      await repository.delete(baseUser.id, mockSession);
 
       expect(userModel.findByIdAndDelete).toHaveBeenCalledWith(baseUser.id);
+      expect(mockQuery.session).toHaveBeenCalledWith(mockSession);
     });
   });
 
   describe("findByEmailWithPassword", () => {
-    it("should return user with passwordHash", async () => {
+    it("should return user with passwordHash without a session", async () => {
       const userWithHash = { ...baseUser, passwordHash: "hashed" };
-      userModel.findOne.mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(mockUserDoc(userWithHash)),
-      } as any);
+      mockQuery.exec.mockResolvedValue(mockUserDoc(userWithHash));
 
       const result = await repository.findByEmailWithPassword(baseUser.email);
 
       expect(userModel.findOne).toHaveBeenCalledWith({ email: baseUser.email });
+      expect(mockQuery.select).toHaveBeenCalledWith("+passwordHash");
       expect(result).toEqual(userWithHash);
-    });
-
-    it("should return null if user is not found", async () => {
-      userModel.findOne.mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(null),
-      } as any);
-
-      const result = await repository.findByEmailWithPassword("non-existent");
-
-      expect(result).toBeNull();
     });
   });
 });

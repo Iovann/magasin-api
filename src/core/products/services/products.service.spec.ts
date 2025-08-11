@@ -12,6 +12,7 @@ import { Product } from "../entities/product.entity";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
 import { DataSource } from "typeorm";
 import { getConnectionToken } from "@nestjs/mongoose";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 // Mock for IProductRepository
 const mockProductRepository = {
@@ -70,6 +71,11 @@ const mockMongooseConnection = {
   startSession: jest.fn().mockResolvedValue(mockMongooseSession),
 };
 
+const mockLogger = {
+  log: jest.fn(),
+  error: jest.fn(),
+};
+
 describe("ProductsService", () => {
   let service: ProductsService;
 
@@ -92,6 +98,10 @@ describe("ProductsService", () => {
         {
           provide: getConnectionToken(),
           useValue: mockMongooseConnection,
+        },
+        {
+          provide: WINSTON_MODULE_PROVIDER,
+          useValue: mockLogger,
         },
       ],
     }).compile();
