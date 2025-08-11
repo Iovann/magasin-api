@@ -100,7 +100,10 @@ export class ProductsController {
   @Get(":id")
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({ summary: "Gets a water gun model by its ID" })
-  @ApiResponse({ status: 200, description: "Water gun model details returned." })
+  @ApiResponse({
+    status: 200,
+    description: "Water gun model details returned.",
+  })
   @ApiResponse({ status: 404, description: "Water gun model not found." })
   async getProductById(@Param("id") id: string) {
     return await this.productsService.getProductById(id);
@@ -130,14 +133,20 @@ export class ProductsController {
     summary:
       "Updates the stock quantity of a water gun model (SuperAdmin, Storekeeper)",
   })
-  @ApiResponse({ status: 200, description: "The stock was updated successfully." })
+  @ApiResponse({
+    status: 200,
+    description: "The stock was updated successfully.",
+  })
   @ApiResponse({ status: 400, description: "Invalid data." })
   @ApiResponse({ status: 404, description: "Water gun model not found." })
   async updateStock(
     @Param("id") id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return await this.productsService.updateStock(id, updateProductDto.quantity);
+    return await this.productsService.updateStock(
+      id,
+      updateProductDto.quantity,
+    );
   }
 
   /**
@@ -148,14 +157,22 @@ export class ProductsController {
    */
   @Post(":id/sell")
   @Roles(Role.Vendeur)
-  @ApiOperation({ summary: "Sells a quantity of a water gun model (Salesperson)" })
-  @ApiResponse({ status: 200, description: "Water gun model sold successfully." })
+  @ApiOperation({
+    summary: "Sells a quantity of a water gun model (Salesperson)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Water gun model sold successfully.",
+  })
   @ApiResponse({
     status: 400,
     description: "Insufficient quantity in stock or invalid data.",
   })
   @ApiResponse({ status: 404, description: "Water gun model not found." })
-  async sellProduct(@Param("id") id: string, @Body() sellProductDto: SellProductDto) {
+  async sellProduct(
+    @Param("id") id: string,
+    @Body() sellProductDto: SellProductDto,
+  ) {
     return await this.productsService.sellProduct(id, sellProductDto.quantity);
   }
 
@@ -183,7 +200,10 @@ export class ProductsController {
   @Get("by-name/:name")
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({ summary: "Gets all water guns by name" })
-  @ApiResponse({ status: 200, description: "List of water guns by name returned." })
+  @ApiResponse({
+    status: 200,
+    description: "List of water guns by name returned.",
+  })
   async getProductsByName(@Param("name") name: string) {
     return await this.productsService.getProductsByName(name);
   }
@@ -212,7 +232,10 @@ export class ProductsController {
   @Get("count-by-name/:name")
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({ summary: "Counts the number of water guns by name" })
-  @ApiResponse({ status: 200, description: "Number of water guns by name returned." })
+  @ApiResponse({
+    status: 200,
+    description: "Number of water guns by name returned.",
+  })
   async countProductsByName(@Param("name") name: string) {
     return await this.productsService.countProductsByName(name);
   }

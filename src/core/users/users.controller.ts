@@ -88,7 +88,8 @@ export class UsersController {
    */
   @ApiOperation({
     summary: "Get user statistics",
-    description: "Retrieves the total number of users and the distribution by role.",
+    description:
+      "Retrieves the total number of users and the distribution by role.",
   })
   @ApiResponse({
     status: 200,

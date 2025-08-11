@@ -75,7 +75,9 @@ describe("ProductsController", () => {
     it("should call service.getProductById with the correct id", async () => {
       const productId = "some-id";
       await controller.getProductById(productId);
-      expect(mockProductsService.getProductById).toHaveBeenCalledWith(productId);
+      expect(mockProductsService.getProductById).toHaveBeenCalledWith(
+        productId,
+      );
     });
   });
 
@@ -142,7 +144,9 @@ describe("ProductsController", () => {
     it("should call service.countProductsByName with correct name", async () => {
       const name = "WaterBlaster";
       await controller.countProductsByName(name);
-      expect(mockProductsService.countProductsByName).toHaveBeenCalledWith(name);
+      expect(mockProductsService.countProductsByName).toHaveBeenCalledWith(
+        name,
+      );
     });
   });
 });
