@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy, StrategyOptionsWithRequest } from "passport-jwt";
-import { ConfigService } from "@nestjs/config";
 import { Request } from "express";
 import { UsersService } from "../../core/users/services/users.service";
+import { ConfigService } from "@nestjs/config";
+import { ErrorHandlingService } from "../../common/response/error-handling";
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -11,9 +12,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
   "jwt-refresh",
 ) {
   constructor(
-    private readonly configService: ConfigService,
     private readonly usersService: UsersService,
-  ) {
+    private readonly configService: ConfigService,
+    private readonly errorHandlingService: ErrorHandlingService,
+      ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -25,7 +27,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
   async validate(req: Request, payload: any) {
     const authHeader = req.get("authorization");
     if (!authHeader) {
-      throw new UnauthorizedException("Authorization header missing");
+      throw this.errorHandlingService.returnOnAuthorized("ERR_REFRESH_STRATEGY_001_VALIDATE", "Authorization header missing");
     }
     const refreshToken = authHeader.replace("Bearer", "").trim();
     const user = await this.usersService.getUserIfRefreshTokenMatches(
@@ -33,7 +35,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
       payload.sub,
     );
     if (!user) {
-      throw new UnauthorizedException();
+      throw this.errorHandlingService.returnOnAuthorized("ERR_REFRESH_STRATEGY_002_VALIDATE", "Invalid refresh token");
     }
     return user;
   }

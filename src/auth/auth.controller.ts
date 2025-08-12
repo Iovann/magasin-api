@@ -6,7 +6,6 @@ import {
   HttpStatus,
   Request,
   Body,
-  BadRequestException,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
@@ -22,7 +21,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @ApiTags("auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -33,9 +32,9 @@ export class AuthController {
     status: 200,
     description: 'Retourne les tokens JWT',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Email ou mot de passe incorrect' 
+  @ApiResponse({
+    status: 401,
+    description: 'Email ou mot de passe incorrect'
   })
   async login(@Request() req: { user: User }) {
     return this.authService.login(req.user);
@@ -54,12 +53,12 @@ export class AuthController {
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Rafraîchir le token d'accès",
     description: "Nécessite un refresh token valide"
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: "Nouveaux tokens générés",
     schema: {
       type: 'object',
@@ -85,14 +84,10 @@ export class AuthController {
     @Request() req: { user: User },
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    if (changePasswordDto.newPassword !== changePasswordDto.confirmNewPassword) {
-      throw new BadRequestException('New password and confirmation do not match.');
-    }
     await this.authService.changePassword(
       req.user.id,
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
     );
-    return { message: 'Mot de passe changé avec succès' };
   }
 }

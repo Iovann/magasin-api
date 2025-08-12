@@ -4,6 +4,7 @@ import { AuthService } from "../auth.service";
 import { UnauthorizedException } from "@nestjs/common";
 import { User } from "../../core/users/entities/user.entity";
 import { Role } from "../../common/enum/role.enum";
+import { ErrorHandlingService } from "../../common/response/error-handling";
 
 describe("LocalStrategy", () => {
   let localStrategy: LocalStrategy;
@@ -24,6 +25,12 @@ describe("LocalStrategy", () => {
           provide: AuthService,
           useValue: {
             validateUser: jest.fn(),
+          },
+        },
+        {
+          provide: ErrorHandlingService,
+          useValue: {
+            returnOnAuthorized: jest.fn(() => { throw new UnauthorizedException(); }),
           },
         },
       ],
@@ -54,7 +61,7 @@ describe("LocalStrategy", () => {
     });
 
     it("should throw UnauthorizedException if validation fails", async () => {
-      authService.validateUser.mockResolvedValue(null);
+      authService.validateUser.mockResolvedValue(null as any);
 
       await expect(
         localStrategy.validate("test@example.com", "wrongpassword"),

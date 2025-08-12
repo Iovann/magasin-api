@@ -10,7 +10,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { ErrorHandlingService } from "./error-handling"; // Adjust path if needed
+import { ErrorHandlingService } from "./error-handling";
 
 describe("ErrorHandlingService", () => {
   let service: ErrorHandlingService;

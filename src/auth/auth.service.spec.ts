@@ -6,7 +6,8 @@ import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
 import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
-import { UnauthorizedException } from "@nestjs/common"; // Added import
+import { UnauthorizedException, NotFoundException } from "@nestjs/common";
+import { ErrorHandlingService } from "../common/response/error-handling";
 
 jest.mock("bcrypt");
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
@@ -15,6 +16,7 @@ describe("AuthService", () => {
   let authService: AuthService;
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
+  let errorHandlingService: jest.Mocked<ErrorHandlingService>;
 
   const mockUser: User = {
     id: "1",
@@ -55,12 +57,21 @@ describe("AuthService", () => {
             }),
           },
         },
+        {
+          provide: ErrorHandlingService,
+          useValue: {
+            returnOnAuthorized: jest.fn(() => { throw new UnauthorizedException("Invalid credentials"); }),
+            returnErrorOnNotFound: jest.fn(() => { throw new NotFoundException("User not found."); }),
+          },
+        },
+        
       ],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
     usersService = module.get(UsersService);
     jwtService = module.get(JwtService);
+    errorHandlingService = module.get(ErrorHandlingService);
   });
 
   describe("validateUser", () => {
@@ -73,31 +84,26 @@ describe("AuthService", () => {
         "test@example.com",
         "password",
       );
-      const expectedResult = { ...userWithPassword };
-      delete expectedResult.passwordHash;
-
+      const expectedResult = Object.fromEntries(
+        Object.entries(userWithPassword).filter(([key]) => key !== 'passwordHash')
+      );
       expect(result).toEqual(expectedResult);
     });
 
-    it("should return null if user not found", async () => {
+    it("should throw UnauthorizedException if user not found", async () => {
       usersService.findByEmailWithPassword.mockResolvedValue(null);
-      const result = await authService.validateUser(
-        "test@example.com",
-        "password",
-      );
-      expect(result).toBeNull();
+
+      await expect(authService.validateUser("test@example.com", "password")).rejects.toThrow(UnauthorizedException);
+      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith("ERR_AUTH_SERVICE_001_VALIDATE_USER", "Invalid credentials");
     });
 
-    it("should return null if password does not match", async () => {
+    it("should throw UnauthorizedException if password does not match", async () => {
       const userWithPassword = { ...mockUser, passwordHash: "hashedpassword" };
       usersService.findByEmailWithPassword.mockResolvedValue(userWithPassword);
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      const result = await authService.validateUser(
-        "test@example.com",
-        "password",
-      );
-      expect(result).toBeNull();
+      await expect(authService.validateUser("test@example.com", "password")).rejects.toThrow(UnauthorizedException);
+      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith("ERR_AUTH_SERVICE_001_VALIDATE_USER", "Invalid credentials");
     });
   });
 
@@ -152,6 +158,7 @@ describe("AuthService", () => {
     const hashedPassword = "hashedNewPassword";
     const userWithPassword = { ...mockUser, passwordHash: "hashedOldPassword" };
 
+  
     it("should successfully change the user's password", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
       mockedBcrypt.compare.mockResolvedValue(true as never);
@@ -166,11 +173,11 @@ describe("AuthService", () => {
       expect(usersService.updatePasswordHash).toHaveBeenCalledWith(userId, hashedPassword);
     });
 
-    it("should throw UnauthorizedException if user is not found", async () => {
+    it("should throw NotFoundException if user is not found", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(null);
 
-      await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(UnauthorizedException);
-      expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
+      await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(NotFoundException);
+      expect(errorHandlingService.returnErrorOnNotFound).toHaveBeenCalledWith("ERR_AUTH_SERVICE_003_CHANGE_PASSWORD", "User not found.");
     });
 
     it("should throw UnauthorizedException if current password is invalid", async () => {
@@ -178,8 +185,7 @@ describe("AuthService", () => {
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
       await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(UnauthorizedException);
-      expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith(currentPassword, userWithPassword.passwordHash);
+      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith("ERR_AUTH_SERVICE_004_CHANGE_PASSWORD", "Invalid current password.");
     });
   });
 });

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
-import { BadRequestException, UnauthorizedException } from "@nestjs/common";
+import {  UnauthorizedException, INestApplication, ValidationPipe } from "@nestjs/common";
 
 describe("AuthController", () => {
   let controller: AuthController;
@@ -19,8 +19,10 @@ describe("AuthController", () => {
     createdAt: new Date(),
   };
 
+  let app: INestApplication;
+
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
@@ -42,8 +44,16 @@ describe("AuthController", () => {
       .useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get<AuthController>(AuthController);
-    authService = module.get(AuthService);
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    await app.init();
+
+    controller = moduleFixture.get<AuthController>(AuthController);
+    authService = moduleFixture.get(AuthService);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   describe("login", () => {
@@ -93,7 +103,7 @@ describe("AuthController", () => {
     };
 
     it("should change password successfully", async () => {
-      authService.changePassword.mockResolvedValue(undefined);
+      authService.changePassword.mockResolvedValue({message: "Password changed successfully."});
       const req = { user: mockUser };
 
       const result = await controller.changePassword(req as any, changePasswordDto);
@@ -103,15 +113,7 @@ describe("AuthController", () => {
         changePasswordDto.currentPassword,
         changePasswordDto.newPassword,
       );
-      expect(result).toEqual({ message: "Mot de passe changé avec succès" });
-    });
-
-    it("should throw BadRequestException if new passwords do not match", async () => {
-      const dtoWithMismatch = { ...changePasswordDto, confirmNewPassword: "mismatch" };
-      const req = { user: mockUser };
-
-      await expect(controller.changePassword(req as any, dtoWithMismatch)).rejects.toThrow(BadRequestException);
-      expect(authService.changePassword).not.toHaveBeenCalled();
+      expect(result).toBeUndefined();
     });
 
     it("should rethrow UnauthorizedException from authService", async () => {

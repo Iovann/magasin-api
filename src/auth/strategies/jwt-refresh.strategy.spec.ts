@@ -5,6 +5,7 @@ import { UsersService } from "../../core/users/services/users.service";
 import { UnauthorizedException } from "@nestjs/common";
 import { User } from "../../core/users/entities/user.entity";
 import { Role } from "../../common/enum/role.enum";
+import { ErrorHandlingService } from "../../common/response/error-handling";
 
 describe("JwtRefreshStrategy", () => {
   let jwtRefreshStrategy: JwtRefreshStrategy;
@@ -31,6 +32,12 @@ describe("JwtRefreshStrategy", () => {
           provide: UsersService,
           useValue: {
             getUserIfRefreshTokenMatches: jest.fn(),
+          },
+        },
+        {
+          provide: ErrorHandlingService,
+          useValue: {
+            returnOnAuthorized: jest.fn(() => { throw new UnauthorizedException(); }),
           },
         },
       ],
