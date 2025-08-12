@@ -17,6 +17,7 @@ describe("AuthController", () => {
     email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date(),
+    isBlocked: false,
   };
 
   let app: INestApplication;

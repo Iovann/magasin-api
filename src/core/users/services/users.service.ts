@@ -15,7 +15,7 @@ export class UsersService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject(IUserRepository) private readonly userRepository: IUserRepository,
     private readonly errorHandlingService: ErrorHandlingService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     this.logger.log({
@@ -38,6 +38,7 @@ export class UsersService {
         email: createUserDto.email,
         passwordHash,
         role: createUserDto.role,
+        isBlocked: false,
       };
       const user = await this.userRepository.create(userData);
       this.logger.log({ message: "User created successfully", id: user.id });
@@ -199,5 +200,83 @@ export class UsersService {
         "An error occurred while getting user stats",
       );
     }
+  }
+
+
+  async blockUser(id: string): Promise<User> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw this.errorHandlingService.returnErrorOnNotFound(
+        `[ERR_USER_BLOCK_NOT_FOUND] User ${id} not found`,
+        "User not found",
+      );
+    }
+
+    if (user.isBlocked) {
+      throw this.errorHandlingService.returnErrorOnConflict(
+        `[ERR_USER_BLOCK_CONFLICT] User ${id} is already blocked`,
+        "User is already blocked",
+      );
+    }
+    user.isBlocked = true;
+
+    try {
+      await this.userRepository.update(id, { isBlocked: true });
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_BLOCK_CRITICAL] Critical error: ${error.message}`,
+        "Failed to block user",
+      );
+    }
+
+
+    const updatedUser = await this.userRepository.findById(id);
+
+    if (!updatedUser) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_BLOCK_CRITICAL] Failed to retrieve updated user ${id}`,
+        "Failed to block user",
+      );
+    }
+    this.logger.log({ message: `User ${id} blocked successfully` });
+    return updatedUser;
+  }
+
+  async unblockUser(id: string): Promise<User> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw this.errorHandlingService.returnErrorOnNotFound(
+        `[ERR_USER_UNBLOCK_NOT_FOUND] User ${id} not found`,
+        "User not found",
+      );
+    }
+
+    if (!user.isBlocked) {
+      throw this.errorHandlingService.returnErrorOnConflict(
+        `[ERR_USER_UNBLOCK_CONFLICT] User ${id} is not blocked`,
+        "User is not blocked",
+      );
+    }
+    user.isBlocked = false;
+
+    try {
+      await this.userRepository.update(id, { isBlocked: false });
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_UNBLOCK_CRITICAL] Critical error: ${error.message}`,
+        "Failed to unblock user",
+      );
+    }
+
+    const updatedUser = await this.userRepository.findById(id);
+
+    if (!updatedUser) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_UNBLOCK_CRITICAL] Failed to retrieve updated user ${id}`,
+        "Failed to unblock user",
+      );
+    }
+    this.logger.log({ message: `User ${id} unblocked successfully` });
+    return updatedUser;
   }
 }

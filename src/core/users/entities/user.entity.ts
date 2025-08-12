@@ -65,4 +65,16 @@ export class User {
     format: "date-time",
   })
   createdAt: Date;
+
+
+  /**
+   * Indicates if the user account is blocked.
+   * @example false
+   */
+  @ApiPropertyOptional({
+    description: "The user's block status",
+    default: false,
+    example: false,
+  })
+  isBlocked: boolean;
 }

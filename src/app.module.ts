@@ -11,6 +11,7 @@ import { AuthModule } from "./auth/auth.module";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { CacheModule } from "@nestjs/cache-manager";
 
 @Module({
   imports: [
@@ -18,6 +19,12 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ".env",
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      store: 'redis',
+      host: 'localhost',
+      port: 6379,
     }),
     DatabaseModule.forRootAsync(),
     ProductsModule.forRoot(),

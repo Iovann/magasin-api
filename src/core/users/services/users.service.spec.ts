@@ -49,6 +49,7 @@ describe("UsersService", () => {
     email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date("2024-01-01T00:00:00.000Z"),
+    isBlocked: false,
   };
 
   const mockCreateUserDto: CreateUserDto = {
@@ -103,6 +104,7 @@ describe("UsersService", () => {
         email: mockCreateUserDto.email,
         passwordHash: "hashedPassword123",
         role: mockCreateUserDto.role,
+        isBlocked: false,
       });
       expect(result).toEqual(mockUser);
     });
@@ -192,6 +194,108 @@ describe("UsersService", () => {
       mockUserRepository.update.mockRejectedValue(new Error("DB error"));
 
       await expect(service.updatePasswordHash(userId, newPasswordHash)).rejects.toThrow(InternalServerErrorException);
+      expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalled();
+    });
+  });
+
+  describe("blockUser", () => {
+    it("should block a user successfully", async () => {
+      // const mockUser = { ...mockUser, isBlocked: false } as User;
+      const updatedMockUser = { ...mockUser, isBlocked: true } as User;
+
+      mockUserRepository.findById.mockResolvedValueOnce(mockUser);
+      mockUserRepository.update.mockResolvedValueOnce(undefined); // update doesn't return entity
+      mockUserRepository.findById.mockResolvedValueOnce(updatedMockUser); // second findById returns updated
+
+      const result = await service.blockUser("1");
+
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("1");
+      expect(mockUserRepository.update).toHaveBeenCalledWith("1", { isBlocked: true });
+      expect(mockUserRepository.findById).toHaveBeenCalledTimes(2); // Called twice
+      expect(result).toEqual(updatedMockUser);
+      expect(mockLogger.log).toHaveBeenCalledWith({ message: "User 1 blocked successfully" });
+    });
+
+    it("should throw NotFoundException if user not found", async () => {
+      mockUserRepository.findById.mockResolvedValueOnce(null);
+      mockErrorHandlingService.returnErrorOnNotFound.mockImplementation(() => { throw new NotFoundException(); });
+
+      await expect(service.blockUser("999")).rejects.toThrow(NotFoundException);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("999");
+      expect(mockErrorHandlingService.returnErrorOnNotFound).toHaveBeenCalled();
+    });
+
+    it("should throw ConflictException if user is already blocked", async () => {
+      const mockBlockedUser = { ...mockUser, isBlocked: true } as User;
+      mockUserRepository.findById.mockResolvedValueOnce(mockBlockedUser);
+      mockErrorHandlingService.returnErrorOnConflict.mockImplementation(() => { throw new ConflictException(); });
+
+      await expect(service.blockUser("1")).rejects.toThrow(ConflictException);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("1");
+      expect(mockErrorHandlingService.returnErrorOnConflict).toHaveBeenCalled();
+      expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it("should throw InternalServerErrorException on update failure", async () => {
+      const mockUserToBlock = { ...mockUser, isBlocked: false } as User;
+      mockUserRepository.findById.mockResolvedValueOnce(mockUserToBlock);
+      mockUserRepository.update.mockRejectedValueOnce(new InternalServerErrorException("DB error"));
+      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(() => { throw new InternalServerErrorException(); });
+
+      await expect(service.blockUser("1")).rejects.toThrow(InternalServerErrorException);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("1");
+      expect(mockUserRepository.update).toHaveBeenCalledWith("1", { isBlocked: true });
+      expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalled();
+    });
+  });
+
+  describe("unblockUser", () => {
+    it("should unblock a user successfully", async () => {
+      const mockUserToUnblock = { ...mockUser, isBlocked: true } as User;
+      const updatedMockUser = { ...mockUser, isBlocked: false } as User;
+
+      mockUserRepository.findById.mockResolvedValueOnce(mockUserToUnblock);
+      mockUserRepository.update.mockResolvedValueOnce(undefined);
+      mockUserRepository.findById.mockResolvedValueOnce(updatedMockUser);
+
+      const result = await service.unblockUser("1");
+
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("1");
+      expect(mockUserRepository.update).toHaveBeenCalledWith("1", { isBlocked: false });
+      expect(mockUserRepository.findById).toHaveBeenCalledTimes(2);
+      expect(result).toEqual(updatedMockUser);
+      expect(mockLogger.log).toHaveBeenCalledWith({ message: "User 1 unblocked successfully" });
+    });
+
+    it("should throw NotFoundException if user not found", async () => {
+      mockUserRepository.findById.mockResolvedValueOnce(null);
+      mockErrorHandlingService.returnErrorOnNotFound.mockImplementation(() => { throw new NotFoundException(); });
+
+      await expect(service.unblockUser("999")).rejects.toThrow(NotFoundException);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("999");
+      expect(mockErrorHandlingService.returnErrorOnNotFound).toHaveBeenCalled();
+    });
+
+    it("should throw ConflictException if user is already unblocked", async () => {
+      const mockUnblockedUser = { ...mockUser, isBlocked: false } as User;
+      mockUserRepository.findById.mockResolvedValueOnce(mockUnblockedUser);
+      mockErrorHandlingService.returnErrorOnConflict.mockImplementation(() => { throw new ConflictException(); });
+
+      await expect(service.unblockUser("1")).rejects.toThrow(ConflictException);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("1");
+      expect(mockErrorHandlingService.returnErrorOnConflict).toHaveBeenCalled();
+      expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it("should throw InternalServerErrorException on update failure", async () => {
+      const mockUserToUnblock = { ...mockUser, isBlocked: true } as User;
+      mockUserRepository.findById.mockResolvedValueOnce(mockUserToUnblock);
+      mockUserRepository.update.mockRejectedValueOnce(new Error("DB error"));
+      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(() => { throw new InternalServerErrorException(); });
+
+      await expect(service.unblockUser("1")).rejects.toThrow(InternalServerErrorException);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith("1");
+      expect(mockUserRepository.update).toHaveBeenCalledWith("1", { isBlocked: false });
       expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalled();
     });
   });

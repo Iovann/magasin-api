@@ -1,5 +1,6 @@
 import {
   Controller,
+  Patch,
   Get,
   Post,
   Body,
@@ -153,5 +154,58 @@ export class UsersController {
   @ApiResponse({ status: 404, description: "User not found." })
   async remove(@Param("id") id: string) {
     return await this.usersService.remove(id);
+  }
+
+  @Patch(":id/block")
+  @SuperAdminOnly()
+  @UserPermissions([UserAction.UPDATE])
+  @ApiOperation({
+    summary: "Block a user by ID",
+    description:
+      "Blocks a user by their unique ID. Accessible only by SuperAdmins.",
+  })
+  @ApiParam({
+    name: "id",
+    description: "The unique ID of the user to block.",
+    type: "string",
+    example: "a-valid-uuid-or-id",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "The user has been blocked successfully.",
+    type: User,
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized." })
+  @ApiResponse({ status: 403, description: "Forbidden resource." })
+  @ApiResponse({ status: 404, description: "User not found." })
+  async blockUser(@Param("id") id: string) {
+    return await this.usersService.blockUser(id);
+  }
+
+
+  @Patch(":id/unblock")
+  @SuperAdminOnly()
+  @UserPermissions([UserAction.UPDATE])
+  @ApiOperation({
+    summary: "Unblock a user by ID",
+    description:
+      "Unblocks a user by their unique ID. Accessible only by SuperAdmins.",
+  })
+  @ApiParam({
+    name: "id",
+    description: "The unique ID of the user to unblock.",
+    type: "string",
+    example: "a-valid-uuid-or-id",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "The user has been unblocked successfully.",
+    type: User,
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized." })
+  @ApiResponse({ status: 403, description: "Forbidden resource." })
+  @ApiResponse({ status: 404, description: "User not found." })
+  async unblockUser(@Param("id") id: string) {
+    return await this.usersService.unblockUser(id);
   }
 }

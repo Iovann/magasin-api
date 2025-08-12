@@ -24,6 +24,9 @@ export class AuthService {
    */
   async validateUser(email: string, pass: string): Promise<Omit<User, "passwordHash">> {
     const user = await this.usersService.findByEmailWithPassword(email);
+    if (user && user.isBlocked) {
+      throw this.errorHandlingService.returnOnAuthorized("ERR_AUTH_SERVICE_002_VALIDATE_USER", "Your account has been blocked.");
+    }
     if (user && (await bcrypt.compare(pass, user.passwordHash!))) {
       const userWithoutPassword = Object.fromEntries(
         Object.entries(user).filter(([key]) => key !== 'passwordHash')

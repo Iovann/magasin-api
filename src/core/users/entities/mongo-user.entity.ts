@@ -33,6 +33,13 @@ export class MongoUser extends Document implements User {
   role: Role;
 
   /**
+   * Indicates if the user account is blocked.
+   * @example false
+   */
+  @Prop({ required: true, default: false })
+  isBlocked: boolean;
+
+  /**
    * The creation date of the user.
    */
   createdAt: Date;

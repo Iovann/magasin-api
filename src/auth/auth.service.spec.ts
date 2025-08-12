@@ -23,6 +23,7 @@ describe("AuthService", () => {
     email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date(),
+    isBlocked: false,
   };
 
   beforeEach(async () => {

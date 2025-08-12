@@ -45,4 +45,11 @@ export class PostgresUser implements User {
    */
   @CreateDateColumn()
   createdAt: Date;
+
+  /**
+   * Indicates if the user account is blocked.
+   * @example false
+   */
+  @Column({ default: false })
+  isBlocked: boolean;
 }
