@@ -604,7 +604,7 @@ describe("UsersService", () => {
       const result = await service.removeRefreshToken("1");
 
       expect(mockUserRepository.update).toHaveBeenCalledWith("1", {
-        refreshToken: undefined,
+        refreshToken: '',
       });
       expect(result).toEqual(updatedUser);
       expect(mockLogger.log).toHaveBeenCalledWith({

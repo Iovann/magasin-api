@@ -199,7 +199,9 @@ export class UsersService {
 
   async getUserIfRefreshTokenMatches(refreshToken: string, userId: string) {
     const user = await this.userRepository.findById(userId);
-    if (!user || !user.refreshToken) return null;
+    if (!user || user.refreshToken === null || user.refreshToken === undefined) {
+      return null;
+    }
 
     const isRefreshTokenMatching = await bcrypt.compare(
       refreshToken,
@@ -217,7 +219,7 @@ export class UsersService {
     this.logger.log({ message: `Removing refresh token for user ${userId}` });
     try {
       const updatedUser = await this.userRepository.update(userId, {
-        refreshToken: undefined,
+        refreshToken: '',
       });
 
       if (!updatedUser) {

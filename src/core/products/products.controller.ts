@@ -254,7 +254,7 @@ export class ProductsController {
   }
 
   @Post(":id/sell")
-  @Roles(Role.Vendeur)
+  @Roles(Role.Vendeur, Role.SuperAdmin)
   @ApiOperation({
     summary: "Sell a product",
     description:
