@@ -66,7 +66,6 @@ export class User {
   })
   createdAt: Date;
 
-
   /**
    * Indicates if the user account is blocked.
    * @example false

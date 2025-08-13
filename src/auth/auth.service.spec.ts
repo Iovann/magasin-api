@@ -61,11 +61,14 @@ describe("AuthService", () => {
         {
           provide: ErrorHandlingService,
           useValue: {
-            returnOnAuthorized: jest.fn(() => { throw new UnauthorizedException("Invalid credentials"); }),
-            returnErrorOnNotFound: jest.fn(() => { throw new NotFoundException("User not found."); }),
+            returnOnAuthorized: jest.fn(() => {
+              throw new UnauthorizedException("Invalid credentials");
+            }),
+            returnErrorOnNotFound: jest.fn(() => {
+              throw new NotFoundException("User not found.");
+            }),
           },
         },
-        
       ],
     }).compile();
 
@@ -86,7 +89,9 @@ describe("AuthService", () => {
         "password",
       );
       const expectedResult = Object.fromEntries(
-        Object.entries(userWithPassword).filter(([key]) => key !== 'passwordHash')
+        Object.entries(userWithPassword).filter(
+          ([key]) => key !== "passwordHash",
+        ),
       );
       expect(result).toEqual(expectedResult);
     });
@@ -94,8 +99,13 @@ describe("AuthService", () => {
     it("should throw UnauthorizedException if user not found", async () => {
       usersService.findByEmailWithPassword.mockResolvedValue(null);
 
-      await expect(authService.validateUser("test@example.com", "password")).rejects.toThrow(UnauthorizedException);
-      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith("ERR_AUTH_SERVICE_001_VALIDATE_USER", "Invalid credentials");
+      await expect(
+        authService.validateUser("test@example.com", "password"),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith(
+        "ERR_AUTH_SERVICE_001_VALIDATE_USER",
+        "Invalid credentials",
+      );
     });
 
     it("should throw UnauthorizedException if password does not match", async () => {
@@ -103,8 +113,13 @@ describe("AuthService", () => {
       usersService.findByEmailWithPassword.mockResolvedValue(userWithPassword);
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      await expect(authService.validateUser("test@example.com", "password")).rejects.toThrow(UnauthorizedException);
-      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith("ERR_AUTH_SERVICE_001_VALIDATE_USER", "Invalid credentials");
+      await expect(
+        authService.validateUser("test@example.com", "password"),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith(
+        "ERR_AUTH_SERVICE_001_VALIDATE_USER",
+        "Invalid credentials",
+      );
     });
   });
 
@@ -159,7 +174,6 @@ describe("AuthService", () => {
     const hashedPassword = "hashedNewPassword";
     const userWithPassword = { ...mockUser, passwordHash: "hashedOldPassword" };
 
-  
     it("should successfully change the user's password", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
       mockedBcrypt.compare.mockResolvedValue(true as never);
@@ -169,24 +183,40 @@ describe("AuthService", () => {
       await authService.changePassword(userId, currentPassword, newPassword);
 
       expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith(currentPassword, userWithPassword.passwordHash);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        currentPassword,
+        userWithPassword.passwordHash,
+      );
       expect(mockedBcrypt.hash).toHaveBeenCalledWith(newPassword, 10);
-      expect(usersService.updatePasswordHash).toHaveBeenCalledWith(userId, hashedPassword);
+      expect(usersService.updatePasswordHash).toHaveBeenCalledWith(
+        userId,
+        hashedPassword,
+      );
     });
 
     it("should throw NotFoundException if user is not found", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(null);
 
-      await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(NotFoundException);
-      expect(errorHandlingService.returnErrorOnNotFound).toHaveBeenCalledWith("ERR_AUTH_SERVICE_003_CHANGE_PASSWORD", "User not found.");
+      await expect(
+        authService.changePassword(userId, currentPassword, newPassword),
+      ).rejects.toThrow(NotFoundException);
+      expect(errorHandlingService.returnErrorOnNotFound).toHaveBeenCalledWith(
+        "ERR_AUTH_SERVICE_003_CHANGE_PASSWORD",
+        "User not found.",
+      );
     });
 
     it("should throw UnauthorizedException if current password is invalid", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      await expect(authService.changePassword(userId, currentPassword, newPassword)).rejects.toThrow(UnauthorizedException);
-      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith("ERR_AUTH_SERVICE_004_CHANGE_PASSWORD", "Invalid current password.");
+      await expect(
+        authService.changePassword(userId, currentPassword, newPassword),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(errorHandlingService.returnOnAuthorized).toHaveBeenCalledWith(
+        "ERR_AUTH_SERVICE_004_CHANGE_PASSWORD",
+        "Invalid current password.",
+      );
     });
   });
 });

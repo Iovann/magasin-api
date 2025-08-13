@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { Role } from '../enum/role.enum';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { RolesGuard } from "./roles.guard";
+import { ROLES_KEY } from "../decorators/roles.decorator";
+import { Role } from "../enum/role.enum";
 
-describe('RolesGuard', () => {
+describe("RolesGuard", () => {
   let guard: RolesGuard;
   let reflector: Reflector;
   let mockExecutionContext: ExecutionContext;
@@ -37,12 +37,12 @@ describe('RolesGuard', () => {
     } as any;
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(guard).toBeDefined();
   });
 
-  it('should allow access when no roles are required', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
+  it("should allow access when no roles are required", () => {
+    jest.spyOn(reflector, "getAllAndOverride").mockReturnValue(undefined);
 
     const result = guard.canActivate(mockExecutionContext);
 
@@ -53,8 +53,8 @@ describe('RolesGuard', () => {
     ]);
   });
 
-  it('should allow access when user has required role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.Vendeur]);
+  it("should allow access when user has required role", () => {
+    jest.spyOn(reflector, "getAllAndOverride").mockReturnValue([Role.Vendeur]);
 
     const result = guard.canActivate(mockExecutionContext);
 
@@ -65,8 +65,10 @@ describe('RolesGuard', () => {
     ]);
   });
 
-  it('should deny access when user does not have required role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.SuperAdmin]);
+  it("should deny access when user does not have required role", () => {
+    jest
+      .spyOn(reflector, "getAllAndOverride")
+      .mockReturnValue([Role.SuperAdmin]);
 
     const result = guard.canActivate(mockExecutionContext);
 
@@ -77,8 +79,10 @@ describe('RolesGuard', () => {
     ]);
   });
 
-  it('should allow access when user has one of multiple required roles', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.SuperAdmin, Role.Vendeur]);
+  it("should allow access when user has one of multiple required roles", () => {
+    jest
+      .spyOn(reflector, "getAllAndOverride")
+      .mockReturnValue([Role.SuperAdmin, Role.Vendeur]);
 
     const result = guard.canActivate(mockExecutionContext);
 
@@ -89,8 +93,10 @@ describe('RolesGuard', () => {
     ]);
   });
 
-  it('should deny access when user has none of the required roles', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.SuperAdmin, Role.Magasinier]);
+  it("should deny access when user has none of the required roles", () => {
+    jest
+      .spyOn(reflector, "getAllAndOverride")
+      .mockReturnValue([Role.SuperAdmin, Role.Magasinier]);
 
     const result = guard.canActivate(mockExecutionContext);
 
@@ -101,9 +107,9 @@ describe('RolesGuard', () => {
     ]);
   });
 
-  it('should deny access when user is undefined', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.Vendeur]);
-    
+  it("should deny access when user is undefined", () => {
+    jest.spyOn(reflector, "getAllAndOverride").mockReturnValue([Role.Vendeur]);
+
     mockExecutionContext.switchToHttp = jest.fn().mockReturnValue({
       getRequest: jest.fn().mockReturnValue({
         user: undefined,
@@ -115,9 +121,9 @@ describe('RolesGuard', () => {
     expect(result).toBe(false);
   });
 
-  it('should deny access when user has no role', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.Vendeur]);
-    
+  it("should deny access when user has no role", () => {
+    jest.spyOn(reflector, "getAllAndOverride").mockReturnValue([Role.Vendeur]);
+
     mockExecutionContext.switchToHttp = jest.fn().mockReturnValue({
       getRequest: jest.fn().mockReturnValue({
         user: {},

@@ -137,55 +137,71 @@ describe("UsersController", () => {
     });
   });
 
-  describe('blockUser', () => {
-    it('should block a user successfully', async () => {
+  describe("blockUser", () => {
+    it("should block a user successfully", async () => {
       const mockBlockedUser = { ...mockUser, isBlocked: true } as User;
       usersService.blockUser.mockResolvedValue(mockBlockedUser);
 
-      const result = await controller.blockUser('1');
+      const result = await controller.blockUser("1");
 
-      expect(usersService.blockUser).toHaveBeenCalledWith('1');
+      expect(usersService.blockUser).toHaveBeenCalledWith("1");
       expect(result).toEqual(mockBlockedUser);
     });
 
-    it('should rethrow NotFoundException from service', async () => {
-      usersService.blockUser.mockImplementation(() => { throw new NotFoundException('User not found'); });
+    it("should rethrow NotFoundException from service", async () => {
+      usersService.blockUser.mockImplementation(() => {
+        throw new NotFoundException("User not found");
+      });
 
-      await expect(controller.blockUser('999')).rejects.toThrow(NotFoundException);
-      expect(usersService.blockUser).toHaveBeenCalledWith('999');
+      await expect(controller.blockUser("999")).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(usersService.blockUser).toHaveBeenCalledWith("999");
     });
 
-    it('should rethrow ConflictException from service', async () => {
-      usersService.blockUser.mockImplementation(() => { throw new ConflictException('User already blocked'); });
+    it("should rethrow ConflictException from service", async () => {
+      usersService.blockUser.mockImplementation(() => {
+        throw new ConflictException("User already blocked");
+      });
 
-      await expect(controller.blockUser('1')).rejects.toThrow(ConflictException);
-      expect(usersService.blockUser).toHaveBeenCalledWith('1');
+      await expect(controller.blockUser("1")).rejects.toThrow(
+        ConflictException,
+      );
+      expect(usersService.blockUser).toHaveBeenCalledWith("1");
     });
   });
 
-  describe('unblockUser', () => {
-    it('should unblock a user successfully', async () => {
+  describe("unblockUser", () => {
+    it("should unblock a user successfully", async () => {
       const mockUnblockedUser = { ...mockUser, isBlocked: false } as User;
       usersService.unblockUser.mockResolvedValue(mockUnblockedUser);
 
-      const result = await controller.unblockUser('1');
+      const result = await controller.unblockUser("1");
 
-      expect(usersService.unblockUser).toHaveBeenCalledWith('1');
+      expect(usersService.unblockUser).toHaveBeenCalledWith("1");
       expect(result).toEqual(mockUnblockedUser);
     });
 
-    it('should rethrow NotFoundException from service', async () => {
-      usersService.unblockUser.mockImplementation(() => { throw new NotFoundException('User not found'); });
+    it("should rethrow NotFoundException from service", async () => {
+      usersService.unblockUser.mockImplementation(() => {
+        throw new NotFoundException("User not found");
+      });
 
-      await expect(controller.unblockUser('999')).rejects.toThrow(NotFoundException);
-      expect(usersService.unblockUser).toHaveBeenCalledWith('999');
+      await expect(controller.unblockUser("999")).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(usersService.unblockUser).toHaveBeenCalledWith("999");
     });
 
-    it('should rethrow ConflictException from service', async () => {
-      usersService.unblockUser.mockImplementation(() => { throw new ConflictException('User not blocked'); });
+    it("should rethrow ConflictException from service", async () => {
+      usersService.unblockUser.mockImplementation(() => {
+        throw new ConflictException("User not blocked");
+      });
 
-      await expect(controller.unblockUser('1')).rejects.toThrow(ConflictException);
-      expect(usersService.unblockUser).toHaveBeenCalledWith('1');
+      await expect(controller.unblockUser("1")).rejects.toThrow(
+        ConflictException,
+      );
+      expect(usersService.unblockUser).toHaveBeenCalledWith("1");
     });
   });
 });

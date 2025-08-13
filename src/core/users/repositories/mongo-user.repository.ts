@@ -57,9 +57,7 @@ export class MongoUserRepository implements IUserRepository {
   }
 
   async update(id: string, userData: Partial<User>): Promise<User | null> {
-    return this.userModel
-      .findByIdAndUpdate(id, userData, { new: true })
-      .exec();
+    return this.userModel.findByIdAndUpdate(id, userData, { new: true }).exec();
   }
 
   async delete(id: string): Promise<void> {

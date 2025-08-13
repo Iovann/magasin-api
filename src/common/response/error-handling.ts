@@ -17,7 +17,7 @@ import { InternalServerErrorException } from "@nestjs/common/exceptions/internal
 @Global()
 @Injectable()
 export class ErrorHandlingService {
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) { }
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {}
 
   /**
    * Throws an UnauthorizedException with the specified error message.
@@ -84,11 +84,12 @@ export class ErrorHandlingService {
    */
   returnErrorOnInternalServerError(
     loggerMessage: string,
-    errorMessage?: string | Error
+    errorMessage?: string | Error,
   ) {
-    const message = typeof errorMessage === 'string'
-      ? errorMessage
-      : errorMessage?.message || 'An unexpected error occurred';
+    const message =
+      typeof errorMessage === "string"
+        ? errorMessage
+        : errorMessage?.message || "An unexpected error occurred";
 
     this.logger.error(loggerMessage);
     throw new InternalServerErrorException(message);

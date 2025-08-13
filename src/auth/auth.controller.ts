@@ -15,26 +15,25 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { User } from "../core/users/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
-import { ApiBearerAuth } from '@nestjs/swagger';
-
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiTags("auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @UseGuards(LocalAuthGuard)
-  @Post('login')
+  @Post("login")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Connexion utilisateur' })
+  @ApiOperation({ summary: "User login" })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 200,
-    description: 'Retourne les tokens JWT',
+    description: "Return JWT tokens",
   })
   @ApiResponse({
     status: 401,
-    description: 'Email ou mot de passe incorrect'
+    description: "Invalid email or password",
   })
   async login(@Request() req: { user: User }) {
     return this.authService.login(req.user);
@@ -43,7 +42,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post("logout")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Log out a user" })
+  @ApiOperation({ summary: "User logout" })
   @ApiResponse({ status: 200, description: "User logged out successfully." })
   async logout(@Request() req: { user: User }) {
     return this.authService.logout((req.user as User).id);
@@ -52,34 +51,38 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
-    summary: "Rafraîchir le token d'accès",
-    description: "Nécessite un refresh token valide"
+    summary: "Refresh JWT tokens",
+    description: "Refresh JWT tokens",
   })
   @ApiResponse({
     status: 200,
-    description: "Nouveaux tokens générés",
+    description: "New tokens generated",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        access_token: { type: 'string' },
-        refresh_token: { type: 'string' }
-      }
-    }
+        access_token: { type: "string" },
+        refresh_token: { type: "string" },
+      },
+    },
   })
   async refresh(@Request() req: { user: User & { refreshToken: string } }) {
-    return this.authService.getTokens(req.user.id, req.user.email, req.user.role);
+    return this.authService.getTokens(
+      req.user.id,
+      req.user.email,
+      req.user.role,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('change-password')
+  @Post("change-password")
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Changer le mot de passe de l\'utilisateur' })
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Change user password" })
   @ApiBody({ type: ChangePasswordDto })
-  @ApiResponse({ status: 200, description: 'Mot de passe changé avec succès' })
-  @ApiResponse({ status: 401, description: 'Mot de passe actuel invalide' })
+  @ApiResponse({ status: 200, description: "Password changed successfully" })
+  @ApiResponse({ status: 401, description: "Invalid current password" })
   async changePassword(
     @Request() req: { user: User },
     @Body() changePasswordDto: ChangePasswordDto,

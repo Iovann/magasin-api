@@ -15,7 +15,7 @@ export class UsersService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject(IUserRepository) private readonly userRepository: IUserRepository,
     private readonly errorHandlingService: ErrorHandlingService,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     this.logger.log({
@@ -105,7 +105,9 @@ export class UsersService {
   }
 
   async findByEmailWithPassword(email: string): Promise<User | null> {
-    this.logger.log({ message: `Fetching user by email with password: ${email}` });
+    this.logger.log({
+      message: `Fetching user by email with password: ${email}`,
+    });
     try {
       const user = await this.userRepository.findByEmailWithPassword(email);
       if (user) {
@@ -122,7 +124,9 @@ export class UsersService {
     }
   }
 
-  async findByIdWithPassword(id: string): Promise<(User & { passwordHash: string }) | null> {
+  async findByIdWithPassword(
+    id: string,
+  ): Promise<(User & { passwordHash: string }) | null> {
     this.logger.log({ message: `Fetching user by ID with password: ${id}` });
     try {
       const user = await this.userRepository.findByIdWithPassword(id);
@@ -161,7 +165,10 @@ export class UsersService {
     }
   }
 
-  async setCurrentRefreshToken(refreshToken: string, userId: string): Promise<User> {
+  async setCurrentRefreshToken(
+    refreshToken: string,
+    userId: string,
+  ): Promise<User> {
     this.logger.log({ message: `Setting refresh token for user ${userId}` });
     try {
       const salt = await bcrypt.genSalt();
@@ -169,16 +176,16 @@ export class UsersService {
       const updatedUser = await this.userRepository.update(userId, {
         refreshToken: hashedRefreshToken,
       });
-      
+
       if (!updatedUser) {
         throw this.errorHandlingService.returnErrorOnNotFound(
           `[ERR_USER_SET_REFRESH_TOKEN_NOT_FOUND] User ${userId} not found`,
           "User not found",
         );
       }
-      
-      this.logger.log({ 
-        message: `Refresh token set for user ${userId}` 
+
+      this.logger.log({
+        message: `Refresh token set for user ${userId}`,
       });
       return updatedUser;
     } catch (error) {
@@ -212,16 +219,16 @@ export class UsersService {
       const updatedUser = await this.userRepository.update(userId, {
         refreshToken: undefined,
       });
-      
+
       if (!updatedUser) {
         throw this.errorHandlingService.returnErrorOnNotFound(
           `[ERR_USER_REMOVE_REFRESH_TOKEN_NOT_FOUND] User ${userId} not found`,
           "User not found",
         );
       }
-      
-      this.logger.log({ 
-        message: `Refresh token removed for user ${userId}` 
+
+      this.logger.log({
+        message: `Refresh token removed for user ${userId}`,
       });
       return updatedUser;
     } catch (error) {
@@ -233,10 +240,17 @@ export class UsersService {
     }
   }
 
-  async updatePasswordHash(userId: string, passwordHash: string): Promise<User> {
-    this.logger.log({ message: `Attempting to update password hash for user ${userId}` });
+  async updatePasswordHash(
+    userId: string,
+    passwordHash: string,
+  ): Promise<User> {
+    this.logger.log({
+      message: `Attempting to update password hash for user ${userId}`,
+    });
     try {
-      const updatedUser = await this.userRepository.update(userId, { passwordHash });
+      const updatedUser = await this.userRepository.update(userId, {
+        passwordHash,
+      });
       if (!updatedUser) {
         throw this.errorHandlingService.returnErrorOnNotFound(
           `[ERR_USER_UPDATE_PASSWORD_HASH_NOT_FOUND] User ${userId} not found`,
@@ -286,8 +300,8 @@ export class UsersService {
       const users = await this.userRepository.findAll();
       const stats = {
         totalUsers: users.length,
-        activeUsers: users.filter(user => !user.isBlocked).length,
-        blockedUsers: users.filter(user => user.isBlocked).length,
+        activeUsers: users.filter((user) => !user.isBlocked).length,
+        blockedUsers: users.filter((user) => user.isBlocked).length,
         userRoles: {} as Record<string, number>,
       };
 
@@ -304,7 +318,6 @@ export class UsersService {
       );
     }
   }
-
 
   async blockUser(id: string): Promise<User> {
     const user = await this.userRepository.findById(id);
@@ -331,7 +344,6 @@ export class UsersService {
         "Failed to block user",
       );
     }
-
 
     const updatedUser = await this.userRepository.findById(id);
 

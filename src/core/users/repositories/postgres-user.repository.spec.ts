@@ -1,36 +1,36 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
-import { PostgresUserRepository } from './postgres-user.repository';
-import { PostgresUser } from '../entities/postgres-user.entity';
-import { User } from '../entities/user.entity';
-import { Role } from '../../../common/enum/role.enum';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
+import { PostgresUserRepository } from "./postgres-user.repository";
+import { PostgresUser } from "../entities/postgres-user.entity";
+import { User } from "../entities/user.entity";
+import { Role } from "../../../common/enum/role.enum";
 
-describe('PostgresUserRepository', () => {
+describe("PostgresUserRepository", () => {
   let repository: PostgresUserRepository;
   let mockUserRepository: jest.Mocked<Repository<PostgresUser>>;
   let mockQueryBuilder: jest.Mocked<SelectQueryBuilder<PostgresUser>>;
 
   const mockUser: User = {
-    id: '1',
-    email: 'test@example.com',
+    id: "1",
+    email: "test@example.com",
     role: Role.Vendeur,
     isBlocked: false,
     createdAt: new Date(),
   };
 
   const mockPostgresUser: PostgresUser = {
-    id: '1',
-    email: 'test@example.com',
+    id: "1",
+    email: "test@example.com",
     role: Role.Vendeur,
     isBlocked: false,
     createdAt: new Date(),
-    passwordHash: 'hashedPassword123',
+    passwordHash: "hashedPassword123",
   };
 
   const mockUserWithPassword = {
     ...mockUser,
-    passwordHash: 'hashedPassword123',
+    passwordHash: "hashedPassword123",
   };
 
   // const createUserData = {
@@ -74,11 +74,11 @@ describe('PostgresUserRepository', () => {
     jest.clearAllMocks();
   });
 
-  describe('create', () => {
-    it('should create a new user', async () => {
+  describe("create", () => {
+    it("should create a new user", async () => {
       const createUserData = {
-        email: 'test@example.com',
-        passwordHash: 'hashedPassword123',
+        email: "test@example.com",
+        passwordHash: "hashedPassword123",
         role: Role.Vendeur,
         isBlocked: false,
       };
@@ -91,160 +91,192 @@ describe('PostgresUserRepository', () => {
       expect(mockUserRepository.create).toHaveBeenCalledWith(createUserData);
       expect(mockUserRepository.save).toHaveBeenCalledWith(mockPostgresUser);
       expect(result).toMatchObject({
-        id: '1',
-        email: 'test@example.com',
+        id: "1",
+        email: "test@example.com",
         role: Role.Vendeur,
         isBlocked: false,
       });
     });
   });
 
-  describe('findById', () => {
-    it('should find a user by id', async () => {
+  describe("findById", () => {
+    it("should find a user by id", async () => {
       mockUserRepository.findOneBy.mockResolvedValue(mockPostgresUser);
 
-      const result = await repository.findById('1');
+      const result = await repository.findById("1");
 
-      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: '1' });
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: "1" });
       expect(result).toMatchObject({
-        id: '1',
-        email: 'test@example.com',
+        id: "1",
+        email: "test@example.com",
         role: Role.Vendeur,
         isBlocked: false,
       });
     });
 
-    it('should return null when user not found', async () => {
+    it("should return null when user not found", async () => {
       mockUserRepository.findOneBy.mockResolvedValue(null);
 
-      const result = await repository.findById('999');
+      const result = await repository.findById("999");
 
-      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: '999' });
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: "999" });
       expect(result).toBeNull();
     });
   });
 
-  describe('findByEmail', () => {
-    it('should find a user by email', async () => {
+  describe("findByEmail", () => {
+    it("should find a user by email", async () => {
       mockUserRepository.findOneBy.mockResolvedValue(mockPostgresUser);
 
-      const result = await repository.findByEmail('test@example.com');
+      const result = await repository.findByEmail("test@example.com");
 
-      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ email: 'test@example.com' });
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
+        email: "test@example.com",
+      });
       expect(result).toMatchObject({
-        id: '1',
-        email: 'test@example.com',
+        id: "1",
+        email: "test@example.com",
         role: Role.Vendeur,
         isBlocked: false,
       });
     });
 
-    it('should return null when user not found by email', async () => {
+    it("should return null when user not found by email", async () => {
       mockUserRepository.findOneBy.mockResolvedValue(null);
 
-      const result = await repository.findByEmail('nonexistent@example.com');
+      const result = await repository.findByEmail("nonexistent@example.com");
 
-      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ email: 'nonexistent@example.com' });
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
+        email: "nonexistent@example.com",
+      });
       expect(result).toBeNull();
     });
   });
 
-  describe('findByEmailWithPassword', () => {
-    it('should find a user by email with password hash', async () => {
+  describe("findByEmailWithPassword", () => {
+    it("should find a user by email with password hash", async () => {
       mockQueryBuilder.getOne.mockResolvedValue(mockUserWithPassword);
 
-      const result = await repository.findByEmailWithPassword('test@example.com');
+      const result =
+        await repository.findByEmailWithPassword("test@example.com");
 
-      expect(mockUserRepository.createQueryBuilder).toHaveBeenCalledWith('user');
-      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith('user.passwordHash');
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('user.email = :email', { email: 'test@example.com' });
+      expect(mockUserRepository.createQueryBuilder).toHaveBeenCalledWith(
+        "user",
+      );
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+        "user.passwordHash",
+      );
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        "user.email = :email",
+        { email: "test@example.com" },
+      );
       expect(mockQueryBuilder.getOne).toHaveBeenCalled();
       expect(result).toEqual(mockUserWithPassword);
     });
 
-    it('should return null when user not found by email with password', async () => {
+    it("should return null when user not found by email with password", async () => {
       mockQueryBuilder.getOne.mockResolvedValue(null);
 
-      const result = await repository.findByEmailWithPassword('nonexistent@example.com');
+      const result = await repository.findByEmailWithPassword(
+        "nonexistent@example.com",
+      );
 
       expect(result).toBeNull();
     });
   });
 
-  describe('findByIdWithPassword', () => {
-    it('should find a user by id with password hash', async () => {
+  describe("findByIdWithPassword", () => {
+    it("should find a user by id with password hash", async () => {
       mockQueryBuilder.getOne.mockResolvedValue(mockUserWithPassword);
 
-      const result = await repository.findByIdWithPassword('1');
+      const result = await repository.findByIdWithPassword("1");
 
-      expect(mockUserRepository.createQueryBuilder).toHaveBeenCalledWith('user');
-      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith('user.passwordHash');
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: '1' });
+      expect(mockUserRepository.createQueryBuilder).toHaveBeenCalledWith(
+        "user",
+      );
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+        "user.passwordHash",
+      );
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith("user.id = :id", {
+        id: "1",
+      });
       expect(mockQueryBuilder.getOne).toHaveBeenCalled();
       expect(result).toEqual(mockUserWithPassword);
     });
 
-    it('should return null when user not found by id with password', async () => {
+    it("should return null when user not found by id with password", async () => {
       mockQueryBuilder.getOne.mockResolvedValue(null);
 
-      const result = await repository.findByIdWithPassword('999');
+      const result = await repository.findByIdWithPassword("999");
 
       expect(result).toBeNull();
     });
   });
 
-  describe('findAll', () => {
-    it('should return all users', async () => {
+  describe("findAll", () => {
+    it("should return all users", async () => {
       mockUserRepository.find.mockResolvedValue([mockPostgresUser]);
 
       const result = await repository.findAll();
 
       expect(mockUserRepository.find).toHaveBeenCalled();
-      expect(result).toMatchObject([{
-        id: '1',
-        email: 'test@example.com',
-        role: Role.Vendeur,
-        isBlocked: false,
-      }]);
+      expect(result).toMatchObject([
+        {
+          id: "1",
+          email: "test@example.com",
+          role: Role.Vendeur,
+          isBlocked: false,
+        },
+      ]);
     });
   });
 
-  describe('update', () => {
-    it('should update an existing user', async () => {
+  describe("update", () => {
+    it("should update an existing user", async () => {
       const updateData = { isBlocked: true };
       const updatedUser = { ...mockUser, isBlocked: true };
 
-      mockUserRepository.update.mockResolvedValue({ affected: 1, raw: [], generatedMaps: [] });
+      mockUserRepository.update.mockResolvedValue({
+        affected: 1,
+        raw: [],
+        generatedMaps: [],
+      });
       mockUserRepository.findOneBy.mockResolvedValue(updatedUser);
 
-      const result = await repository.update('1', updateData);
+      const result = await repository.update("1", updateData);
 
-      expect(mockUserRepository.update).toHaveBeenCalledWith('1', updateData);
-      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: '1' });
+      expect(mockUserRepository.update).toHaveBeenCalledWith("1", updateData);
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: "1" });
       expect(result).toEqual(updatedUser);
     });
 
-    it('should return null when user not found for update', async () => {
+    it("should return null when user not found for update", async () => {
       const updateData = { isBlocked: true };
 
-      mockUserRepository.update.mockResolvedValue({ affected: 0, raw: [], generatedMaps: [] });
+      mockUserRepository.update.mockResolvedValue({
+        affected: 0,
+        raw: [],
+        generatedMaps: [],
+      });
       mockUserRepository.findOneBy.mockResolvedValue(null);
 
-      const result = await repository.update('999', updateData);
+      const result = await repository.update("999", updateData);
 
-      expect(mockUserRepository.update).toHaveBeenCalledWith('999', { isBlocked: true });
-      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: '999' });
+      expect(mockUserRepository.update).toHaveBeenCalledWith("999", {
+        isBlocked: true,
+      });
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: "999" });
       expect(result).toBeNull();
     });
   });
 
-  describe('delete', () => {
-    it('should delete a user', async () => {
+  describe("delete", () => {
+    it("should delete a user", async () => {
       mockUserRepository.delete.mockResolvedValue({ affected: 1, raw: [] });
 
-      await repository.delete('1');
+      await repository.delete("1");
 
-      expect(mockUserRepository.delete).toHaveBeenCalledWith('1');
+      expect(mockUserRepository.delete).toHaveBeenCalledWith("1");
     });
   });
 });

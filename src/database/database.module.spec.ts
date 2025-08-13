@@ -1,17 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { DatabaseModule } from './database.module';
+import { Test, TestingModule } from "@nestjs/testing";
+import { DatabaseModule } from "./database.module";
 
-describe('DatabaseModule', () => {
-  describe('with postgres database type', () => {
+describe("DatabaseModule", () => {
+  describe("with postgres database type", () => {
     beforeEach(async () => {
-      process.env.DB_TYPE = 'postgres';
+      process.env.DB_TYPE = "postgres";
     });
 
     afterEach(() => {
       delete process.env.DB_TYPE;
     });
 
-    it('should be defined', async () => {
+    it("should be defined", async () => {
       const module: TestingModule = await Test.createTestingModule({
         imports: [DatabaseModule],
       }).compile();
@@ -20,16 +20,16 @@ describe('DatabaseModule', () => {
     });
   });
 
-  describe('with mongodb database type', () => {
+  describe("with mongodb database type", () => {
     beforeEach(async () => {
-      process.env.DB_TYPE = 'mongodb';
+      process.env.DB_TYPE = "mongodb";
     });
 
     afterEach(() => {
       delete process.env.DB_TYPE;
     });
 
-    it('should be defined', async () => {
+    it("should be defined", async () => {
       const module: TestingModule = await Test.createTestingModule({
         imports: [DatabaseModule],
       }).compile();
@@ -38,16 +38,16 @@ describe('DatabaseModule', () => {
     });
   });
 
-  describe('with fs database type', () => {
+  describe("with fs database type", () => {
     beforeEach(async () => {
-      process.env.DB_TYPE = 'fs';
+      process.env.DB_TYPE = "fs";
     });
 
     afterEach(() => {
       delete process.env.DB_TYPE;
     });
 
-    it('should be defined', async () => {
+    it("should be defined", async () => {
       const module: TestingModule = await Test.createTestingModule({
         imports: [DatabaseModule],
       }).compile();

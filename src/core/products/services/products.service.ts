@@ -226,8 +226,8 @@ export class ProductsService {
 
       if (!updatedProduct) {
         throw this.errorHandlingService.returnErrorOnInternalServerError(
-          '[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: Failed to update product stock',
-          'Failed to update product stock',
+          "[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: Failed to update product stock",
+          "Failed to update product stock",
         );
       }
 

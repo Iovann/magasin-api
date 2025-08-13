@@ -102,8 +102,7 @@ export class UsersController {
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get a user by ID",
-    description:
-      "Retrieves a single user by their unique ID.",
+    description: "Retrieves a single user by their unique ID.",
   })
   @ApiParam({
     name: "id",
@@ -172,7 +171,6 @@ export class UsersController {
   async blockUser(@Param("id") id: string) {
     return await this.usersService.blockUser(id);
   }
-
 
   @Patch(":id/unblock")
   @Roles(Role.SuperAdmin)

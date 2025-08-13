@@ -6,7 +6,11 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
-import {  UnauthorizedException, INestApplication, ValidationPipe } from "@nestjs/common";
+import {
+  UnauthorizedException,
+  INestApplication,
+  ValidationPipe,
+} from "@nestjs/common";
 
 describe("AuthController", () => {
   let controller: AuthController;
@@ -46,7 +50,9 @@ describe("AuthController", () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     controller = moduleFixture.get<AuthController>(AuthController);
@@ -104,10 +110,15 @@ describe("AuthController", () => {
     };
 
     it("should change password successfully", async () => {
-      authService.changePassword.mockResolvedValue({message: "Password changed successfully."});
+      authService.changePassword.mockResolvedValue({
+        message: "Password changed successfully.",
+      });
       const req = { user: mockUser };
 
-      const result = await controller.changePassword(req as any, changePasswordDto);
+      const result = await controller.changePassword(
+        req as any,
+        changePasswordDto,
+      );
 
       expect(authService.changePassword).toHaveBeenCalledWith(
         mockUser.id,
@@ -118,10 +129,14 @@ describe("AuthController", () => {
     });
 
     it("should rethrow UnauthorizedException from authService", async () => {
-      authService.changePassword.mockRejectedValue(new UnauthorizedException("Invalid current password."));
+      authService.changePassword.mockRejectedValue(
+        new UnauthorizedException("Invalid current password."),
+      );
       const req = { user: mockUser };
 
-      await expect(controller.changePassword(req as any, changePasswordDto)).rejects.toThrow(UnauthorizedException);
+      await expect(
+        controller.changePassword(req as any, changePasswordDto),
+      ).rejects.toThrow(UnauthorizedException);
       expect(authService.changePassword).toHaveBeenCalledWith(
         mockUser.id,
         changePasswordDto.currentPassword,

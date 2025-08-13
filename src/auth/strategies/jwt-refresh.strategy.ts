@@ -15,7 +15,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly errorHandlingService: ErrorHandlingService,
-      ) {
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -27,7 +27,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
   async validate(req: Request, payload: any) {
     const authHeader = req.get("authorization");
     if (!authHeader) {
-      throw this.errorHandlingService.returnOnAuthorized("ERR_REFRESH_STRATEGY_001_VALIDATE", "Authorization header missing");
+      throw this.errorHandlingService.returnOnAuthorized(
+        "ERR_REFRESH_STRATEGY_001_VALIDATE",
+        "Authorization header missing",
+      );
     }
     const refreshToken = authHeader.replace("Bearer", "").trim();
     const user = await this.usersService.getUserIfRefreshTokenMatches(
@@ -35,7 +38,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
       payload.sub,
     );
     if (!user) {
-      throw this.errorHandlingService.returnOnAuthorized("ERR_REFRESH_STRATEGY_002_VALIDATE", "Invalid refresh token");
+      throw this.errorHandlingService.returnOnAuthorized(
+        "ERR_REFRESH_STRATEGY_002_VALIDATE",
+        "Invalid refresh token",
+      );
     }
     return user;
   }

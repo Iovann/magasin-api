@@ -9,8 +9,8 @@ import { ConfigModule } from "@nestjs/config";
 import { ErrorHandlingModule } from "./common/response/error-handling.module";
 import { AuthModule } from "./auth/auth.module";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import { CacheModule } from "@nestjs/cache-manager";
 
 @Module({
@@ -22,8 +22,8 @@ import { CacheModule } from "@nestjs/cache-manager";
     }),
     CacheModule.register({
       isGlobal: true,
-      store: 'redis',
-      host: 'localhost',
+      store: "redis",
+      host: "localhost",
       port: 6379,
     }),
     DatabaseModule.forRootAsync(),
@@ -41,11 +41,12 @@ import { CacheModule } from "@nestjs/cache-manager";
     }),
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

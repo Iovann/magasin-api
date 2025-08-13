@@ -37,7 +37,9 @@ describe("JwtRefreshStrategy", () => {
         {
           provide: ErrorHandlingService,
           useValue: {
-            returnOnAuthorized: jest.fn(() => { throw new UnauthorizedException(); }),
+            returnOnAuthorized: jest.fn(() => {
+              throw new UnauthorizedException();
+            }),
           },
         },
       ],
