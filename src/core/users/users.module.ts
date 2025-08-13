@@ -1,4 +1,4 @@
-import { Module, DynamicModule, Provider } from "@nestjs/common";
+import { Module, DynamicModule, Provider, Global } from "@nestjs/common";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./services/users.service";
 import { UserInitService } from "./services/user-init.service";
@@ -14,6 +14,7 @@ import { PostgresUser } from "./entities/postgres-user.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
 
+@Global()
 @Module({})
 export class UsersModule {
   static forRoot(): DynamicModule {

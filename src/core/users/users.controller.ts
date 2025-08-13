@@ -26,17 +26,21 @@ import {
 import { UserAction } from "../../common/enum/permission.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { UseGuards } from "@nestjs/common";
+import { RolesGuard } from "../../common/guards/roles.guard";
+import { Roles } from "../../common/decorators/roles.decorator";
+import { Role } from "../../common/enum/role.enum";
 
 @ApiTags("users")
 @Controller("users")
 @ApiBearerAuth("JWT-auth")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @SuperAdminOnly()
   @UserPermissions([UserAction.CREATE])
+  @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Create a new user",
     description: "Creates a new user. Accessible only by SuperAdmins.",
@@ -58,8 +62,8 @@ export class UsersController {
   }
 
   @Get()
-  @SuperAdminOnly()
   @UserPermissions([UserAction.VIEW])
+  @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get all users",
     description:
@@ -77,7 +81,6 @@ export class UsersController {
   }
 
   @Get("stats")
-  @SuperAdminOnly()
   @UserPermissions([UserAction.VIEW])
   @ApiOperation({
     summary: "Get user statistics",
@@ -105,12 +108,12 @@ export class UsersController {
   }
 
   @Get(":id")
-  @SuperAdminOnly()
+  @Roles(Role.SuperAdmin)
   @UserPermissions([UserAction.VIEW])
   @ApiOperation({
     summary: "Get a user by ID",
     description:
-      "Retrieves a single user by their unique ID. Accessible only by SuperAdmins.",
+      "Retrieves a single user by their unique ID.",
   })
   @ApiParam({
     name: "id",
@@ -131,7 +134,7 @@ export class UsersController {
   }
 
   @Delete(":id")
-  @SuperAdminOnly()
+  @Roles(Role.SuperAdmin)
   @UserPermissions([UserAction.DELETE])
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
@@ -157,7 +160,7 @@ export class UsersController {
   }
 
   @Patch(":id/block")
-  @SuperAdminOnly()
+  @Roles(Role.SuperAdmin)
   @UserPermissions([UserAction.UPDATE])
   @ApiOperation({
     summary: "Block a user by ID",
@@ -184,7 +187,7 @@ export class UsersController {
 
 
   @Patch(":id/unblock")
-  @SuperAdminOnly()
+  @Roles(Role.SuperAdmin)
   @UserPermissions([UserAction.UPDATE])
   @ApiOperation({
     summary: "Unblock a user by ID",

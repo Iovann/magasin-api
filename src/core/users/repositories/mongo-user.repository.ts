@@ -14,18 +14,15 @@ export class MongoUserRepository implements IUserRepository {
 
   async create(user: Omit<User, "id" | "createdAt">): Promise<User> {
     const newUser = new this.userModel(user);
-    const savedUser = await newUser.save();
-    return this.toUserEntity(savedUser);
+    return newUser.save();
   }
 
   async findById(id: string): Promise<User | null> {
-    const user = await this.userModel.findById(id).exec();
-    return user ? this.toUserEntity(user) : null;
+    return this.userModel.findById(id).exec();
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.userModel.findOne({ email }).exec();
-    return user ? this.toUserEntity(user) : null;
+    return this.userModel.findOne({ email }).exec();
   }
 
   async findByEmailWithPassword(
@@ -35,15 +32,11 @@ export class MongoUserRepository implements IUserRepository {
       .findOne({ email })
       .select("+passwordHash")
       .exec();
-    if (!user || !user.passwordHash) return null;
-
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-      passwordHash: user.passwordHash,
-    };
+    // We must ensure passwordHash is present and return a correctly typed object.
+    if (!user || !user.passwordHash) {
+      return null;
+    }
+    return user as User & { passwordHash: string };
   }
 
   async findByIdWithPassword(
@@ -53,39 +46,23 @@ export class MongoUserRepository implements IUserRepository {
       .findById(id)
       .select("+passwordHash")
       .exec();
-    if (!user || !user.passwordHash) return null;
-
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-      passwordHash: user.passwordHash,
-    };
+    if (!user || !user.passwordHash) {
+      return null;
+    }
+    return user as User & { passwordHash: string };
   }
 
   async findAll(): Promise<User[]> {
-    const users = await this.userModel.find().exec();
-    return users.map((user) => this.toUserEntity(user));
+    return this.userModel.find().exec();
   }
 
   async update(id: string, userData: Partial<User>): Promise<User | null> {
-    const updatedUser = await this.userModel
+    return this.userModel
       .findByIdAndUpdate(id, userData, { new: true })
       .exec();
-    return updatedUser ? this.toUserEntity(updatedUser) : null;
   }
 
   async delete(id: string): Promise<void> {
     await this.userModel.findByIdAndDelete(id).exec();
-  }
-
-  private toUserEntity(mongoUser: MongoUser): User {
-    return {
-      id: mongoUser.id,
-      email: mongoUser.email,
-      role: mongoUser.role,
-      createdAt: mongoUser.createdAt,
-    };
   }
 }

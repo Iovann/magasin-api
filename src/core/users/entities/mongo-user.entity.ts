@@ -43,6 +43,12 @@ export class MongoUser extends Document implements User {
    * The creation date of the user.
    */
   createdAt: Date;
+
+  /**
+   * Stores the hashed refresh token for the user.
+   */
+  @Prop({ nullable: true })
+  refreshToken?: string;
 }
 
 export const MongoUserSchema = SchemaFactory.createForClass(MongoUser);

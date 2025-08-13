@@ -22,17 +22,19 @@ export class PostgresUserRepository implements IUserRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOneBy({ email });
+    const user = await this.userRepository.findOneBy({ email });
+    return user;
   }
 
   async findByEmailWithPassword(
     email: string,
   ): Promise<(User & { passwordHash: string }) | null> {
-    return this.userRepository
+    const user = await this.userRepository
       .createQueryBuilder("user")
       .addSelect("user.passwordHash")
       .where("user.email = :email", { email })
       .getOne();
+    return user;
   }
 
   async findByIdWithPassword(

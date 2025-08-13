@@ -52,4 +52,10 @@ export class PostgresUser implements User {
    */
   @Column({ default: false })
   isBlocked: boolean;
+
+  /**
+   * Stores the hashed refresh token for the user.
+   */
+  @Column({ nullable: true })
+  refreshToken?: string;
 }
