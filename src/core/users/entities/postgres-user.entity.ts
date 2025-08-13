@@ -27,7 +27,7 @@ export class PostgresUser implements User {
   /**
    * The user's hashed password.
    */
-  @Column()
+  @Column({ select: false })
   passwordHash: string;
 
   /**
@@ -56,6 +56,6 @@ export class PostgresUser implements User {
   /**
    * Stores the hashed refresh token for the user.
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   refreshToken?: string;
 }

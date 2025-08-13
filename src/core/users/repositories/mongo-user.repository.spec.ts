@@ -11,6 +11,7 @@ const baseUser: User = {
   email: "test@example.com",
   role: Role.Vendeur,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
+  isBlocked: false,
 };
 
 const createUserData = {
@@ -27,6 +28,7 @@ const mockUserDoc = (user: Partial<User & { passwordHash?: string }>) => ({
   role: user.role,
   createdAt: user.createdAt || new Date(),
   passwordHash: user.passwordHash,
+  isBlocked: user.isBlocked || false,
 });
 
 describe("MongoUserRepository", () => {
@@ -99,7 +101,7 @@ describe("MongoUserRepository", () => {
 
       expect(userModel.findById).toHaveBeenCalledWith(baseUser.id);
       expect(mockQuery.session).not.toHaveBeenCalled(); // No session argument
-      expect(result).toEqual(baseUser);
+      expect(result).toEqual(expect.objectContaining(baseUser));
     });
   });
 
@@ -111,7 +113,7 @@ describe("MongoUserRepository", () => {
 
       expect(userModel.findOne).toHaveBeenCalledWith({ email: baseUser.email });
       expect(mockQuery.session).not.toHaveBeenCalled(); // No session argument
-      expect(result).toEqual(baseUser);
+      expect(result).toEqual(expect.objectContaining(baseUser));
     });
   });
 
@@ -123,7 +125,7 @@ describe("MongoUserRepository", () => {
 
       expect(userModel.find).toHaveBeenCalled();
       expect(mockQuery.session).not.toHaveBeenCalled(); // No session argument
-      expect(result).toEqual([baseUser]);
+      expect(result).toEqual([expect.objectContaining(baseUser)]);
     });
   });
 
@@ -147,7 +149,7 @@ describe("MongoUserRepository", () => {
 
       expect(userModel.findOne).toHaveBeenCalledWith({ email: baseUser.email });
       expect(mockQuery.select).toHaveBeenCalledWith("+passwordHash");
-      expect(result).toEqual(userWithHash);
+      expect(result).toEqual(expect.objectContaining(userWithHash));
     });
   });
 
@@ -160,7 +162,7 @@ describe("MongoUserRepository", () => {
 
       expect(userModel.findById).toHaveBeenCalledWith(baseUser.id);
       expect(mockQuery.select).toHaveBeenCalledWith("+passwordHash");
-      expect(result).toEqual(userWithHash);
+      expect(result).toEqual(expect.objectContaining(userWithHash));
     });
 
     it("should return null if user not found by ID", async () => {

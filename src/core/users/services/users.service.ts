@@ -105,19 +105,89 @@ export class UsersService {
   }
 
   async findByEmailWithPassword(email: string): Promise<User | null> {
-    return this.userRepository.findByEmailWithPassword(email);
+    this.logger.log({ message: `Fetching user by email with password: ${email}` });
+    try {
+      const user = await this.userRepository.findByEmailWithPassword(email);
+      if (user) {
+        this.logger.log({ message: `Found user with email ${email}` });
+      } else {
+        this.logger.log({ message: `User with email ${email} not found` });
+      }
+      return user;
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_FIND_BY_EMAIL_WITH_PASSWORD_CRITICAL] Error finding user by email with password: ${error.message}`,
+        "An error occurred while fetching the user by email with password",
+      );
+    }
   }
 
   async findByIdWithPassword(id: string): Promise<(User & { passwordHash: string }) | null> {
-    return this.userRepository.findByIdWithPassword(id);
+    this.logger.log({ message: `Fetching user by ID with password: ${id}` });
+    try {
+      const user = await this.userRepository.findByIdWithPassword(id);
+      if (user) {
+        this.logger.log({ message: `Found user with ID ${id}` });
+      } else {
+        this.logger.log({ message: `User with ID ${id} not found` });
+      }
+      return user;
+    } catch (error) {
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_FIND_BY_ID_WITH_PASSWORD_CRITICAL] Error finding user by ID with password: ${error.message}`,
+        "An error occurred while fetching the user by ID with password",
+      );
+    }
   }
 
-  async setCurrentRefreshToken(refreshToken: string, userId: string) {
-    const salt = await bcrypt.genSalt();
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
-    await this.userRepository.update(userId, {
-      refreshToken: hashedRefreshToken,
-    });
+  async update(id: string, updateData: Partial<User>): Promise<User> {
+    this.logger.log({ message: `Attempting to update user ${id}`, updateData });
+    try {
+      const user = await this.userRepository.update(id, updateData);
+      if (!user) {
+        throw this.errorHandlingService.returnErrorOnNotFound(
+          `[ERR_USER_UPDATE_NOT_FOUND] User ${id} not found`,
+          "User not found",
+        );
+      }
+      this.logger.log({ message: `User ${id} updated successfully` });
+      return user;
+    } catch (error) {
+      if (error.status) throw error;
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_UPDATE_CRITICAL] Error updating user: ${error.message}`,
+        "An error occurred while updating the user",
+      );
+    }
+  }
+
+  async setCurrentRefreshToken(refreshToken: string, userId: string): Promise<User> {
+    this.logger.log({ message: `Setting refresh token for user ${userId}` });
+    try {
+      const salt = await bcrypt.genSalt();
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+      const updatedUser = await this.userRepository.update(userId, {
+        refreshToken: hashedRefreshToken,
+      });
+      
+      if (!updatedUser) {
+        throw this.errorHandlingService.returnErrorOnNotFound(
+          `[ERR_USER_SET_REFRESH_TOKEN_NOT_FOUND] User ${userId} not found`,
+          "User not found",
+        );
+      }
+      
+      this.logger.log({ 
+        message: `Refresh token set for user ${userId}` 
+      });
+      return updatedUser;
+    } catch (error) {
+      if (error.status) throw error;
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_SET_REFRESH_TOKEN_CRITICAL] Error setting refresh token: ${error.message}`,
+        "An error occurred while setting the refresh token",
+      );
+    }
   }
 
   async getUserIfRefreshTokenMatches(refreshToken: string, userId: string) {
@@ -136,21 +206,50 @@ export class UsersService {
     return null;
   }
 
-  async removeRefreshToken(userId: string) {
-    return this.userRepository.update(userId, {
-      refreshToken: undefined,
-    });
+  async removeRefreshToken(userId: string): Promise<User> {
+    this.logger.log({ message: `Removing refresh token for user ${userId}` });
+    try {
+      const updatedUser = await this.userRepository.update(userId, {
+        refreshToken: undefined,
+      });
+      
+      if (!updatedUser) {
+        throw this.errorHandlingService.returnErrorOnNotFound(
+          `[ERR_USER_REMOVE_REFRESH_TOKEN_NOT_FOUND] User ${userId} not found`,
+          "User not found",
+        );
+      }
+      
+      this.logger.log({ 
+        message: `Refresh token removed for user ${userId}` 
+      });
+      return updatedUser;
+    } catch (error) {
+      if (error.status) throw error;
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_USER_REMOVE_REFRESH_TOKEN_CRITICAL] Error removing refresh token: ${error.message}`,
+        "An error occurred while removing the refresh token",
+      );
+    }
   }
 
-  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<User> {
     this.logger.log({ message: `Attempting to update password hash for user ${userId}` });
     try {
-      await this.userRepository.update(userId, { passwordHash });
-      this.logger.log({ message: `Password hash updated successfully for user ${userId}` });
+      const updatedUser = await this.userRepository.update(userId, { passwordHash });
+      if (!updatedUser) {
+        throw this.errorHandlingService.returnErrorOnNotFound(
+          `[ERR_USER_UPDATE_PASSWORD_HASH_NOT_FOUND] User ${userId} not found`,
+          "User not found",
+        );
+      }
+      this.logger.log({ message: `Password hash updated for user ${userId}` });
+      return updatedUser;
     } catch (error) {
+      if (error.status) throw error;
       throw this.errorHandlingService.returnErrorOnInternalServerError(
-        `[ERR_USER_UPDATE_PASSWORD_CRITICAL] Critical error updating password for user ${userId}: ${error.message}`,
-        "Failed to update user password",
+        `[ERR_USER_UPDATE_PASSWORD_HASH_CRITICAL] Error updating password hash: ${error.message}`,
+        "An error occurred while updating the password hash",
       );
     }
   }
@@ -177,27 +276,31 @@ export class UsersService {
   }
 
   async getUserStats(): Promise<{
-    total: number;
-    byRole: Record<string, number>;
+    totalUsers: number;
+    activeUsers: number;
+    blockedUsers: number;
+    userRoles: Record<string, number>;
   }> {
     this.logger.log({ message: "Fetching user stats" });
     try {
       const users = await this.userRepository.findAll();
       const stats = {
-        total: users.length,
-        byRole: {} as Record<string, number>,
+        totalUsers: users.length,
+        activeUsers: users.filter(user => !user.isBlocked).length,
+        blockedUsers: users.filter(user => user.isBlocked).length,
+        userRoles: {} as Record<string, number>,
       };
 
       users.forEach((user) => {
-        stats.byRole[user.role] = (stats.byRole[user.role] || 0) + 1;
+        stats.userRoles[user.role] = (stats.userRoles[user.role] || 0) + 1;
       });
 
       this.logger.log({ message: "Successfully fetched user stats", stats });
       return stats;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
-        `[ERR_USER_STATS_CRITICAL] Error getting user stats: ${error.message}`,
-        "An error occurred while getting user stats",
+        `[ERR_USER_GET_STATS_CRITICAL] Error getting user statistics: ${error.message}`,
+        "An error occurred while fetching user statistics",
       );
     }
   }

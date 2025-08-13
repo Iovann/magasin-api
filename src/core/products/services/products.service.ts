@@ -184,7 +184,7 @@ export class ProductsService {
       return updatedProduct;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
-        `[ERR_PROD_SELL_CRITICAL] Critical error during sale: ${error.message}`,
+        `[ERR_PROD_SELL_CRITICAL] Critical error during sale: ${error?.message}`,
         "An error occurred while processing the sale",
       );
     }
@@ -225,7 +225,10 @@ export class ProductsService {
       });
 
       if (!updatedProduct) {
-        throw new Error("Failed to update product stock");
+        throw this.errorHandlingService.returnErrorOnInternalServerError(
+          '[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: Failed to update product stock',
+          'Failed to update product stock',
+        );
       }
 
       this.logger.log({
@@ -235,7 +238,7 @@ export class ProductsService {
       return updatedProduct;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
-        `[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: ${error.message}`,
+        `[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: ${error?.message}`,
         "An error occurred while updating the stock",
       );
     }

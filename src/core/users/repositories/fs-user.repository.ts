@@ -19,6 +19,13 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     await this.loadData();
   }
 
+  private toPublicUser(user: User): User {
+    const publicUser = { ...user };
+    delete publicUser.passwordHash;
+    delete publicUser.refreshToken;
+    return publicUser;
+  }
+
   private async loadData(): Promise<void> {
     try {
       await fs.mkdir(path.dirname(this.dbPath), { recursive: true });
@@ -47,15 +54,17 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     };
     this.data.push(newUser);
     await this.persist();
-    return newUser;
+    return this.toPublicUser(newUser);
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.data.find((u) => u.id === id) || null;
+    const user = this.data.find((u) => u.id === id) || null;
+    return user ? this.toPublicUser(user) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.data.find((u) => u.email === email) || null;
+    const user = this.data.find((u) => u.email === email) || null;
+    return user ? this.toPublicUser(user) : null;
   }
 
   async findByEmailWithPassword(
@@ -79,7 +88,7 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
   }
 
   async findAll(): Promise<User[]> {
-    return [...this.data];
+    return this.data.map(this.toPublicUser);
   }
 
   async update(id: string, userData: Partial<User>): Promise<User | null> {
@@ -89,7 +98,7 @@ export class FsUserRepository implements IUserRepository, OnModuleInit {
     }
     this.data[userIndex] = { ...this.data[userIndex], ...userData };
     await this.persist();
-    return this.data[userIndex];
+    return this.toPublicUser(this.data[userIndex]);
   }
 
   async delete(id: string): Promise<void> {

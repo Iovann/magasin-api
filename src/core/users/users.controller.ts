@@ -19,11 +19,6 @@ import {
 import { UsersService } from "./services/users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "./entities/user.entity";
-import {
-  SuperAdminOnly,
-  UserPermissions,
-} from "../../common/decorators/permissions.decorator";
-import { UserAction } from "../../common/enum/permission.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { UseGuards } from "@nestjs/common";
 import { RolesGuard } from "../../common/guards/roles.guard";
@@ -38,8 +33,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @SuperAdminOnly()
-  @UserPermissions([UserAction.CREATE])
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Create a new user",
@@ -62,7 +55,6 @@ export class UsersController {
   }
 
   @Get()
-  @UserPermissions([UserAction.VIEW])
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get all users",
@@ -81,7 +73,6 @@ export class UsersController {
   }
 
   @Get("stats")
-  @UserPermissions([UserAction.VIEW])
   @ApiOperation({
     summary: "Get user statistics",
     description:
@@ -109,7 +100,6 @@ export class UsersController {
 
   @Get(":id")
   @Roles(Role.SuperAdmin)
-  @UserPermissions([UserAction.VIEW])
   @ApiOperation({
     summary: "Get a user by ID",
     description:
@@ -135,7 +125,6 @@ export class UsersController {
 
   @Delete(":id")
   @Roles(Role.SuperAdmin)
-  @UserPermissions([UserAction.DELETE])
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: "Delete a user by ID",
@@ -161,7 +150,6 @@ export class UsersController {
 
   @Patch(":id/block")
   @Roles(Role.SuperAdmin)
-  @UserPermissions([UserAction.UPDATE])
   @ApiOperation({
     summary: "Block a user by ID",
     description:
@@ -188,7 +176,6 @@ export class UsersController {
 
   @Patch(":id/unblock")
   @Roles(Role.SuperAdmin)
-  @UserPermissions([UserAction.UPDATE])
   @ApiOperation({
     summary: "Unblock a user by ID",
     description:
