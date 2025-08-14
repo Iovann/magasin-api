@@ -8,11 +8,12 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { JwtRefreshStrategy } from "./strategies/jwt-refresh.strategy";
 import { LocalStrategy } from "./strategies/local.strategy";
-
+import { TokenBlacklistModule } from "./services/token-blacklist.module";
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    TokenBlacklistModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

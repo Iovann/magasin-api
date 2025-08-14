@@ -6,16 +6,22 @@ import {
   HttpStatus,
   Request,
   Body,
+  Headers,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from "@nestjs/swagger";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { User } from "../core/users/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
-import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -41,11 +47,19 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post("logout")
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "User logout" })
-  @ApiResponse({ status: 200, description: "User logged out successfully." })
-  async logout(@Request() req: { user: User }) {
-    return this.authService.logout((req.user as User).id);
+  @ApiBearerAuth("JWT-auth")
+  @ApiResponse({ status: 204, description: "User logged out successfully." })
+  @ApiResponse({ status: 401, description: "Unauthorized." })
+  async logout(
+    @Request() req: { user: User },
+    @Headers('authorization') authHeader: string,
+  ) {
+    const token = authHeader?.split(' ')[1];
+    if (token) {
+      await this.authService.logout(req.user.id, token);
+    }
   }
 
   @UseGuards(JwtRefreshGuard)

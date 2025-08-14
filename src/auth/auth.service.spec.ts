@@ -8,6 +8,7 @@ import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
 import { UnauthorizedException, NotFoundException } from "@nestjs/common";
 import { ErrorHandlingService } from "../common/response/error-handling";
+import { TokenBlacklistService } from "./services/token-blacklist.service"; // Added import
 
 jest.mock("bcrypt");
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
@@ -17,6 +18,7 @@ describe("AuthService", () => {
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
   let errorHandlingService: jest.Mocked<ErrorHandlingService>;
+  let tokenBlacklistService: jest.Mocked<TokenBlacklistService>; // Added mock instance
 
   const mockUser: User = {
     id: "1",
@@ -44,6 +46,7 @@ describe("AuthService", () => {
           provide: JwtService,
           useValue: {
             signAsync: jest.fn(),
+            decode: jest.fn(), // Added decode mock
           },
         },
         {
@@ -69,6 +72,13 @@ describe("AuthService", () => {
             }),
           },
         },
+        { // Added mock for TokenBlacklistService
+          provide: TokenBlacklistService,
+          useValue: {
+            addToBlacklist: jest.fn(),
+            isBlacklisted: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -76,6 +86,7 @@ describe("AuthService", () => {
     usersService = module.get(UsersService);
     jwtService = module.get(JwtService);
     errorHandlingService = module.get(ErrorHandlingService);
+    tokenBlacklistService = module.get(TokenBlacklistService); // Get mock instance
   });
 
   describe("validateUser", () => {
@@ -142,9 +153,23 @@ describe("AuthService", () => {
   });
 
   describe("logout", () => {
-    it("should call removeRefreshToken with userId", async () => {
-      await authService.logout(mockUser.id);
+    it("should call removeRefreshToken with userId and blacklist the token", async () => { // Updated test description
+      const accessToken = "mockAccessToken";
+      const decodedToken = { exp: Math.floor(Date.now() / 1000) + 3600 }; // Token expires in 1 hour
+      jwtService.decode.mockReturnValue(decodedToken); // Mock decode
+
+      await authService.logout(mockUser.id, accessToken); // Updated call
       expect(usersService.removeRefreshToken).toHaveBeenCalledWith(mockUser.id);
+      expect(tokenBlacklistService.addToBlacklist).toHaveBeenCalledWith(accessToken, expect.any(Number)); // Check addToBlacklist
+    });
+
+    it("should call removeRefreshToken even if token decoding fails", async () => {
+      const accessToken = "invalidToken";
+      jwtService.decode.mockReturnValue(null); // Mock decode to return null
+
+      await authService.logout(mockUser.id, accessToken);
+      expect(usersService.removeRefreshToken).toHaveBeenCalledWith(mockUser.id);
+      expect(tokenBlacklistService.addToBlacklist).not.toHaveBeenCalled(); // Should not blacklist
     });
   });
 

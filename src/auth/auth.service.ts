@@ -5,6 +5,7 @@ import * as bcrypt from "bcrypt";
 import { User } from "../core/users/entities/user.entity";
 import { ConfigService } from "@nestjs/config";
 import { ErrorHandlingService } from "../common/response/error-handling";
+import { TokenBlacklistService } from "./services/token-blacklist.service";
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly errorHandlingService: ErrorHandlingService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   /**
@@ -34,9 +36,7 @@ export class AuthService {
       );
     }
     if (user && (await bcrypt.compare(pass, user.passwordHash!))) {
-      const userWithoutPassword = Object.fromEntries(
-        Object.entries(user).filter(([key]) => key !== "passwordHash"),
-      ) as Omit<User, "passwordHash">;
+      const { passwordHash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     }
     throw this.errorHandlingService.returnOnAuthorized(
@@ -60,12 +60,29 @@ export class AuthService {
   }
 
   /**
-   * Logs out a user by removing their refresh token.
+   * Logs out a user by blacklisting their access token and removing their refresh token.
    * @param userId - The ID of the user to log out.
-   * @returns The result of the removeRefreshToken operation.
+   * @param accessToken - The access token to blacklist.
    */
-  async logout(userId: string) {
-    return this.usersService.removeRefreshToken(userId);
+  async logout(userId: string, accessToken: string): Promise<void> {
+    try {
+      const decodedToken = this.jwtService.decode(accessToken) as { exp: number };
+      if (decodedToken && decodedToken.exp) {
+        const expirationTimestamp = decodedToken.exp;
+        const now = Math.floor(Date.now() / 1000);
+        const ttl = expirationTimestamp - now;
+
+        if (ttl > 0) {
+          await this.tokenBlacklistService.addToBlacklist(accessToken, ttl);
+        }
+      }
+    } catch (error) {
+      // Log the error but don't block the logout process
+      console.error('Error blacklisting token:', error);
+    }
+
+    // Also, remove the refresh token from the database
+    await this.usersService.removeRefreshToken(userId);
   }
 
   /**

@@ -9,9 +9,11 @@ import { ConfigModule } from "@nestjs/config";
 import { ErrorHandlingModule } from "./common/response/error-handling.module";
 import { AuthModule } from "./auth/auth.module";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerGuard } from "@nestjs/throttler";
-import { CacheModule } from "@nestjs/cache-manager";
+import { CacheModule } from "./cache/cache.module";
+import { TokenBlacklistModule } from "./auth/services/token-blacklist.module";
+import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation.interceptor";
 
 @Module({
   imports: [
@@ -20,17 +22,13 @@ import { CacheModule } from "@nestjs/cache-manager";
       isGlobal: true,
       envFilePath: ".env",
     }),
-    CacheModule.register({
-      isGlobal: true,
-      store: "redis",
-      host: "localhost",
-      port: 6379,
-    }),
     DatabaseModule.forRootAsync(),
     ProductsModule.forRoot(),
     UsersModule.forRoot(),
     ErrorHandlingModule,
+    TokenBlacklistModule,
     AuthModule,
+    CacheModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -46,6 +44,10 @@ import { CacheModule } from "@nestjs/cache-manager";
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TokenRevocationInterceptor,
     },
   ],
 })

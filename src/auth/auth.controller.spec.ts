@@ -77,10 +77,13 @@ describe("AuthController", () => {
   });
 
   describe("logout", () => {
-    it("should call authService.logout with the userId", async () => {
+    it("should call authService.logout with the userId and accessToken", async () => {
       const req = { user: mockUser };
-      await controller.logout(req as any);
-      expect(authService.logout).toHaveBeenCalledWith(mockUser.id);
+      const mockAccessToken = "mockAccessToken";
+      const authHeader = `Bearer ${mockAccessToken}`;
+
+      await controller.logout(req as any, authHeader);
+      expect(authService.logout).toHaveBeenCalledWith(mockUser.id, mockAccessToken);
     });
   });
 
