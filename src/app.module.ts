@@ -14,6 +14,7 @@ import { ThrottlerGuard } from "@nestjs/throttler";
 import { CacheModule } from "./cache/cache.module";
 import { TokenBlacklistModule } from "./auth/services/token-blacklist.module";
 import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation.interceptor";
+import { BcryptModule } from './utils/bcrypt/bcrypt.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation
         },
       ],
     }),
+    BcryptModule,
   ],
   controllers: [AppController],
   providers: [

@@ -7,6 +7,7 @@ import { TokenBlacklistService } from '../services/token-blacklist.service';
 describe('TokenRevocationInterceptor', () => {
   let interceptor: TokenRevocationInterceptor;
   let tokenBlacklistService: jest.Mocked<TokenBlacklistService>;
+  let module: TestingModule;
 
   const mockTokenBlacklistService = {
     isBlacklisted: jest.fn(),
@@ -17,7 +18,7 @@ describe('TokenRevocationInterceptor', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         TokenRevocationInterceptor,
         {
@@ -33,8 +34,11 @@ describe('TokenRevocationInterceptor', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    if (module) {
+      await module.close();
+    }
   });
 
   describe('intercept', () => {

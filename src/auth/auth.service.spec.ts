@@ -3,22 +3,21 @@ import { AuthService } from "./auth.service";
 import { UsersService } from "../core/users/services/users.service";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import * as bcrypt from "bcrypt";
 import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
 import { UnauthorizedException, NotFoundException } from "@nestjs/common";
 import { ErrorHandlingService } from "../common/response/error-handling";
-import { TokenBlacklistService } from "./services/token-blacklist.service"; // Added import
-
-jest.mock("bcrypt");
-const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
+import { TokenBlacklistService } from "./services/token-blacklist.service";
+import { BcryptService } from "../utils/bcrypt/bcrypt.service"; // Added import
+import { BcryptModule } from "../utils/bcrypt/bcrypt.module"; // Added import
 
 describe("AuthService", () => {
   let authService: AuthService;
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
   let errorHandlingService: jest.Mocked<ErrorHandlingService>;
-  let tokenBlacklistService: jest.Mocked<TokenBlacklistService>; // Added mock instance
+  let tokenBlacklistService: jest.Mocked<TokenBlacklistService>;
+  let bcryptService: jest.Mocked<BcryptService>; // Added mock instance
 
   const mockUser: User = {
     id: "1",
@@ -29,6 +28,12 @@ describe("AuthService", () => {
   };
 
   beforeEach(async () => {
+    // Create proper mocks for BcryptService
+    const mockBcryptService = {
+      hashPassword: jest.fn().mockResolvedValue("hashedpassword"),
+      comparePassword: jest.fn().mockResolvedValue(true),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -46,7 +51,7 @@ describe("AuthService", () => {
           provide: JwtService,
           useValue: {
             signAsync: jest.fn(),
-            decode: jest.fn(), // Added decode mock
+            decode: jest.fn(),
           },
         },
         {
@@ -72,12 +77,16 @@ describe("AuthService", () => {
             }),
           },
         },
-        { // Added mock for TokenBlacklistService
+        {
           provide: TokenBlacklistService,
           useValue: {
             addToBlacklist: jest.fn(),
             isBlacklisted: jest.fn(),
           },
+        },
+        {
+          provide: BcryptService,
+          useValue: mockBcryptService,
         },
       ],
     }).compile();
@@ -86,14 +95,15 @@ describe("AuthService", () => {
     usersService = module.get(UsersService);
     jwtService = module.get(JwtService);
     errorHandlingService = module.get(ErrorHandlingService);
-    tokenBlacklistService = module.get(TokenBlacklistService); // Get mock instance
+    tokenBlacklistService = module.get(TokenBlacklistService);
+    bcryptService = module.get(BcryptService) as jest.Mocked<BcryptService>;
   });
 
   describe("validateUser", () => {
     it("should return user if validation is successful", async () => {
       const userWithPassword = { ...mockUser, passwordHash: "hashedpassword" };
       usersService.findByEmailWithPassword.mockResolvedValue(userWithPassword);
-      mockedBcrypt.compare.mockResolvedValue(true as never);
+      bcryptService.comparePassword.mockResolvedValue(true); // Use bcryptService mock
 
       const result = await authService.validateUser(
         "test@example.com",
@@ -122,7 +132,7 @@ describe("AuthService", () => {
     it("should throw UnauthorizedException if password does not match", async () => {
       const userWithPassword = { ...mockUser, passwordHash: "hashedpassword" };
       usersService.findByEmailWithPassword.mockResolvedValue(userWithPassword);
-      mockedBcrypt.compare.mockResolvedValue(false as never);
+      bcryptService.comparePassword.mockResolvedValue(false); // Use bcryptService mock
 
       await expect(
         authService.validateUser("test@example.com", "password"),
@@ -153,23 +163,23 @@ describe("AuthService", () => {
   });
 
   describe("logout", () => {
-    it("should call removeRefreshToken with userId and blacklist the token", async () => { // Updated test description
+    it("should call removeRefreshToken with userId and blacklist the token", async () => {
       const accessToken = "mockAccessToken";
-      const decodedToken = { exp: Math.floor(Date.now() / 1000) + 3600 }; // Token expires in 1 hour
-      jwtService.decode.mockReturnValue(decodedToken); // Mock decode
+      const decodedToken = { exp: Math.floor(Date.now() / 1000) + 3600 };
+      jwtService.decode.mockReturnValue(decodedToken);
 
-      await authService.logout(mockUser.id, accessToken); // Updated call
+      await authService.logout(mockUser.id, accessToken);
       expect(usersService.removeRefreshToken).toHaveBeenCalledWith(mockUser.id);
-      expect(tokenBlacklistService.addToBlacklist).toHaveBeenCalledWith(accessToken, expect.any(Number)); // Check addToBlacklist
+      expect(tokenBlacklistService.addToBlacklist).toHaveBeenCalledWith(accessToken, expect.any(Number));
     });
 
     it("should call removeRefreshToken even if token decoding fails", async () => {
       const accessToken = "invalidToken";
-      jwtService.decode.mockReturnValue(null); // Mock decode to return null
+      jwtService.decode.mockReturnValue(null);
 
       await authService.logout(mockUser.id, accessToken);
       expect(usersService.removeRefreshToken).toHaveBeenCalledWith(mockUser.id);
-      expect(tokenBlacklistService.addToBlacklist).not.toHaveBeenCalled(); // Should not blacklist
+      expect(tokenBlacklistService.addToBlacklist).not.toHaveBeenCalled();
     });
   });
 
@@ -201,18 +211,18 @@ describe("AuthService", () => {
 
     it("should successfully change the user's password", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
-      mockedBcrypt.compare.mockResolvedValue(true as never);
-      mockedBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      bcryptService.comparePassword.mockResolvedValue(true); // Use bcryptService mock
+      bcryptService.hashPassword.mockResolvedValue(hashedPassword); // Use bcryptService mock
       usersService.updatePasswordHash.mockResolvedValue(undefined);
 
       await authService.changePassword(userId, currentPassword, newPassword);
 
       expect(usersService.findByIdWithPassword).toHaveBeenCalledWith(userId);
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+      expect(bcryptService.comparePassword).toHaveBeenCalledWith( // Use bcryptService mock
         currentPassword,
         userWithPassword.passwordHash,
       );
-      expect(mockedBcrypt.hash).toHaveBeenCalledWith(newPassword, 10);
+      expect(bcryptService.hashPassword).toHaveBeenCalledWith(newPassword);
       expect(usersService.updatePasswordHash).toHaveBeenCalledWith(
         userId,
         hashedPassword,
@@ -233,7 +243,7 @@ describe("AuthService", () => {
 
     it("should throw UnauthorizedException if current password is invalid", async () => {
       usersService.findByIdWithPassword.mockResolvedValue(userWithPassword);
-      mockedBcrypt.compare.mockResolvedValue(false as never);
+      bcryptService.comparePassword.mockResolvedValue(false); // Use bcryptService mock
 
       await expect(
         authService.changePassword(userId, currentPassword, newPassword),

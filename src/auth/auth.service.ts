@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { UsersService } from "../core/users/services/users.service";
 import { JwtService } from "@nestjs/jwt";
-import * as bcrypt from "bcrypt";
 import { User } from "../core/users/entities/user.entity";
 import { ConfigService } from "@nestjs/config";
 import { ErrorHandlingService } from "../common/response/error-handling";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
+import { BcryptService } from "../utils/bcrypt/bcrypt.service"; // Added import
 
 @Injectable()
 export class AuthService {
@@ -15,6 +15,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly bcryptService: BcryptService, // Injected
   ) {}
 
   /**
@@ -35,7 +36,7 @@ export class AuthService {
         "Your account has been blocked.",
       );
     }
-    if (user && (await bcrypt.compare(pass, user.passwordHash!))) {
+    if (user && (await this.bcryptService.comparePassword(pass, user.passwordHash!))) {
       const { passwordHash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     }
@@ -168,7 +169,7 @@ export class AuthService {
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(
+    const isPasswordValid = await this.bcryptService.comparePassword(
       currentPassword,
       user!.passwordHash!,
     );
@@ -179,7 +180,7 @@ export class AuthService {
       );
     }
 
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await this.bcryptService.hashPassword(newPassword);
     try {
       await this.usersService.updatePasswordHash(userId, hashedNewPassword);
       return { message: "Password changed successfully." };
