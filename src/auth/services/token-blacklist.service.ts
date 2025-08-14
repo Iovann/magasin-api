@@ -17,15 +17,13 @@ export class TokenBlacklistService {
     const key = this.blacklistPrefix + token;
     const effectiveTtl = ttl > 0 ? Math.ceil(ttl) : undefined;
     
-    this.logger.debug(`[TokenBlacklistService] Attempting to SET key: ${key}, TTL: ${effectiveTtl}`);
-    await this.cacheService.set(key, true, { ttl: effectiveTtl });
-    this.logger.debug(`[TokenBlacklistService] SET operation completed for key: ${key}`);
-
-    // Immediate GET to verify persistence
-    const retrieved = await this.cacheService.get(key);
-    this.logger.debug(`[TokenBlacklistService] Retrieved after SET for key ${key}: ${retrieved ? 'found' : 'not found'}`);
-
-    this.logger.log(`Token added to blacklist with a TTL of ${effectiveTtl} seconds.`);
+    try {
+      await this.cacheService.set(key, true, { ttl: effectiveTtl });
+      this.logger.log(`Token blacklisted successfully with TTL: ${effectiveTtl}s`);
+    } catch (error) {
+      this.logger.error(`Failed to blacklist token: ${error.message}`);
+      throw error;
+    }
   }
 
   /**
@@ -35,10 +33,16 @@ export class TokenBlacklistService {
    */
   async isBlacklisted(token: string): Promise<boolean> {
     const key = this.blacklistPrefix + token;
-    this.logger.debug(`[TokenBlacklistService] Attempting to GET key: ${key} for blacklist check.`);
-    const isBlacklisted = await this.cacheService.has(key);
-    this.logger.debug(`[TokenBlacklistService] Blacklist check result for key ${key}: ${isBlacklisted}`);
-    return isBlacklisted;
+    try {
+      const isBlacklisted = await this.cacheService.has(key);
+      this.logger.log(`Token blacklist check: ${isBlacklisted ? 'BLACKLISTED' : 'VALID'} (${token.substring(0, 20)}...)`);
+      return isBlacklisted;
+    } catch (error) {
+      this.logger.error(`Failed to check token blacklist: ${error.message}`);
+      // En cas d'erreur de cache, on considère le token comme non blacklisté
+      // pour éviter de bloquer les utilisateurs légitimes
+      return false;
+    }
   }
 
   /**
@@ -47,9 +51,13 @@ export class TokenBlacklistService {
    */
   async removeFromBlacklist(token: string): Promise<void> {
     const key = this.blacklistPrefix + token;
-    this.logger.debug(`[TokenBlacklistService] Attempting to DEL key: ${key}`);
-    await this.cacheService.delete(key);
-    this.logger.log('Token removed from blacklist');
+    try {
+      await this.cacheService.delete(key);
+      this.logger.log('Token removed from blacklist');
+    } catch (error) {
+      this.logger.error(`Failed to remove token from blacklist: ${error.message}`);
+      throw error;
+    }
   }
 
   /**
@@ -57,8 +65,13 @@ export class TokenBlacklistService {
    * Note: This can be a heavy operation depending on the cache store.
    */
   async clearBlacklist(): Promise<void> {
-    this.logger.warn(`[TokenBlacklistService] Clearing entire blacklist.`);
-    await this.cacheService.clear();
-    this.logger.log('Blacklist cleared');
+    this.logger.warn('Clearing entire blacklist - this is a heavy operation');
+    try {
+      await this.cacheService.clear();
+      this.logger.log('Blacklist cleared successfully');
+    } catch (error) {
+      this.logger.error(`Failed to clear blacklist: ${error.message}`);
+      throw error;
+    }
   }
 }

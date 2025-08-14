@@ -1,15 +1,20 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { of } from 'rxjs';
-import { TokenBlacklistService } from '../services/token-blacklist.service';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { of, firstValueFrom } from 'rxjs';
 import { TokenRevocationInterceptor } from './token-revocation.interceptor';
+import { TokenBlacklistService } from '../services/token-blacklist.service';
+
 describe('TokenRevocationInterceptor', () => {
   let interceptor: TokenRevocationInterceptor;
   let tokenBlacklistService: jest.Mocked<TokenBlacklistService>;
+
+  const mockTokenBlacklistService = {
+    isBlacklisted: jest.fn(),
+  };
+
+  const mockCallHandler = {
+    handle: () => of({ success: true }),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,69 +22,124 @@ describe('TokenRevocationInterceptor', () => {
         TokenRevocationInterceptor,
         {
           provide: TokenBlacklistService,
-          useValue: {
-            isBlacklisted: jest.fn(),
-          },
+          useValue: mockTokenBlacklistService,
         },
       ],
     }).compile();
 
-    interceptor = module.get<TokenRevocationInterceptor>(
-      TokenRevocationInterceptor,
-    );
+    interceptor = module.get<TokenRevocationInterceptor>(TokenRevocationInterceptor);
     tokenBlacklistService = module.get(TokenBlacklistService);
+
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  const mockExecutionContext = (headers: any = {}): ExecutionContext =>
-    ({
-      switchToHttp: () => ({
-        getRequest: () => ({
-          headers,
+  describe('intercept', () => {
+    it('should allow request when no authorization header', async () => {
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            method: 'GET',
+            url: '/test',
+            headers: {},
+          }),
         }),
-      }),
-    }) as any;
+      } as ExecutionContext;
 
-  const mockCallHandler: CallHandler = {
-    handle: jest.fn(() => of('next handler')),
-  };
+      const result = await firstValueFrom(interceptor.intercept(context, mockCallHandler));
 
-  it('should be defined', () => {
-    expect(interceptor).toBeDefined();
-  });
+      expect(result).toEqual({ success: true });
+      expect(tokenBlacklistService.isBlacklisted).not.toHaveBeenCalled();
+    });
 
-  it('should pass if no authorization header is present', async () => {
-    const context = mockExecutionContext();
-    await interceptor.intercept(context, mockCallHandler);
-    expect(tokenBlacklistService.isBlacklisted).not.toHaveBeenCalled();
-    expect(mockCallHandler.handle).toHaveBeenCalled();
-  });
+    it('should allow request when authorization header does not start with Bearer', async () => {
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            method: 'GET',
+            url: '/test',
+            headers: {
+              authorization: 'Basic dGVzdDp0ZXN0',
+            },
+          }),
+        }),
+      } as ExecutionContext;
 
-  it('should pass if authorization header is not a Bearer token', async () => {
-    const context = mockExecutionContext({ authorization: 'Basic some-token' });
-    await interceptor.intercept(context, mockCallHandler);
-    expect(tokenBlacklistService.isBlacklisted).not.toHaveBeenCalled();
-    expect(mockCallHandler.handle).toHaveBeenCalled();
-  });
+      const result = await firstValueFrom(interceptor.intercept(context, mockCallHandler));
 
-  it('should pass if token is not blacklisted', async () => {
-    const token = 'valid-token';
-    const context = mockExecutionContext({ authorization: `Bearer ${token}` });
-    tokenBlacklistService.isBlacklisted.mockResolvedValue(false);
-    await interceptor.intercept(context, mockCallHandler);
-    expect(tokenBlacklistService.isBlacklisted).toHaveBeenCalledWith(token);
-    expect(mockCallHandler.handle).toHaveBeenCalled();
-  });
+      expect(result).toEqual({ success: true });
+      expect(tokenBlacklistService.isBlacklisted).not.toHaveBeenCalled();
+    });
 
-  it('should throw UnauthorizedException if token is blacklisted', async () => {
-    const token = 'revoked-token';
-    const context = mockExecutionContext({ authorization: `Bearer ${token}` });
-    tokenBlacklistService.isBlacklisted.mockResolvedValue(true);
-    await expect(interceptor.intercept(context, mockCallHandler)).rejects.toThrow(UnauthorizedException);
-    expect(tokenBlacklistService.isBlacklisted).toHaveBeenCalledWith(token);
-    expect(mockCallHandler.handle).not.toHaveBeenCalled();
+    it('should allow request when token is not blacklisted', async () => {
+      const token = 'valid-token';
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            method: 'GET',
+            url: '/test',
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          }),
+        }),
+      } as ExecutionContext;
+
+      mockTokenBlacklistService.isBlacklisted.mockResolvedValue(false);
+
+      const result = await firstValueFrom(interceptor.intercept(context, mockCallHandler));
+
+      expect(result).toEqual({ success: true });
+      expect(tokenBlacklistService.isBlacklisted).toHaveBeenCalledWith(token);
+    });
+
+    it('should block request when token is blacklisted', async () => {
+      const token = 'blacklisted-token';
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            method: 'GET',
+            url: '/test',
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          }),
+        }),
+      } as ExecutionContext;
+
+      mockTokenBlacklistService.isBlacklisted.mockResolvedValue(true);
+
+      await expect(
+        firstValueFrom(interceptor.intercept(context, mockCallHandler))
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(tokenBlacklistService.isBlacklisted).toHaveBeenCalledWith(token);
+    });
+
+    it('should handle blacklist service errors gracefully', async () => {
+      const token = 'test-token';
+      const context = {
+        switchToHttp: () => ({
+          getRequest: () => ({
+            method: 'GET',
+            url: '/test',
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          }),
+        }),
+      } as ExecutionContext;
+
+      const error = new Error('Cache error');
+      mockTokenBlacklistService.isBlacklisted.mockRejectedValue(error);
+
+      const result = await firstValueFrom(interceptor.intercept(context, mockCallHandler));
+
+      expect(result).toEqual({ success: true });
+      expect(tokenBlacklistService.isBlacklisted).toHaveBeenCalledWith(token);
+    });
   });
 });

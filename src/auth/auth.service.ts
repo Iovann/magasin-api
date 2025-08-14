@@ -65,6 +65,8 @@ export class AuthService {
    * @param accessToken - The access token to blacklist.
    */
   async logout(userId: string, accessToken: string): Promise<void> {
+    let blacklistSuccess = false;
+    
     try {
       const decodedToken = this.jwtService.decode(accessToken) as { exp: number };
       if (decodedToken && decodedToken.exp) {
@@ -74,15 +76,33 @@ export class AuthService {
 
         if (ttl > 0) {
           await this.tokenBlacklistService.addToBlacklist(accessToken, ttl);
+          blacklistSuccess = true;
+          console.log(`[AuthService] Token successfully blacklisted for user ${userId} with TTL: ${ttl}s`);
+        } else {
+          console.log(`[AuthService] Token already expired for user ${userId}, skipping blacklist`);
         }
       }
     } catch (error) {
-      // Log the error but don't block the logout process
-      console.error('Error blacklisting token:', error);
+      console.error(`[AuthService] Error blacklisting token for user ${userId}:`, error);
+      // On continue même si la blacklist échoue
     }
 
-    // Also, remove the refresh token from the database
-    await this.usersService.removeRefreshToken(userId);
+    try {
+      // Toujours supprimer le refresh token de la base de données
+      await this.usersService.removeRefreshToken(userId);
+      console.log(`[AuthService] Refresh token removed for user ${userId}`);
+    } catch (error) {
+      console.error(`[AuthService] Error removing refresh token for user ${userId}:`, error);
+      // Si on ne peut pas supprimer le refresh token, c'est plus critique
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        "ERR_AUTH_SERVICE_006_LOGOUT",
+        "Failed to complete logout process",
+      );
+    }
+
+    if (!blacklistSuccess) {
+      console.warn(`[AuthService] Warning: Token blacklisting failed for user ${userId}, but logout completed`);
+    }
   }
 
   /**
@@ -168,6 +188,56 @@ export class AuthService {
         "ERR_AUTH_SERVICE_005_UPDATE_PASSWORD",
         `Error updating password, ${error}`,
       );
+    }
+  }
+
+  /**
+   * Check if a token is blacklisted.
+   * @param token - The JWT token to check.
+   * @returns True if the token is blacklisted, false otherwise.
+   */
+  async checkTokenBlacklist(token: string): Promise<boolean> {
+    return this.tokenBlacklistService.isBlacklisted(token);
+  }
+
+  /**
+   * Check Redis connection and blacklist status.
+   * @returns Redis connection status and blacklist information.
+   */
+  async checkRedisStatus(): Promise<any> {
+    try {
+      // Test de connexion Redis
+      const testKey = 'redis-test-connection';
+      const testValue = 'test-value-' + Date.now();
+      
+      // Test SET
+      await this.tokenBlacklistService['cacheService'].set(testKey, testValue, { ttl: 60 });
+      
+      // Test GET
+      const retrievedValue = await this.tokenBlacklistService['cacheService'].get(testKey);
+      
+      // Test HAS
+      const hasKey = await this.tokenBlacklistService['cacheService'].has(testKey);
+      
+      // Nettoyer le test
+      await this.tokenBlacklistService['cacheService'].delete(testKey);
+      
+      return {
+        status: 'connected',
+        tests: {
+          set: retrievedValue === testValue,
+          get: retrievedValue === testValue,
+          has: hasKey,
+          delete: true
+        },
+        message: 'Redis connection is working properly'
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        error: error.message,
+        message: 'Redis connection failed'
+      };
     }
   }
 }

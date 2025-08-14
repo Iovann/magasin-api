@@ -6,16 +6,19 @@ import { UnauthorizedException } from "@nestjs/common";
 import { User } from "../../core/users/entities/user.entity";
 import { Role } from "../../common/enum/role.enum";
 import { ErrorHandlingService } from "../../common/response/error-handling";
+import { TokenBlacklistService } from "../services/token-blacklist.service";
 
 describe("JwtStrategy", () => {
   let jwtStrategy: JwtStrategy;
   let usersService: jest.Mocked<UsersService>;
+  let configService: jest.Mocked<ConfigService>;
 
   const mockUser: User = {
     id: "1",
     email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date(),
+    isBlocked: false,
   };
 
   beforeEach(async () => {
@@ -42,6 +45,12 @@ describe("JwtStrategy", () => {
             }),
           },
         },
+        {
+          provide: TokenBlacklistService,
+          useValue: {
+            isBlacklisted: jest.fn().mockResolvedValue(false),
+          },
+        },
       ],
     }).compile();
 
@@ -63,21 +72,21 @@ describe("JwtStrategy", () => {
         role: mockUser.role,
       };
 
-      const result = await jwtStrategy.validate(payload);
+      const result = await jwtStrategy.validate({} as any, payload);
 
       expect(usersService.findOne).toHaveBeenCalledWith(mockUser.id);
       expect(result).toEqual(mockUser);
     });
 
     it("should throw UnauthorizedException if user does not exist", async () => {
-      usersService.findOne.mockResolvedValue(null);
+      usersService.findOne.mockResolvedValue(undefined);
       const payload = {
         sub: "non-existent-id",
         email: "test@example.com",
         role: Role.Vendeur,
       };
 
-      await expect(jwtStrategy.validate(payload)).rejects.toThrow(
+      await expect(jwtStrategy.validate({} as any, payload)).rejects.toThrow(
         UnauthorizedException,
       );
       expect(usersService.findOne).toHaveBeenCalledWith("non-existent-id");

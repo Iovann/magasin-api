@@ -7,6 +7,7 @@ import {
   Request,
   Body,
   Headers,
+  Get,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
@@ -106,5 +107,52 @@ export class AuthController {
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("test-token")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Test if token is valid (not revoked)" })
+  @ApiResponse({ status: 200, description: "Token is valid" })
+  @ApiResponse({ status: 401, description: "Token is revoked or invalid" })
+  async testToken(@Request() req: { user: User }) {
+    return { 
+      message: "Token is valid", 
+      userId: req.user.id,
+      email: req.user.email 
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("check-blacklist")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Check if current token is blacklisted" })
+  @ApiResponse({ status: 200, description: "Blacklist status" })
+  async checkBlacklist(
+    @Request() req: { user: User },
+    @Headers('authorization') authHeader: string,
+  ) {
+    const token = authHeader?.split(' ')[1];
+    if (!token) {
+      return { message: "No token provided", blacklisted: false };
+    }
+
+    const isBlacklisted = await this.authService.checkTokenBlacklist(token);
+    return {
+      message: isBlacklisted ? "Token is blacklisted" : "Token is not blacklisted",
+      blacklisted: isBlacklisted,
+      userId: req.user.id,
+      email: req.user.email
+    };
+  }
+
+  @Get("redis-status")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Check Redis connection and blacklist status" })
+  @ApiResponse({ status: 200, description: "Redis status" })
+  async checkRedisStatus() {
+    return await this.authService.checkRedisStatus();
   }
 }

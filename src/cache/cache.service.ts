@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { ErrorHandlingService } from 'src/common/response/error-handling';
@@ -9,6 +9,7 @@ import { ErrorHandlingService } from 'src/common/response/error-handling';
  */
 @Injectable()
 export class CacheService {
+  private readonly logger = new Logger(CacheService.name);
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly errorHandlingService: ErrorHandlingService,
@@ -45,6 +46,7 @@ export class CacheService {
   async get<T>(key: string): Promise<T | undefined> {
     this.validateKey(key, 'GET');
     try {
+      this.logger.log(`[CacheService] Attempting to GET key: ${key}`);
       return await this.cacheManager.get<T>(key);
     } catch (error: any) {
       this.errorHandlingService.returnErrorOnInternalServerError(
@@ -68,7 +70,9 @@ export class CacheService {
     this.validateKey(key, 'SET');
     this.validateTTL(ttl, 'SET');
     try {
-      await this.cacheManager.set(key, value, ttl);
+      this.logger.log(`[CacheService] Attempting to SET key: ${key}`);
+      await this.cacheManager.set(key, value, ttl !== undefined ? { ttl } : undefined as any);
+      this.logger.log(`[CacheService] SET operation completed for key: ${key}`);
     } catch (error: any) {
       this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_CACHE_SET] Failed to set key="${key}": ${error?.message || error}`,
@@ -86,7 +90,9 @@ export class CacheService {
   async delete(key: string): Promise<void> {
     this.validateKey(key, 'DELETE');
     try {
+      this.logger.log(`[CacheService] Attempting to DELETE key: ${key}`);
       await this.cacheManager.del(key);
+      this.logger.log(`[CacheService] DELETE operation completed for key: ${key}`);
     } catch (error: any) {
       this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_CACHE_DELETE] Failed to delete key="${key}": ${error?.message || error}`,

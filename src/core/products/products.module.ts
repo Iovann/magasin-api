@@ -19,7 +19,7 @@ import { Model } from "mongoose";
 @Module({})
 export class ProductsModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = [];
+    const imports: any[] = []; // Plus besoin d'importer ErrorHandlingModule car il est global
     const providers: Provider[] = [ProductsService, DatabaseConfig];
 
     // Configuration conditionnelle des imports et providers
