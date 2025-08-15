@@ -4,8 +4,8 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { EntityClassOrSchema } from "@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type";
 import { ConfigifyModule } from "@itgorillaz/configify";
 import { ConfigService } from "@nestjs/config";
-import { PostgresProduct } from "../core/products/entities/postgres-product.entity";
-import { PostgresUser } from "../core/users/entities/postgres-user.entity";
+import { PostgresProduct } from "../../core/products/entities/postgres-product.entity";
+import { PostgresUser } from "../../core/users/entities/postgres-user.entity";
 
 @Global()
 @Module({})

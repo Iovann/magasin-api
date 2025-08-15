@@ -3,6 +3,6 @@ import { BcryptService } from './bcrypt.service';
 
 @Module({
   providers: [BcryptService],
-  exports: [BcryptService], // Export BcryptService
+  exports: [BcryptService],
 })
 export class BcryptModule {}

@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class BcryptService {
-  private readonly saltRounds = 10; // You can configure this value
+  private readonly saltRounds = 10;
 
   /**
    * Hashes a plain text password.

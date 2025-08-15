@@ -15,6 +15,14 @@ export class TokenRevocationInterceptor implements NestInterceptor {
 
   constructor(private readonly tokenBlacklistService: TokenBlacklistService) {}
 
+
+  /**
+   * Intercepts the request to check if the token is blacklisted.
+   * @param context The execution context.
+   * @param next The next handler to be called.
+   * @returns An Observable of the result of the next handler.
+   */
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
@@ -22,7 +30,6 @@ export class TokenRevocationInterceptor implements NestInterceptor {
 
     this.logger.log(`[Interceptor] Checking route: ${route}`);
 
-    // Seulement vérifier si un token Bearer est présent
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
       this.logger.log(`[Interceptor] Token found: ${token.substring(0, 20)}...`);
@@ -36,6 +43,13 @@ export class TokenRevocationInterceptor implements NestInterceptor {
     }
   }
 
+  /**
+   * Checks if the token is blacklisted.
+   * @param token The JWT token to check.
+   * @param route The route to check.
+   * @returns A Promise that resolves to void.
+   */
+
   private async checkToken(token: string, route: string): Promise<void> {
     try {
       const isBlacklisted = await this.tokenBlacklistService.isBlacklisted(token);
@@ -46,13 +60,10 @@ export class TokenRevocationInterceptor implements NestInterceptor {
         throw new UnauthorizedException('Token has been revoked');
       }
     } catch (error) {
-      // Si c'est déjà une UnauthorizedException, la relancer
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      // Pour les autres erreurs (cache, etc.), log et continuer
       this.logger.error(`[Interceptor] Error checking token blacklist: ${error.message}`);
-      // On continue l'exécution même en cas d'erreur de cache
     }
   }
 }

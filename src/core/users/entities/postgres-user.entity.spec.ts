@@ -1,3 +1,4 @@
+import { Role } from "src/common/enum/role.enum";
 import { PostgresUser } from "./postgres-user.entity";
 
 describe("PostgresUser", () => {
@@ -72,14 +73,14 @@ describe("PostgresUser", () => {
     const user = new PostgresUser();
 
     // Test with different roles
-    user.role = "SUPER_ADMIN";
-    expect(user.role).toBe("SUPER_ADMIN");
+    user.role = Role.SuperAdmin;
+    expect(user.role).toBe(Role.SuperAdmin);
 
-    user.role = "MAGASINIER";
-    expect(user.role).toBe("MAGASINIER");
+    user.role = Role.Magasinier;
+    expect(user.role).toBe(Role.Magasinier);
 
-    user.role = "VENDEUR";
-    expect(user.role).toBe("VENDEUR");
+    user.role = Role.Vendeur;
+    expect(user.role).toBe(Role.Vendeur);
   });
 
   it("should handle boolean values correctly", () => {

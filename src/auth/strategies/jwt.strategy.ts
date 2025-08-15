@@ -20,10 +20,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>("JWT_SECRET")!,
-      passReqToCallback: true, // Permet de passer la requête au callback
+      passReqToCallback: true, // Pass the request to passport callback
     });
   }
 
+  /**
+   * Validates the JWT token.
+   * @param request The HTTP request.
+   * @param payload The JWT payload.
+   * @returns The user object if the token is valid.
+   */
   async validate(request: any, payload: any) {
     const route = `${request.method} ${request.url}`;
     this.logger.log(`[JwtStrategy] Validating token for route: ${route}`);

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CacheService } from './cache.service';
-import { ErrorHandlingService } from '../common/response/error-handling';
+import { ErrorHandlingService } from '../../common/response/error-handling';
 
 describe('CacheService', () => {
   let service: CacheService;

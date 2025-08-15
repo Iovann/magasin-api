@@ -6,6 +6,10 @@ import { UsersService } from "../../core/users/services/users.service";
 import { ConfigService } from "@nestjs/config";
 import { ErrorHandlingService } from "../../common/response/error-handling";
 
+
+/**
+ * Strategy for validating JWT refresh tokens.
+ */
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
@@ -24,6 +28,12 @@ export class JwtRefreshStrategy extends PassportStrategy(
     } as StrategyOptionsWithRequest);
   }
 
+  /**
+   * Validates the JWT refresh token.
+   * @param req The HTTP request.
+   * @param payload The JWT payload.
+   * @returns The user object if the token is valid.
+   */
   async validate(req: Request, payload: any) {
     const authHeader = req.get("authorization");
     if (!authHeader) {

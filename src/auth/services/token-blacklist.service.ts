@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CacheService } from '../../cache/cache.service';
+import { CacheService } from '../../libs/cache/cache.service';
 
 @Injectable()
 export class TokenBlacklistService {

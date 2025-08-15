@@ -23,13 +23,22 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { User } from "../core/users/entities/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { Throttle } from "@nestjs/throttler";
 
 @ApiTags("auth")
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
+
+  /**
+   * Logs in a user and returns JWT tokens.
+   * @param req The HTTP request.
+   * @returns The JWT tokens.
+   */
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard, LocalAuthGuard)
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "User login" })
@@ -46,6 +55,11 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  /**
+   * Logs out a user and revokes their access token.
+   * @param req The HTTP request.
+   * @param authHeader The authorization header.
+   */
   @UseGuards(JwtAuthGuard)
   @Post("logout")
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -63,8 +77,14 @@ export class AuthController {
     }
   }
 
+  /**
+   * Refreshes the JWT tokens.
+   * @param req The HTTP request.
+   * @returns The new JWT tokens.
+   */
   @UseGuards(JwtRefreshGuard)
   @Post("refresh")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
@@ -90,8 +110,14 @@ export class AuthController {
     );
   }
 
+  /**
+   * Changes the user's password.
+   * @param req The HTTP request.
+   * @param changePasswordDto The change password DTO.
+   */
   @UseGuards(JwtAuthGuard)
   @Post("change-password")
+  @Throttle({ default: { limit: 8, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Change user password" })
@@ -109,6 +135,11 @@ export class AuthController {
     );
   }
 
+  /**
+   * Tests if the token is valid (not revoked).
+   * @param req The HTTP request.
+   * @returns The user ID and email.
+   */
   @UseGuards(JwtAuthGuard)
   @Get("test-token")
   @HttpCode(HttpStatus.OK)

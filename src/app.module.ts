@@ -4,14 +4,13 @@ import { AppService } from "./app.service";
 import { ConfigifyModule } from "@itgorillaz/configify";
 import { ProductsModule } from "./core/products/products.module";
 import { UsersModule } from "./core/users/users.module";
-import { DatabaseModule } from "./database/database.module";
+import { DatabaseModule } from "./libs/database/database.module";
 import { ConfigModule } from "@nestjs/config";
 import { ErrorHandlingModule } from "./common/response/error-handling.module";
 import { AuthModule } from "./auth/auth.module";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
-import { ThrottlerGuard } from "@nestjs/throttler";
-import { CacheModule } from "./cache/cache.module";
+import { APP_INTERCEPTOR } from "@nestjs/core";
+import { CacheModule } from "./libs/cache/cache.module";
 import { TokenBlacklistModule } from "./auth/services/token-blacklist.module";
 import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation.interceptor";
 import { BcryptModule } from './utils/bcrypt/bcrypt.module';
@@ -43,10 +42,6 @@ import { BcryptModule } from './utils/bcrypt/bcrypt.module';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
     {
       provide: APP_INTERCEPTOR,
       useClass: TokenRevocationInterceptor,

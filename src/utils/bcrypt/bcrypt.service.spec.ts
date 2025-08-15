@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BcryptService } from './bcrypt.service';
-import * as bcrypt from 'bcrypt'; // Import bcrypt for mocking
+import * as bcrypt from 'bcrypt';
 
-// Mock bcrypt to control its behavior in tests
 jest.mock('bcrypt', () => ({
   hash: jest.fn((password, saltRounds) => Promise.resolve(`hashed_${password}_${saltRounds}`)),
   compare: jest.fn((password, hash) => Promise.resolve(hash === `hashed_${password}_10`)),
