@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { CacheService } from '../../cache/cache.service';
-import { Logger } from '@nestjs/common';
 
 describe('TokenBlacklistService', () => {
   let service: TokenBlacklistService;

@@ -1,17 +1,42 @@
 import { Configuration, Value } from "@itgorillaz/configify";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsString, IsNumber, IsOptional, Min, Max, IsBoolean } from "class-validator";
 
 @Configuration()
 export class CacheConfig {
-  @IsNotEmpty({ message: "Cache host should not be empty" })
-  @IsString({ message: "Cache host should be a string" })
-  @Value("CACHE_HOST", { default: "localhost" })
-  cacheHost: string;
+  @IsString()
+  @Value('CACHE_HOST', { default: 'localhost' })
+  host: string;
 
-  @IsNotEmpty({ message: "Cache port should not be empty" })
-  @Value("CACHE_PORT", { default: 6379 })
-  cachePort: number;
+  @IsNumber()
+  @Min(1) @Max(65535)
+  @Value('CACHE_PORT', { default: 6379 })
+  port: number;
 
-  @Value("CACHE_TTL", { default: 3600 })
-  cacheTtl: number;
+  @IsNumber() @Min(0)
+  @Value('CACHE_TTL', { default: 3600 })
+  ttl: number;
+
+  @IsNumber() @Min(0)
+  @Value('CACHE_DB', { default: 0 })
+  db: number;
+
+  @IsString() @IsOptional()
+  @Value('CACHE_PASSWORD')
+  password?: string;
+
+  @IsString()
+  @Value('CACHE_PREFIX', { default: 'magasinx:' })
+  keyPrefix: string;
+
+  @IsNumber() @Min(1)
+  @Value('CACHE_MAX_ITEMS', { default: 1000 })
+  maxItems: number;
+
+  @IsNumber() @Min(0)
+  @Value('CACHE_MAX_RETRIES', { default: 3 })
+  maxRetries: number;
+
+  @IsBoolean()
+  @Value('CACHE_READY_CHECK', { default: true })
+  readyCheck: boolean;
 }
