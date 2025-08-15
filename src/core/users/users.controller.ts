@@ -24,15 +24,27 @@ import { UseGuards } from "@nestjs/common";
 import { RolesGuard } from "../../common/guards/roles.guard";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { Role } from "../../common/enum/role.enum";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { Throttle } from "@nestjs/throttler";
+import { CacheKey, CacheTTL, CacheInterceptor } from "@nestjs/cache-manager";
+import { UseInterceptors } from "@nestjs/common";
 
 @ApiTags("users")
 @Controller("users")
 @ApiBearerAuth("JWT-auth")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseInterceptors(CacheInterceptor)
+@UseGuards(JwtAuthGuard, RolesGuard, ThrottlerGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  /**
+   * Creates a new user.
+   * @param createUserDto - The data for the new user.
+   * @returns The created user.
+   */
+  
   @Post()
+  @Throttle({ default: { limit: 8, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Create a new user",
@@ -54,7 +66,14 @@ export class UsersController {
     return await this.usersService.create(createUserDto);
   }
 
+  /**
+   * Retrieves a list of all users.
+   * @returns An array of users.
+   */
   @Get()
+  @CacheKey('users:list')
+  @CacheTTL(300)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get all users",
@@ -72,7 +91,15 @@ export class UsersController {
     return await this.usersService.findAll();
   }
 
+  /**
+   * Retrieves statistics about users.
+   * @returns User statistics.
+   */
   @Get("stats")
+  @CacheKey('users:stats')
+  @CacheTTL(1200)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get user statistics",
     description:
@@ -98,7 +125,14 @@ export class UsersController {
     return await this.usersService.getUserStats();
   }
 
+  /**
+   * Retrieves a single user by their unique ID.
+   * @param id - The unique ID of the user.
+   * @returns The user with the specified ID.
+   */
   @Get(":id")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @CacheTTL(300)
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get a user by ID",
@@ -122,7 +156,12 @@ export class UsersController {
     return await this.usersService.findOne(id);
   }
 
+  /**
+   * Deletes a user by their unique ID.
+   * @param id - The unique ID of the user to delete.
+   */
   @Delete(":id")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
@@ -147,7 +186,13 @@ export class UsersController {
     return await this.usersService.remove(id);
   }
 
+  /**
+   * Blocks a user by their unique ID.
+   * @param id - The unique ID of the user to block.
+   * @returns The updated user.
+   */
   @Patch(":id/block")
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Block a user by ID",
@@ -172,8 +217,15 @@ export class UsersController {
     return await this.usersService.blockUser(id);
   }
 
+  /**
+   * Unblocks a user by their unique ID.
+   * @param id - The unique ID of the user to unblock.
+   * @returns The updated user.
+   */
   @Patch(":id/unblock")
   @Roles(Role.SuperAdmin)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Unblock a user by ID",
     description:
@@ -182,7 +234,7 @@ export class UsersController {
   @ApiParam({
     name: "id",
     description: "The unique ID of the user to unblock.",
-    type: "string",
+    type: "string", 
     example: "a-valid-uuid-or-id",
   })
   @ApiResponse({

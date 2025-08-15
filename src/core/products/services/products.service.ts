@@ -4,6 +4,7 @@ import { IProductRepository } from "../repositories/product.repository";
 import { Product } from "../entities/product.entity";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { CacheService } from "../../../libs/cache/cache.service";
 
 /**
  * Service for handling product-related operations.
@@ -15,6 +16,7 @@ export class ProductsService {
     @Inject(IProductRepository)
     private readonly productRepository: IProductRepository,
     private readonly errorHandlingService: ErrorHandlingService,
+    private readonly cacheService: CacheService,
   ) {}
 
   /**
@@ -39,6 +41,14 @@ export class ProductsService {
 
     try {
       const product = await this.productRepository.create(createProductDto);
+      
+      // Invalidate relevant caches
+      await Promise.all([
+        this.cacheService.delete('products:list'),
+        this.cacheService.delete(`products:count:model:${product.modelName}`),
+        this.cacheService.delete(`products:count:name:${product.name}`)
+      ]);
+      
       this.logger.log({
         message: "Product created successfully",
         id: product.id,
@@ -77,9 +87,16 @@ export class ProductsService {
   async getAllProducts(): Promise<Product[]> {
     this.logger.log({ message: "Fetching all products" });
     try {
-      const products = await this.productRepository.findAll();
-      this.logger.log({ message: `Found ${products.length} products` });
-      return products;
+      const cacheKey = 'products:list';
+      return this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          const products = await this.productRepository.findAll();
+          this.logger.log({ message: `Found ${products.length} products` });
+          return products;
+        },
+        { ttl: 300 } // 5 minutes cache for product list
+      );
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_PROD_GET_ALL_PRODUCTS] Error getting all products: ${error.message}`,
@@ -96,13 +113,20 @@ export class ProductsService {
   async getProductById(id: string): Promise<Product | null> {
     this.logger.log({ message: `Fetching product by ID: ${id}` });
     try {
-      const product = await this.productRepository.findById(id);
-      if (product) {
-        this.logger.log({ message: `Found product with ID ${id}`, product });
-      } else {
-        this.logger.log({ message: `Product with ID ${id} not found` });
-      }
-      return product;
+      const cacheKey = `products:findOne:${id}`;
+      return this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          const product = await this.productRepository.findById(id);
+          if (product) {
+            this.logger.log({ message: `Found product with ID ${id}`, product });
+          } else {
+            this.logger.log({ message: `Product with ID ${id} not found` });
+          }
+          return product;
+        },
+        { ttl: 3600 } // 1 hour cache for individual products
+      );
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_PROD_GET_PRODUCT_BY_ID] Error getting product by ID: ${error.message}`,
@@ -119,7 +143,14 @@ export class ProductsService {
   async getStockByModel(modelName: string): Promise<{ count: number }> {
     this.logger.log({ message: `Fetching stock for model: ${modelName}` });
     try {
-      const count = await this.productRepository.countByModelName(modelName);
+      const cacheKey = `products:count:model:${modelName}`;
+      const count = await this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          return await this.productRepository.countByModelName(modelName);
+        },
+        { ttl: 3600 } // 1 hour cache for model counts
+      );
       this.logger.log({
         message: `Stock count for model ${modelName}: ${count}`,
       });
@@ -149,7 +180,7 @@ export class ProductsService {
       );
     }
 
-    const product = await this.productRepository.findById(id);
+    const product = await this.getProductById(id); // Using cached version
     if (!product) {
       throw this.errorHandlingService.returnErrorOnNotFound(
         `[ERR_PROD_SELL_NOT_FOUND] Product ${id} not found`,
@@ -175,6 +206,14 @@ export class ProductsService {
           "Failed to update product",
         );
       }
+
+      // Invalidate relevant caches
+      await Promise.all([
+        this.cacheService.delete(`products:findOne:${id}`),
+        this.cacheService.delete('products:list'),
+        this.cacheService.delete(`products:count:model:${product.modelName}`),
+        this.cacheService.delete(`products:count:name:${product.name}`)
+      ]);
 
       this.logger.log({
         message: `Product ${id} sold successfully`,
@@ -210,7 +249,7 @@ export class ProductsService {
       );
     }
 
-    const product = await this.productRepository.findById(id);
+    const product = await this.getProductById(id); // Using cached version
     if (!product) {
       throw this.errorHandlingService.returnErrorOnNotFound(
         `[ERR_PROD_UPDATE_NOT_FOUND] Product ${id} not found`,
@@ -230,6 +269,14 @@ export class ProductsService {
           "Failed to update product stock",
         );
       }
+
+      // Invalidate relevant caches
+      await Promise.all([
+        this.cacheService.delete(`products:findOne:${id}`),
+        this.cacheService.delete('products:list'),
+        this.cacheService.delete(`products:count:model:${product.modelName}`),
+        this.cacheService.delete(`products:count:name:${product.name}`)
+      ]);
 
       this.logger.log({
         message: `Stock for product ${id} updated successfully`,
@@ -300,7 +347,14 @@ export class ProductsService {
       message: `Counting products by model name: ${modelName}`,
     });
     try {
-      const count = await this.productRepository.countByModelName(modelName);
+      const cacheKey = `products:count:model:${modelName}`;
+      const count = await this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          return await this.productRepository.countByModelName(modelName);
+        },
+        { ttl: 3600 } // 1 hour cache for model counts
+      );
       this.logger.log({ message: `Count for model ${modelName}: ${count}` });
       return { count };
     } catch (error) {
@@ -319,7 +373,14 @@ export class ProductsService {
   async countProductsByName(name: string): Promise<{ count: number }> {
     this.logger.log({ message: `Counting products by name: ${name}` });
     try {
-      const count = await this.productRepository.countByName(name);
+      const cacheKey = `products:count:name:${name}`;
+      const count = await this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          return await this.productRepository.countByName(name);
+        },
+        { ttl: 3600 } // 1 hour cache for name counts
+      );
       this.logger.log({ message: `Count for name ${name}: ${count}` });
       return { count };
     } catch (error) {
@@ -336,7 +397,7 @@ export class ProductsService {
    */
   async remove(id: string): Promise<void> {
     this.logger.log({ message: `Attempting to remove product ${id}` });
-    const product = await this.productRepository.findById(id);
+    const product = await this.getProductById(id); // Using cached version
     if (!product) {
       throw this.errorHandlingService.returnErrorOnNotFound(
         `[ERR_PROD_REMOVE_NOT_FOUND] Product ${id} not found`,
@@ -346,6 +407,15 @@ export class ProductsService {
 
     try {
       await this.productRepository.delete(id);
+      
+      // Invalidate all related caches
+      await Promise.all([
+        this.cacheService.delete(`products:findOne:${id}`),
+        this.cacheService.delete('products:list'),
+        this.cacheService.delete(`products:count:model:${product.modelName}`),
+        this.cacheService.delete(`products:count:name:${product.name}`)
+      ]);
+      
       this.logger.log({ message: `Product ${id} removed successfully` });
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(

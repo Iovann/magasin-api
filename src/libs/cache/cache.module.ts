@@ -1,11 +1,12 @@
 import { CacheModule as NestCacheModule } from '@nestjs/cache-manager';
-import { Module, Logger } from '@nestjs/common';
+import { Module, Logger, Global } from '@nestjs/common';
 import { ConfigifyModule } from '@itgorillaz/configify';
 import { CacheService } from './cache.service';
 import Keyv from 'keyv';
 import KeyvValkey from '@keyv/valkey';
 import { CacheConfig } from 'src/config/cache.config';
 
+@Global()
 @Module({
   imports: [
     NestCacheModule.registerAsync({
@@ -51,7 +52,6 @@ import { CacheConfig } from 'src/config/cache.config';
           isCacheable: () => true,
         };
       },
-      isGlobal: true,
     }),
   ],
   providers: [CacheService],

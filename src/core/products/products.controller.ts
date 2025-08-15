@@ -26,7 +26,10 @@ import {
 import { Product } from "./entities/product.entity";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../common/guards/roles.guard";
+import { UseInterceptors } from "@nestjs/common";
+import { CacheKey, CacheTTL, CacheInterceptor } from "@nestjs/cache-manager";
 
+@UseInterceptors(CacheInterceptor)
 @ApiTags("products")
 @ApiBearerAuth("JWT-auth")
 @Controller("products")
@@ -34,6 +37,12 @@ import { RolesGuard } from "../../common/guards/roles.guard";
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  /**
+   * Creates a new product.
+   * @param createProductDto - The data for the new product.
+   * @returns The created product.
+   */
+  
   @Post()
   @Roles(Role.SuperAdmin, Role.Magasinier)
   @ApiOperation({
@@ -61,7 +70,13 @@ export class ProductsController {
     return await this.productsService.create(createProductDto);
   }
 
+  /**
+   * Retrieves the total stock of all products.
+   * @returns The total count of all products.
+   */
   @Get("stock")
+  @CacheKey('products:stock')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get total stock of all products",
@@ -77,7 +92,13 @@ export class ProductsController {
     return await this.productsService.getTotalStock();
   }
 
+  /**
+   * Retrieves a list of all products.
+   * @returns An array of products.
+   */
   @Get()
+  @CacheKey('products:list')
+  @CacheTTL(300)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get all products",
@@ -93,7 +114,17 @@ export class ProductsController {
     return await this.productsService.getAllProducts();
   }
 
+
+
+  /**
+   * Retrieves the stock count for a specific model.
+   * @param modelName - The model name of the product.
+   * @returns The stock count for the given model.
+   */
+
   @Get("stock/:modelName")
+  @CacheKey('products:stock')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get stock count for a specific model",
@@ -114,7 +145,18 @@ export class ProductsController {
     return await this.productsService.getStockByModel(modelName);
   }
 
+
+
+  /**
+   * Retrieves a list of products matching the model name.
+   * @param modelName - The model name to search for.
+   * @returns An array of products matching the model name.
+   */
+
+
   @Get("by-model/:modelName")
+  @CacheKey('products:by-model')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get all products of a specific model",
@@ -135,7 +177,16 @@ export class ProductsController {
     return await this.productsService.getProductsByModelName(modelName);
   }
 
+
+  /**
+   * Retrieves a list of products matching the name.
+   * @param name - The name to search for.
+   * @returns An array of products matching the name.
+   */
+
   @Get("by-name/:name")
+  @CacheKey('products:by-name')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get all products by name",
@@ -156,7 +207,16 @@ export class ProductsController {
     return await this.productsService.getProductsByName(name);
   }
 
+
+  /**
+   * Retrieves the count of products matching the model name.
+   * @param modelName - The model name to count.
+   * @returns The count of products matching the model name.
+   */
+
   @Get("count-by-model/:modelName")
+  @CacheKey('products:count-by-model')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Count products by model name",
@@ -177,7 +237,15 @@ export class ProductsController {
     return await this.productsService.countProductsByModelName(modelName);
   }
 
+  /**
+   * Retrieves the count of products matching the name.
+   * @param name - The name to count.
+   * @returns The count of products matching the name.
+   */
+
   @Get("count-by-name/:name")
+  @CacheKey('products:count-by-name')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Count products by name",
@@ -198,7 +266,15 @@ export class ProductsController {
     return await this.productsService.countProductsByName(name);
   }
 
+  /**
+   * Retrieves a product by its unique ID.
+   * @param id - The unique ID of the product.
+   * @returns The product with the specified ID.
+   */
+
   @Get(":id")
+  @CacheKey('products:findOne')
+  @CacheTTL(300)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get a product by its ID",
@@ -220,7 +296,16 @@ export class ProductsController {
     return await this.productsService.getProductById(id);
   }
 
+
+  /**
+   * Updates the stock quantity of a product.
+   * @param id - The unique ID of the product to update.
+   * @param updateProductDto - The data for updating the product stock.
+   * @returns The updated product.
+   */
   @Put(":id/stock")
+  @CacheKey('products:update-stock')
+  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier)
   @ApiOperation({
     summary: "Update product stock",
@@ -253,6 +338,12 @@ export class ProductsController {
     );
   }
 
+  /**
+   * Sells a specified quantity of a product.
+   * @param id - The unique ID of the product to sell.
+   * @param sellProductDto - The data for selling the product.
+   * @returns The updated product.
+   */
   @Post(":id/sell")
   @Roles(Role.Vendeur, Role.SuperAdmin)
   @ApiOperation({
@@ -283,6 +374,10 @@ export class ProductsController {
     return await this.productsService.sellProduct(id, sellProductDto.quantity);
   }
 
+  /**
+   * Deletes a product by its unique ID.
+   * @param id - The unique ID of the product to delete.
+   */
   @Delete(":id")
   @Roles(Role.SuperAdmin)
   @HttpCode(HttpStatus.NO_CONTENT)

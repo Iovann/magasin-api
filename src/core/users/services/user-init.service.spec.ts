@@ -15,6 +15,7 @@ describe("UserInitService", () => {
     email: "admin@gunshop.com",
     role: Role.SuperAdmin,
     createdAt: new Date("2024-01-01T00:00:00.000Z"),
+    isBlocked: false,
   };
 
   const mockVendeur: User = {
@@ -22,6 +23,7 @@ describe("UserInitService", () => {
     email: "vendeur@gunshop.com",
     role: Role.Vendeur,
     createdAt: new Date("2024-01-01T00:00:00.000Z"),
+    isBlocked: false,
   };
 
   beforeEach(async () => {

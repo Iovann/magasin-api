@@ -39,8 +39,6 @@ export class TokenBlacklistService {
       return isBlacklisted;
     } catch (error) {
       this.logger.error(`Failed to check token blacklist: ${error.message}`);
-      // En cas d'erreur de cache, on considère le token comme non blacklisté
-      // pour éviter de bloquer les utilisateurs légitimes
       return false;
     }
   }

@@ -13,12 +13,13 @@ import { TypeOrmModule, getRepositoryToken } from "@nestjs/typeorm";
 import { PostgresUser } from "./entities/postgres-user.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
+import { CacheModule } from "src/libs/cache/cache.module";
 
 @Global()
 @Module({})
 export class UsersModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = [];
+    const imports: any[] = [CacheModule];
     const providers: Provider[] = [
       UsersService,
       UserInitService,

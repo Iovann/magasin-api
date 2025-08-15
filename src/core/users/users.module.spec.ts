@@ -1,58 +1,92 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { UsersModule } from "./users.module";
+import { CacheModule } from "../../libs/cache/cache.module";
+import { UsersService } from "./services/users.service";
+import { IUserRepository } from "./repositories/user.repository";
+import { ErrorHandlingService } from "../../common/response/error-handling";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 describe("UsersModule", () => {
+  let module: TestingModule;
+
+  const mockUserRepository = {
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
+
+  const mockLogger = {
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
+
+  const mockErrorHandlingService = {
+    returnErrorOnConflict: jest.fn(),
+    returnErrorOnInternalServerError: jest.fn(),
+    returnErrorOnNotFound: jest.fn(),
+  };
+
+  const setup = async (dbType: string) => {
+    process.env.DB_TYPE = dbType;
+    module = await Test.createTestingModule({
+      imports: [UsersModule.forRoot(), CacheModule],
+    })
+      .overrideProvider(IUserRepository)
+      .useValue(mockUserRepository)
+      .overrideProvider(WINSTON_MODULE_PROVIDER)
+      .useValue(mockLogger)
+      .overrideProvider(ErrorHandlingService)
+      .useValue(mockErrorHandlingService)
+      .compile();
+  };
+
+  afterEach(() => {
+    delete process.env.DB_TYPE;
+  });
+
   describe("with fs database type", () => {
     beforeEach(async () => {
-      process.env.DB_TYPE = "fs";
+      await setup("fs");
     });
 
-    afterEach(() => {
-      delete process.env.DB_TYPE;
-    });
-
-    it("should be defined", async () => {
-      const module: TestingModule = await Test.createTestingModule({
-        imports: [UsersModule],
-      }).compile();
-
+    it("should be defined", () => {
       expect(module).toBeDefined();
+    });
+
+    it("should resolve UsersService", () => {
+      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(UsersService);
     });
   });
 
   describe("with mongodb database type", () => {
     beforeEach(async () => {
-      process.env.DB_TYPE = "mongodb";
+      await setup("mongodb");
     });
 
-    afterEach(() => {
-      delete process.env.DB_TYPE;
-    });
-
-    it("should be defined", async () => {
-      const module: TestingModule = await Test.createTestingModule({
-        imports: [UsersModule],
-      }).compile();
-
+    it("should be defined", () => {
       expect(module).toBeDefined();
+    });
+
+    it("should resolve UsersService", () => {
+      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(UsersService);
     });
   });
 
   describe("with postgres database type", () => {
     beforeEach(async () => {
-      process.env.DB_TYPE = "postgres";
+      await setup("postgres");
     });
 
-    afterEach(() => {
-      delete process.env.DB_TYPE;
-    });
-
-    it("should be defined", async () => {
-      const module: TestingModule = await Test.createTestingModule({
-        imports: [UsersModule],
-      }).compile();
-
+    it("should be defined", () => {
       expect(module).toBeDefined();
+    });
+
+    it("should resolve UsersService", () => {
+      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(UsersService);
     });
   });
 });
