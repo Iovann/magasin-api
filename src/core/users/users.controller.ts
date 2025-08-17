@@ -20,18 +20,16 @@ import { UsersService } from "./services/users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "./entities/user.entity";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
-import { UseGuards, UseInterceptors } from "@nestjs/common";
+import { UseGuards } from "@nestjs/common";
 import { RolesGuard } from "../../common/guards/roles.guard";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { Role } from "../../common/enum/role.enum";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { Throttle } from "@nestjs/throttler";
-import { CustomCacheInterceptor } from "src/libs/cache/custom-cache.interceptor";
 
 @ApiTags("users")
 @Controller("users")
 @ApiBearerAuth("JWT-auth")
-@UseInterceptors(CustomCacheInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard, ThrottlerGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

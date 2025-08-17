@@ -26,7 +26,6 @@ import {
 import { Product } from "./entities/product.entity";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../common/guards/roles.guard";
-// Les intercepteurs de cache sont maintenant gérés par CustomCacheInterceptor
 
 @ApiTags("products")
 @ApiBearerAuth("JWT-auth")

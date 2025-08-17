@@ -14,7 +14,6 @@ import { CacheModule } from "./libs/cache/cache.module";
 import { TokenBlacklistModule } from "./auth/services/token-blacklist.module";
 import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation.interceptor";
 import { BcryptModule } from './utils/bcrypt/bcrypt.module';
-import { CustomCacheInterceptor } from './libs/cache/custom-cache.interceptor';
 
 @Module({
   imports: [
@@ -46,10 +45,6 @@ import { CustomCacheInterceptor } from './libs/cache/custom-cache.interceptor';
     {
       provide: APP_INTERCEPTOR,
       useClass: TokenRevocationInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CustomCacheInterceptor,
     },
   ],
 })
