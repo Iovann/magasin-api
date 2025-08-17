@@ -66,6 +66,10 @@ export class DatabaseModule {
       console.log("Using file-based database (txt). No ORM module needed.");
     }
 
+    if (process.env.DB_TYPE === "duckdb") {
+      console.log("Using DuckDB database. Configuration is handled by repository.");
+    }
+
     return {
       module: DatabaseModule,
       imports,
@@ -75,6 +79,12 @@ export class DatabaseModule {
   static forFeature(models: EntityClassOrSchema[]): DynamicModule {
     if (process.env.DB_TYPE === "postgres") {
       return TypeOrmModule.forFeature(models);
+    } else if (process.env.DB_TYPE === "duckdb") {
+      return {
+        module: DatabaseModule,
+        providers: [],
+        exports: [],
+      };
     } else {
       console.warn(
         "DatabaseModule.forFeature is primarily for TypeORM (Postgres).",

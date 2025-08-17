@@ -4,7 +4,6 @@ import { CreateUserDto } from "../dto/create-user.dto";
 import { User } from "../entities/user.entity";
 import * as bcrypt from "bcrypt";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CacheService } from "src/libs/cache/cache.service";
 
 /**
@@ -12,8 +11,9 @@ import { CacheService } from "src/libs/cache/cache.service";
  */
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject(IUserRepository) private readonly userRepository: IUserRepository,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly cacheService: CacheService,

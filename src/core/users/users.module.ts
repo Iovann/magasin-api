@@ -59,13 +59,17 @@ export class UsersModule {
         break;
 
       case "duckdb":
-        providers.push({
-          provide: IUserRepository,
-          useFactory: (config: DatabaseConfig) => {
-            return new DuckDBUserRepository(config);
-          },
-          inject: [DatabaseConfig],
-        });
+        // Utiliser une IIFE pour éviter les problèmes de scope
+        (() => {
+          const duckDbRepo = new DuckDBUserRepository(new DatabaseConfig());
+          providers.push({
+            provide: IUserRepository,
+            useFactory: async () => {
+              await duckDbRepo['init']();
+              return duckDbRepo;
+            },
+          });
+        })();
         break;
 
       default: // txt/filesystem

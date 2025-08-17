@@ -16,6 +16,7 @@ import { PostgresProduct } from "./entities/postgres-product.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
 import { CacheModule } from "../../libs/cache/cache.module";
+import { DuckDBProductRepository } from "./repositories/duckdb-product.reposetory";
 
 @Module({})
 export class ProductsModule {
@@ -54,7 +55,21 @@ export class ProductsModule {
         });
         break;
 
-      default: // txt/filesystem
+      case "txt":
+        providers.push({
+          provide: IProductRepository,
+          useClass: FsProductRepository,
+        });
+        break;
+
+      case "duckdb":
+        providers.push({
+          provide: IProductRepository,
+          useClass: DuckDBProductRepository,
+        });
+        break;
+
+      default: // filesystem
         providers.push({
           provide: IProductRepository,
           useFactory: (config: DatabaseConfig) => {
