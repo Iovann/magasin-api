@@ -8,9 +8,8 @@ import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
 import {
   UnauthorizedException,
-  INestApplication,
-  ValidationPipe,
 } from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
 
 describe("AuthController", () => {
   let controller: AuthController;
@@ -23,8 +22,6 @@ describe("AuthController", () => {
     createdAt: new Date(),
     isBlocked: false,
   };
-
-  let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -47,20 +44,12 @@ describe("AuthController", () => {
       .useValue({ canActivate: () => true })
       .overrideGuard(JwtRefreshGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
       .compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true }),
-    );
-    await app.init();
 
     controller = moduleFixture.get<AuthController>(AuthController);
     authService = moduleFixture.get(AuthService);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   describe("login", () => {

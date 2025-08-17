@@ -4,6 +4,8 @@ import { ProductsService } from "./services/products.service";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { SellProductDto } from "./dto/sell-product.dto";
+import { CacheInterceptor } from "@nestjs/cache-manager";
+import { ThrottlerGuard } from "@nestjs/throttler";
 
 // Mock of the service to isolate the controller
 const mockProductsService = {
@@ -33,7 +35,12 @@ describe("ProductsController", () => {
           useValue: mockProductsService,
         },
       ],
-    }).compile();
+    })
+      .overrideInterceptor(CacheInterceptor)
+      .useValue({ intercept: jest.fn() })
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<ProductsController>(ProductsController);
     jest.clearAllMocks();

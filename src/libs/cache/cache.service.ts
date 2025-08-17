@@ -182,13 +182,11 @@ export class CacheService {
       await this.set(key, result, { ttl });
       return result;
     } catch (error: any) {
-      this.errorHandlingService.returnErrorOnInternalServerError(
+      return this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_CACHE_GETORSET] Failed for key="${key}": ${error?.message || error}`,
         'An error occurred during cache get-or-set operation.'
-      );
+      ) as never;
     }
-    // Fallback to satisfy TS (unreachable if above throws)
-    return undefined as any;
   }
 
   /**

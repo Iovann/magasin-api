@@ -10,14 +10,16 @@ describe("PostgresProductRepository", () => {
   let repository: PostgresProductRepository;
   let mockProductRepository: jest.Mocked<Repository<PostgresProduct>>;
 
+  const fixedDate = new Date("2025-08-17T10:00:00.000Z");
+
   const mockProduct: Product = {
     id: "1",
     name: "Test Product",
     modelName: "Test Model",
     quantity: 10,
     price: 29.99,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
   };
 
   const mockPostgresProduct: PostgresProduct = {
@@ -26,8 +28,8 @@ describe("PostgresProductRepository", () => {
     modelName: "Test Model",
     quantity: 10,
     price: 29.99,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
   };
 
   const createProductDto: CreateProductDto = {
@@ -36,6 +38,14 @@ describe("PostgresProductRepository", () => {
     quantity: 10,
     price: 29.99,
   };
+
+  beforeAll(() => {
+    jest.spyOn(global, 'Date').mockImplementation(() => fixedDate);
+  });
+
+  afterAll(() => {
+    jest.spyOn(global, 'Date').mockRestore();
+  });
 
   beforeEach(async () => {
     const mockRepository = {

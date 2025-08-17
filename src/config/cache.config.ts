@@ -1,5 +1,5 @@
 import { Configuration, Value } from "@itgorillaz/configify";
-import { IsString, IsOptional } from "class-validator";
+import { IsString, IsOptional, IsNumberString, IsIn } from "class-validator";
 
 @Configuration()
 export class CacheConfig {
@@ -7,15 +7,15 @@ export class CacheConfig {
   @Value('CACHE_HOST', { default: 'localhost' })
   host: string;
 
-  @IsString()
+  @IsNumberString()
   @Value('CACHE_PORT', { default: '6379' })
   port: string;
 
-  @IsString()
+  @IsNumberString()
   @Value('CACHE_TTL', { default: '3600' })
   ttl: string;
 
-  @IsString()
+  @IsNumberString()
   @Value('CACHE_DB', { default: '0' })
   db: string;
 
@@ -27,15 +27,15 @@ export class CacheConfig {
   @Value('CACHE_PREFIX', { default: 'magasinx:' })
   keyPrefix: string;
 
-  @IsString()
+  @IsNumberString()
   @Value('CACHE_MAX_ITEMS', { default: '1000' })
   maxItems: string;
 
-  @IsString()
+  @IsNumberString()
   @Value('CACHE_MAX_RETRIES', { default: '3' })
   maxRetries: string;
 
-  @IsString()
+  @IsIn(['true', 'false'])
   @Value('CACHE_READY_CHECK', { default: 'true' })
   readyCheck: string;
 }

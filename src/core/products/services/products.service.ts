@@ -85,21 +85,23 @@ export class ProductsService {
    * @returns A list of all products.
    */
   async getAllProducts(): Promise<Product[]> {
-    this.logger.log({ message: "Fetching all products" });
+    this.logger.log("Fetching all products");
+    const cacheKey = "products:list";
     try {
-      const cacheKey = 'products:list';
-      return this.cacheService.getOrSet(
+      return await this.cacheService.getOrSet(
         cacheKey,
         async () => {
           const products = await this.productRepository.findAll();
-          this.logger.log({ message: `Found ${products.length} products` });
+          this.logger.log(`Found ${products.length} products`);
           return products;
         },
-        { ttl: 300 } // 5 minutes cache for product list
+        { ttl: 300 },
       );
     } catch (error) {
+      const errorMessage = `[ERR_PROD_GET_ALL_PRODUCTS] Error getting all products: ${error.message}`;
+      this.logger.error(errorMessage, { stack: error.stack });
       throw this.errorHandlingService.returnErrorOnInternalServerError(
-        `[ERR_PROD_GET_ALL_PRODUCTS] Error getting all products: ${error.message}`,
+        errorMessage,
         "An error occurred while getting all products",
       );
     }
@@ -125,7 +127,7 @@ export class ProductsService {
           }
           return product;
         },
-        { ttl: 3600 } // 1 hour cache for individual products
+        { ttl: 3600 }
       );
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -149,7 +151,7 @@ export class ProductsService {
         async () => {
           return await this.productRepository.countByModelName(modelName);
         },
-        { ttl: 3600 } // 1 hour cache for model counts
+        { ttl: 3600 }
       );
       this.logger.log({
         message: `Stock count for model ${modelName}: ${count}`,

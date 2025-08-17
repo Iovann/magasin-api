@@ -5,10 +5,12 @@ import { CacheService } from './cache.service';
 import Keyv from 'keyv';
 import KeyvValkey from '@keyv/valkey';
 import { CacheConfig } from 'src/config/cache.config';
+import { ErrorHandlingModule } from 'src/common/response/error-handling.module';
 
 @Global()
 @Module({
   imports: [
+    ErrorHandlingModule,
     NestCacheModule.registerAsync({
       imports: [ConfigifyModule.forRootAsync()],
       inject: [CacheConfig],

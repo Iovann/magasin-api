@@ -15,11 +15,12 @@ import { TypeOrmModule, getRepositoryToken } from "@nestjs/typeorm";
 import { PostgresProduct } from "./entities/postgres-product.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
+import { CacheModule } from "../../libs/cache/cache.module";
 
 @Module({})
 export class ProductsModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = []; // Plus besoin d'importer ErrorHandlingModule car il est global
+    const imports: any[] = [CacheModule]; // Plus besoin d'importer ErrorHandlingModule car il est global
     const providers: Provider[] = [ProductsService, DatabaseConfig];
 
     // Configuration conditionnelle des imports et providers

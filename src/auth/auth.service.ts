@@ -37,6 +37,7 @@ export class AuthService {
       );
     }
     if (user && (await this.bcryptService.comparePassword(pass, user.passwordHash!))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordHash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     }
@@ -78,14 +79,13 @@ export class AuthService {
         if (ttl > 0) {
           await this.tokenBlacklistService.addToBlacklist(accessToken, ttl);
           blacklistSuccess = true;
-          console.log(`[AuthService] Token successfully blacklisted for user ${userId} with TTL: ${ttl}s`);
+          // console.log(`[AuthService] Token successfully blacklisted for user ${userId} with TTL: ${ttl}s`);
         } else {
           console.log(`[AuthService] Token already expired for user ${userId}, skipping blacklist`);
         }
       }
     } catch (error) {
       console.error(`[AuthService] Error blacklisting token for user ${userId}:`, error);
-      // On continue même si la blacklist échoue
     }
 
     try {

@@ -9,7 +9,6 @@ import { UnauthorizedException, NotFoundException } from "@nestjs/common";
 import { ErrorHandlingService } from "../common/response/error-handling";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
 import { BcryptService } from "../utils/bcrypt/bcrypt.service"; // Added import
-import { BcryptModule } from "../utils/bcrypt/bcrypt.module"; // Added import
 
 describe("AuthService", () => {
   let authService: AuthService;

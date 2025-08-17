@@ -6,6 +6,7 @@ import { IUserRepository } from "./repositories/user.repository";
 import { FsUserRepository } from "./repositories/fs-user.repository";
 import { MongoUserRepository } from "./repositories/mongo-user.repository";
 import { PostgresUserRepository } from "./repositories/postgres-user.repository";
+import { DuckDBUserRepository } from "./repositories/duckdb-user.repository";
 import { DatabaseConfig } from "../../config/database.config";
 import { MongooseModule, getModelToken } from "@nestjs/mongoose";
 import { MongoUser, MongoUserSchema } from "./entities/mongo-user.entity";
@@ -54,6 +55,16 @@ export class UsersModule {
             return new MongoUserRepository(model);
           },
           inject: [getModelToken(MongoUser.name)],
+        });
+        break;
+
+      case "duckdb":
+        providers.push({
+          provide: IUserRepository,
+          useFactory: (config: DatabaseConfig) => {
+            return new DuckDBUserRepository(config);
+          },
+          inject: [DatabaseConfig],
         });
         break;
 

@@ -5,6 +5,12 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { Role } from "../../common/enum/role.enum";
 import { User } from "./entities/user.entity";
 import { ConflictException, NotFoundException } from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Reflector } from "@nestjs/core";
+import { TestCacheModule } from "../../../test/test-cache.config";
+import { CacheService } from "src/libs/cache/cache.service";
+import { ErrorHandlingService } from "src/common/response/error-handling";
 
 describe("UsersController", () => {
   let controller: UsersController;
@@ -35,15 +41,42 @@ describe("UsersController", () => {
       unblockUser: jest.fn(), // Add this
     };
 
+    const mockCacheManager = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      reset: jest.fn(),
+    };
+
+    const mockErrorHandlingService = {
+      returnErrorOnBadRequest: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
+      imports: [TestCacheModule],
       controllers: [UsersController],
       providers: [
         {
           provide: UsersService,
           useValue: mockUsersService,
         },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
+        },
+        {
+          provide: ErrorHandlingService,
+          useValue: mockErrorHandlingService,
+        },
+        CacheService,
+        Reflector,
       ],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue(mockCacheManager)
+      .compile();
 
     controller = module.get<UsersController>(UsersController);
     usersService = module.get(UsersService);
@@ -119,8 +152,10 @@ describe("UsersController", () => {
     it("should return user statistics", async () => {
       // Arrange
       const mockStats = {
-        total: 3,
-        byRole: {
+        totalUsers: 3,
+        activeUsers: 3,
+        blockedUsers: 0,
+        userRoles: {
           [Role.SuperAdmin]: 1,
           [Role.Magasinier]: 1,
           [Role.Vendeur]: 1,

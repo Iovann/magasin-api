@@ -11,7 +11,6 @@ import { TokenBlacklistService } from "../services/token-blacklist.service";
 describe("JwtStrategy", () => {
   let jwtStrategy: JwtStrategy;
   let usersService: jest.Mocked<UsersService>;
-  let configService: jest.Mocked<ConfigService>;
 
   const mockUser: User = {
     id: "1",
@@ -56,7 +55,6 @@ describe("JwtStrategy", () => {
 
     jwtStrategy = module.get<JwtStrategy>(JwtStrategy);
     usersService = module.get(UsersService);
-    configService = module.get(ConfigService);
   });
 
   it("should be defined", () => {

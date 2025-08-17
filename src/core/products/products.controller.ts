@@ -26,10 +26,8 @@ import {
 import { Product } from "./entities/product.entity";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../common/guards/roles.guard";
-import { UseInterceptors } from "@nestjs/common";
-import { CacheKey, CacheTTL, CacheInterceptor } from "@nestjs/cache-manager";
+// Les intercepteurs de cache sont maintenant gérés par CustomCacheInterceptor
 
-@UseInterceptors(CacheInterceptor)
 @ApiTags("products")
 @ApiBearerAuth("JWT-auth")
 @Controller("products")
@@ -75,8 +73,6 @@ export class ProductsController {
    * @returns The total count of all products.
    */
   @Get("stock")
-  @CacheKey('products:stock')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get total stock of all products",
@@ -97,8 +93,6 @@ export class ProductsController {
    * @returns An array of products.
    */
   @Get()
-  @CacheKey('products:list')
-  @CacheTTL(300)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get all products",
@@ -123,8 +117,6 @@ export class ProductsController {
    */
 
   @Get("stock/:modelName")
-  @CacheKey('products:stock')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get stock count for a specific model",
@@ -155,8 +147,6 @@ export class ProductsController {
 
 
   @Get("by-model/:modelName")
-  @CacheKey('products:by-model')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get all products of a specific model",
@@ -185,8 +175,6 @@ export class ProductsController {
    */
 
   @Get("by-name/:name")
-  @CacheKey('products:by-name')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get all products by name",
@@ -215,8 +203,6 @@ export class ProductsController {
    */
 
   @Get("count-by-model/:modelName")
-  @CacheKey('products:count-by-model')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Count products by model name",
@@ -244,8 +230,6 @@ export class ProductsController {
    */
 
   @Get("count-by-name/:name")
-  @CacheKey('products:count-by-name')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Count products by name",
@@ -273,8 +257,6 @@ export class ProductsController {
    */
 
   @Get(":id")
-  @CacheKey('products:findOne')
-  @CacheTTL(300)
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get a product by its ID",
@@ -304,8 +286,6 @@ export class ProductsController {
    * @returns The updated product.
    */
   @Put(":id/stock")
-  @CacheKey('products:update-stock')
-  @CacheTTL(600)
   @Roles(Role.SuperAdmin, Role.Magasinier)
   @ApiOperation({
     summary: "Update product stock",

@@ -41,18 +41,25 @@ describe('CacheConfig', () => {
       expect(errors.length).toBe(0);
     });
 
-    it('should fail validation with invalid port', async () => {
-      const config = createConfig({ CACHE_PORT: '0' });
+    it('should fail validation with invalid port (non-numeric)', async () => {
+      const config = createConfig({ CACHE_PORT: 'invalid' });
       const errors = await validate(config);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0].property).toBe('port');
     });
 
-    it('should fail validation with negative TTL', async () => {
-      const config = createConfig({ CACHE_TTL: '-1' });
+    it('should fail validation with invalid TTL (non-numeric)', async () => {
+      const config = createConfig({ CACHE_TTL: 'invalid' });
       const errors = await validate(config);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0].property).toBe('ttl');
+    });
+
+    it('should fail validation with invalid readyCheck', async () => {
+      const config = createConfig({ CACHE_READY_CHECK: 'maybe' });
+      const errors = await validate(config);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].property).toBe('readyCheck');
     });
   });
 

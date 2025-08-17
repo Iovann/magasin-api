@@ -1,5 +1,4 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { UsersModule } from "./users.module";
 import { CacheModule } from "../../libs/cache/cache.module";
 import { UsersService } from "./services/users.service";
 import { IUserRepository } from "./repositories/user.repository";
@@ -33,15 +32,23 @@ describe("UsersModule", () => {
   const setup = async (dbType: string) => {
     process.env.DB_TYPE = dbType;
     module = await Test.createTestingModule({
-      imports: [UsersModule.forRoot(), CacheModule],
-    })
-      .overrideProvider(IUserRepository)
-      .useValue(mockUserRepository)
-      .overrideProvider(WINSTON_MODULE_PROVIDER)
-      .useValue(mockLogger)
-      .overrideProvider(ErrorHandlingService)
-      .useValue(mockErrorHandlingService)
-      .compile();
+      imports: [CacheModule],
+      providers: [
+        UsersService,
+        {
+          provide: WINSTON_MODULE_PROVIDER,
+          useValue: mockLogger,
+        },
+        {
+          provide: IUserRepository,
+          useValue: mockUserRepository,
+        },
+        {
+          provide: ErrorHandlingService,
+          useValue: mockErrorHandlingService,
+        },
+      ],
+    }).compile();
   };
 
   afterEach(() => {

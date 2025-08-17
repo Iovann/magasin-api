@@ -20,19 +20,18 @@ import { UsersService } from "./services/users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "./entities/user.entity";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
-import { UseGuards } from "@nestjs/common";
+import { UseGuards, UseInterceptors } from "@nestjs/common";
 import { RolesGuard } from "../../common/guards/roles.guard";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { Role } from "../../common/enum/role.enum";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import { Throttle } from "@nestjs/throttler";
-import { CacheKey, CacheTTL, CacheInterceptor } from "@nestjs/cache-manager";
-import { UseInterceptors } from "@nestjs/common";
+import { CustomCacheInterceptor } from "src/libs/cache/custom-cache.interceptor";
 
 @ApiTags("users")
 @Controller("users")
 @ApiBearerAuth("JWT-auth")
-@UseInterceptors(CacheInterceptor)
+@UseInterceptors(CustomCacheInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard, ThrottlerGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -71,8 +70,6 @@ export class UsersController {
    * @returns An array of users.
    */
   @Get()
-  @CacheKey('users:list')
-  @CacheTTL(300)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
   @ApiOperation({
@@ -96,8 +93,6 @@ export class UsersController {
    * @returns User statistics.
    */
   @Get("stats")
-  @CacheKey('users:stats')
-  @CacheTTL(1200)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
   @ApiOperation({
@@ -132,7 +127,6 @@ export class UsersController {
    */
   @Get(":id")
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  @CacheTTL(300)
   @Roles(Role.SuperAdmin)
   @ApiOperation({
     summary: "Get a user by ID",
