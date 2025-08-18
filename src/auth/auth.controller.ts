@@ -37,8 +37,8 @@ export class AuthController {
    * @param req The HTTP request.
    * @returns The JWT tokens.
    */
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
-  @UseGuards(ThrottlerGuard, LocalAuthGuard)
+  // @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @UseGuards(LocalAuthGuard)
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "User login" })

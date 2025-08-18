@@ -14,6 +14,7 @@ import { CacheModule } from "./libs/cache/cache.module";
 import { TokenBlacklistModule } from "./auth/services/token-blacklist.module";
 import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation.interceptor";
 import { BcryptModule } from './utils/bcrypt/bcrypt.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -29,15 +30,17 @@ import { BcryptModule } from './utils/bcrypt/bcrypt.module';
     TokenBlacklistModule,
     AuthModule,
     CacheModule,
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 10,
-        },
-      ],
-    }),
+    ThrottlerModule.forRoot(),
     BcryptModule,
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    BullModule.registerQueue({
+      name: 'email',
+    }),
   ],
   controllers: [AppController],
   providers: [

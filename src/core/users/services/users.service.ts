@@ -5,6 +5,8 @@ import { User } from "../entities/user.entity";
 import * as bcrypt from "bcrypt";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
 import { CacheService } from "src/libs/cache/cache.service";
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
 
 /**
  * Service for handling user-related operations.
@@ -17,6 +19,7 @@ export class UsersService {
     @Inject(IUserRepository) private readonly userRepository: IUserRepository,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly cacheService: CacheService,
+    @InjectQueue('email') private readonly emailQueue: Queue,
   ) {}
 
   /**
@@ -51,6 +54,10 @@ export class UsersService {
         isBlocked: false,
       };
       const user = await this.userRepository.create(userData);
+      await this.emailQueue.add('email', {
+        email: createUserDto.email,
+        name: createUserDto.role,
+      });
       await this.cacheService.delete("users:list");
       this.logger.log({
         level: "info",

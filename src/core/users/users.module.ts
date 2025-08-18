@@ -1,3 +1,4 @@
+import { EmailProcessor } from './../../workers/email/email.processor';
 import { Module, DynamicModule, Provider, Global } from "@nestjs/common";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./services/users.service";
@@ -15,16 +16,18 @@ import { PostgresUser } from "./entities/postgres-user.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
 import { CacheModule } from "src/libs/cache/cache.module";
+import { BullModule } from "@nestjs/bullmq";
 
 @Global()
 @Module({})
 export class UsersModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = [CacheModule];
+    const imports: any[] = [CacheModule, BullModule.registerQueue({name: 'email'})];
     const providers: Provider[] = [
       UsersService,
       UserInitService,
       DatabaseConfig,
+      EmailProcessor,
     ];
 
     // Configuration conditionnelle des imports et providers
@@ -63,8 +66,6 @@ export class UsersModule {
           provide: IUserRepository,
           useFactory: async (config: DatabaseConfig) => {
             const repo = new DuckDBUserRepository(config);
-            // L'initialisation se fera de manière paresseuse lors de la première utilisation
-            // grâce à la méthode waitForInitialization() dans le repository
             return repo;
           },
           inject: [DatabaseConfig],
