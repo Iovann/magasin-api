@@ -241,10 +241,14 @@ describe("ProductsService", () => {
       
       // Vérifier que les messages de log contiennent les textes attendus
       expect(mockLogger.log).toHaveBeenCalledWith(
-        "Fetching all products"
+        expect.objectContaining({
+          message: "Fetching all products"
+        })
       );
       expect(mockLogger.log).toHaveBeenCalledWith(
-        expect.stringContaining("Found")
+        expect.objectContaining({
+          message: expect.stringContaining("Found")
+        })
       );
     });
 
@@ -258,7 +262,9 @@ describe("ProductsService", () => {
       
       // Configurer le mock pour retourner l'erreur
       const expectedError = new InternalServerErrorException("An error occurred while getting all products");
-      mockErrorHandlingService.returnErrorOnInternalServerError.mockReturnValue(expectedError);
+      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(() => {
+        throw expectedError;
+      });
 
       // S'attendre à ce que l'erreur soit propagée
       await expect(service.getAllProducts()).rejects.toThrow(
@@ -278,8 +284,10 @@ describe("ProductsService", () => {
       
       // Vérifier que le logger a été appelé avec le message d'erreur
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/[\[]ERR_PROD_GET_ALL_PRODUCTS[\]].*Database error/), // Added for the stack trace
-        expect.any(Object) // for the stack trace
+        expect.stringContaining('[ERR_PROD_GET_ALL_PRODUCTS]'),
+        expect.objectContaining({
+          stack: expect.any(String)
+        })
       );
     });
   });

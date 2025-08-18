@@ -26,8 +26,11 @@ export class UsersService {
    */
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    this.logger.log("Attempting to create a new user", {
-      ...createUserDto,
+    this.logger.log({
+      level: "info",
+      message: `Attempting to create a new user,
+      ${JSON.stringify(createUserDto)}`,
+      context: UsersService.name,
     });
     const existingUser = await this.userRepository.findByEmail(
       createUserDto.email,
@@ -49,7 +52,11 @@ export class UsersService {
       };
       const user = await this.userRepository.create(userData);
       await this.cacheService.delete("users:list");
-      this.logger.log(`User created successfully with id: ${user.id}`);
+      this.logger.log({
+        level: "info",
+        message: `User created successfully ${user.id}`,
+        context: UsersService.name,
+      });
       return user;
     } catch (error) {
       return this.errorHandlingService.returnErrorOnInternalServerError(
@@ -72,7 +79,11 @@ export class UsersService {
         () => this.userRepository.findAll(),
         { ttl: 3600 },
       );
-      this.logger.log(`Found ${users.length} users`);
+      this.logger.log({
+        level: "info",
+        message: `Found ${users.length} users`,
+        context: UsersService.name,
+      });
       return users;
     } catch (error) {
       return this.errorHandlingService.returnErrorOnInternalServerError(
@@ -102,7 +113,11 @@ export class UsersService {
           "User not found",
         );
       }
-      this.logger.log(`Found user with ID ${id}`);
+      this.logger.log({
+        level: "info",
+        message: `Found user with ID ${id}`,
+        context: UsersService.name,
+      });
       return user;
     } catch (error) {
       if (error.status) throw error;
@@ -125,9 +140,17 @@ export class UsersService {
       // This is not cached to ensure we get the latest data for auth purposes.
       const user = await this.userRepository.findByEmail(email);
       if (user) {
-        this.logger.log(`Found user with email ${email}`);
+        this.logger.log({
+          level: "info",
+          message: `Found user with email ${email}`,
+          context: UsersService.name,
+        });
       } else {
-        this.logger.log(`User with email ${email} not found`);
+        this.logger.log({
+          level: "warn",
+          message: `User with email ${email} not found`,
+          context: UsersService.name,
+        });
       }
       return user;
     } catch (error) {
@@ -148,9 +171,17 @@ export class UsersService {
     try {
       const user = await this.userRepository.findByEmailWithPassword(email);
       if (user) {
-        this.logger.log(`Found user with email ${email}`);
+        this.logger.log({
+          level: "info",
+          message: `Found user with email ${email}`,
+          context: UsersService.name,
+        });
       } else {
-        this.logger.log(`User with email ${email} not found`);
+        this.logger.log({
+          level: "warn",
+          message: `User with email ${email} not found`,
+          context: UsersService.name,
+        });
       }
       return user;
     } catch (error) {
@@ -173,9 +204,17 @@ export class UsersService {
     try {
       const user = await this.userRepository.findByIdWithPassword(id);
       if (user) {
-        this.logger.log(`Found user with ID ${id}`);
+        this.logger.log({
+          level: "info",
+          message: `Found user with ID ${id}`,
+          context: UsersService.name,
+        });
       } else {
-        this.logger.warn(`User with ID ${id} not found`);
+        this.logger.log({
+          level: "warn",
+          message: `User with ID ${id} not found`,
+          context: UsersService.name,
+        });
       }
       return user;
     } catch (error) {
@@ -193,7 +232,11 @@ export class UsersService {
    * @returns The updated user.
    */
   async update(id: string, updateData: Partial<User>): Promise<User> {
-    this.logger.log(`Attempting to update user ${id}`, { updateData });
+    this.logger.log({
+      level: "info",
+      message: `Attempting to update user ${id}`,
+      context: UsersService.name,
+    });
     try {
       const user = await this.userRepository.update(id, updateData);
       if (!user) {
@@ -226,7 +269,11 @@ export class UsersService {
     refreshToken: string,
     userId: string,
   ): Promise<User> {
-    this.logger.log(`Setting refresh token for user ${userId}`);
+    this.logger.log({
+      level: "info",
+      message: `Setting refresh token for user ${userId}`,
+      context: UsersService.name,
+    });
     try {
       const salt = await bcrypt.genSalt();
       const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
@@ -241,7 +288,11 @@ export class UsersService {
         );
       }
 
-      this.logger.log(`Refresh token set for user ${userId}`);
+      this.logger.log({
+        level: "info",
+        message: `Refresh token set for user ${userId}`,
+        context: UsersService.name,
+      });
       return updatedUser;
     } catch (error) {
       if (error.status) throw error;
@@ -283,7 +334,11 @@ export class UsersService {
    * @returns The updated user.
    */
   async removeRefreshToken(userId: string): Promise<User> {
-    this.logger.log(`Removing refresh token for user ${userId}`);
+    this.logger.log({
+      level: "info",
+      message: `Removing refresh token for user ${userId}`,
+      context: UsersService.name,
+    });
     try {
       const updatedUser = await this.userRepository.update(userId, {
         refreshToken: '',
@@ -296,7 +351,11 @@ export class UsersService {
         );
       }
 
-      this.logger.log(`Refresh token removed for user ${userId}`);
+      this.logger.log({
+        level: "info",
+        message: `Refresh token removed for user ${userId}`,
+        context: UsersService.name,
+      });
       return updatedUser;
     } catch (error) {
       if (error.status) throw error;
@@ -317,7 +376,11 @@ export class UsersService {
     userId: string,
     passwordHash: string,
   ): Promise<User> {
-    this.logger.log(`Attempting to update password hash for user ${userId}`);
+    this.logger.log({
+      level: "info",
+      message: `Attempting to update password hash for user ${userId}`,
+      context: UsersService.name,
+    });
     try {
       const updatedUser = await this.userRepository.update(userId, {
         passwordHash,
@@ -328,7 +391,11 @@ export class UsersService {
           "User not found",
         );
       }
-      this.logger.log(`Password hash updated for user ${userId}`);
+      this.logger.log({
+        level: "info",
+        message: `Password hash updated for user ${userId}`,
+        context: UsersService.name,
+      });
       return updatedUser;
     } catch (error) {
       if (error.status) throw error;
@@ -346,7 +413,11 @@ export class UsersService {
    * @returns void
    */
   async remove(id: string): Promise<void> {
-    this.logger.log(`Attempting to remove user ${id}`);
+    this.logger.log({
+      level: "info",
+      message: `Attempting to remove user ${id}`,
+      context: UsersService.name,
+    });
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw this.errorHandlingService.returnErrorOnNotFound(
@@ -359,7 +430,11 @@ export class UsersService {
       await this.userRepository.delete(id);
       await this.cacheService.delete("users:list");
       await this.cacheService.delete(`users:findOne:${id}`);
-      this.logger.log(`User ${id} removed successfully`);
+      this.logger.log({
+        level: "info",
+        message: `User ${id} removed successfully`,
+        context: UsersService.name,
+      });
       return {
         message: `User ${id} removed successfully`,
       } as never;
@@ -381,7 +456,11 @@ export class UsersService {
     blockedUsers: number;
     userRoles: Record<string, number>;
   }> {
-    this.logger.log("Fetching user stats");
+    this.logger.log({
+      level: "info",
+      message: "Fetching user stats",
+      context: UsersService.name,
+    });
     try {
       const users = await this.userRepository.findAll();
       const stats = {
@@ -395,7 +474,11 @@ export class UsersService {
         stats.userRoles[user.role] = (stats.userRoles[user.role] || 0) + 1;
       });
 
-      this.logger.log("Successfully fetched user stats", { stats });
+      this.logger.log({
+        level: "info",
+        message: "Successfully fetched user stats",
+        context: UsersService.name,
+      });
       return stats;
     } catch (error) {
       return this.errorHandlingService.returnErrorOnInternalServerError(
@@ -445,7 +528,11 @@ export class UsersService {
         "Failed to block user",
       );
     }
-    this.logger.log(`User ${id} blocked successfully`);
+    this.logger.log({
+      level: "info",
+      message: `User ${id} blocked successfully`,
+      context: UsersService.name,
+    });
     return updatedUser;
   }
 
@@ -488,7 +575,11 @@ export class UsersService {
         "Failed to unblock user",
       ) as never;
     }
-    this.logger.log(`User ${id} unblocked successfully`);
+    this.logger.log({
+      level: "info",
+      message: `User ${id} unblocked successfully`,
+      context: UsersService.name,
+    });
     return updatedUser;
   }
 }

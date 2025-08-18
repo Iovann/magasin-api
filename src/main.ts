@@ -14,6 +14,8 @@ async function bootstrap() {
             winston.format.timestamp(),
             winston.format.ms(),
             winston.format.json(),
+            winston.format.colorize({ all: true }),
+            winston.format.prettyPrint(),
           ),
         }),
       ],
