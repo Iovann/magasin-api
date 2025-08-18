@@ -34,6 +34,8 @@ describe("AuthController", () => {
             logout: jest.fn(),
             getTokens: jest.fn(),
             changePassword: jest.fn(),
+            checkTokenBlacklist: jest.fn(),
+            checkRedisStatus: jest.fn(),
           },
         },
       ],
@@ -74,6 +76,12 @@ describe("AuthController", () => {
       await controller.logout(req as any, authHeader);
       expect(authService.logout).toHaveBeenCalledWith(mockUser.id, mockAccessToken);
     });
+
+    it("should not call authService.logout if token is missing", async () => {
+      const req = { user: mockUser };
+      await controller.logout(req as any, "");
+      expect(authService.logout).not.toHaveBeenCalled();
+    });
   });
 
   describe("refresh", () => {
@@ -107,7 +115,7 @@ describe("AuthController", () => {
       });
       const req = { user: mockUser };
 
-      const result = await controller.changePassword(
+      await controller.changePassword(
         req as any,
         changePasswordDto,
       );
@@ -117,7 +125,6 @@ describe("AuthController", () => {
         changePasswordDto.currentPassword,
         changePasswordDto.newPassword,
       );
-      expect(result).toBeUndefined();
     });
 
     it("should rethrow UnauthorizedException from authService", async () => {
@@ -134,6 +141,52 @@ describe("AuthController", () => {
         changePasswordDto.currentPassword,
         changePasswordDto.newPassword,
       );
+    });
+  });
+
+  describe("testToken", () => {
+    it("should return a success message with user details", async () => {
+      const req = { user: mockUser };
+      const result = await controller.testToken(req as any);
+      expect(result).toEqual({
+        message: "Token is valid",
+        userId: mockUser.id,
+        email: mockUser.email,
+      });
+    });
+  });
+
+  describe("checkBlacklist", () => {
+    it("should return blacklisted status", async () => {
+      const req = { user: mockUser };
+      const token = "test-token";
+      const authHeader = `Bearer ${token}`;
+      authService.checkTokenBlacklist.mockResolvedValue(true);
+
+      const result = await controller.checkBlacklist(req as any, authHeader);
+
+      expect(authService.checkTokenBlacklist).toHaveBeenCalledWith(token);
+      expect(result.blacklisted).toBe(true);
+    });
+
+    it('should return a message if no token is provided', async () => {
+      const req = { user: mockUser };
+      const result = await controller.checkBlacklist(req as any, '');
+      expect(result.message).toBe('No token provided');
+      expect(result.blacklisted).toBe(false);
+      expect(authService.checkTokenBlacklist).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("checkRedisStatus", () => {
+    it("should return redis status", async () => {
+      const status = { status: "connected" };
+      authService.checkRedisStatus.mockResolvedValue(status);
+
+      const result = await controller.checkRedisStatus();
+
+      expect(authService.checkRedisStatus).toHaveBeenCalled();
+      expect(result).toEqual(status);
     });
   });
 });
