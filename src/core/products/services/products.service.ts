@@ -85,14 +85,14 @@ export class ProductsService {
    * @returns A list of all products.
    */
   async getAllProducts(): Promise<Product[]> {
-    this.logger.log("Fetching all products");
+    this.logger.log({ message: "Fetching all products" });
     const cacheKey = "products:list";
     try {
       return await this.cacheService.getOrSet(
         cacheKey,
         async () => {
           const products = await this.productRepository.findAll();
-          this.logger.log(`Found ${products.length} products`);
+          this.logger.log({ message: `Found ${products.length} products` });
           return products;
         },
         { ttl: 300 },

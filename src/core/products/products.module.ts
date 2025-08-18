@@ -65,7 +65,13 @@ export class ProductsModule {
       case "duckdb":
         providers.push({
           provide: IProductRepository,
-          useClass: DuckDBProductRepository,
+          useFactory: (config: DatabaseConfig) => {
+            const repo = new DuckDBProductRepository(config);
+            // L'initialisation se fera de manière paresseuse lors de la première utilisation
+            // grâce à la méthode waitForInitialization() dans le repository
+            return repo;
+          },
+          inject: [DatabaseConfig],
         });
         break;
 

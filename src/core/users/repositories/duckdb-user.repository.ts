@@ -17,9 +17,17 @@ export class DuckDBUserRepository implements IUserRepository {
   private connection: DuckDBConnection;
   private readonly logger = new Logger(DuckDBUserRepository.name);
   private readonly tableName = 'users';
+  private isInitialized = false;
+  private initPromise: Promise<void>;
 
   constructor(private readonly config: DatabaseConfig) {
-    this.init();
+    this.initPromise = this.init();
+  }
+
+  private async waitForInitialization(): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initPromise;
+    }
   }
 
   private async init(): Promise<void> {
@@ -44,6 +52,7 @@ export class DuckDBUserRepository implements IUserRepository {
         )
       `);
       this.logger.log('DuckDB initialized successfully');
+      this.isInitialized = true;
     } catch (err) {
       this.logger.error('Failed to initialize database', err);
       throw err;
@@ -51,6 +60,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async create(user: Omit<User, 'id' | 'createdAt'>): Promise<UserWithTimestamps> {
+    await this.waitForInitialization();
     const id = crypto.randomUUID();
     const now = new Date();
     const newUser: UserWithTimestamps = {
@@ -79,6 +89,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<UserWithTimestamps | null> {
+    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE id = ?`, [id]);
       return rows[0] ? this.mapRowToUser(rows[0]) : null;
@@ -89,6 +100,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async findByEmail(email: string): Promise<UserWithTimestamps | null> {
+    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE email = ?`, [email]);
       return rows[0] ? this.mapRowToUser(rows[0]) : null;
@@ -99,6 +111,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async findByEmailWithPassword(email: string): Promise<(UserWithTimestamps & { passwordHash: string }) | null> {
+    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT * FROM ${this.tableName} WHERE email = ?`, [email]);
       if (!rows[0]) return null;
@@ -110,6 +123,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async findByIdWithPassword(id: string): Promise<(UserWithTimestamps & { passwordHash: string }) | null> {
+    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT * FROM ${this.tableName} WHERE id = ?`, [id]);
       if (!rows[0]) return null;
@@ -121,6 +135,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async findAll(): Promise<UserWithTimestamps[]> {
+    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName}`);
       return rows.map(row => this.mapRowToUser(row));
@@ -131,6 +146,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async update(id: string, userData: Partial<User>): Promise<UserWithTimestamps | null> {
+    await this.waitForInitialization();
     const updates: string[] = [];
     const params: any[] = [];
     if (userData.email !== undefined) { updates.push('email = ?'); params.push(userData.email); }
@@ -152,6 +168,7 @@ export class DuckDBUserRepository implements IUserRepository {
   }
 
   async delete(id: string): Promise<void> {
+    await this.waitForInitialization();
     try {
       await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
     } catch (err) {

@@ -59,17 +59,16 @@ export class UsersModule {
         break;
 
       case "duckdb":
-        // Utiliser une IIFE pour éviter les problèmes de scope
-        (() => {
-          const duckDbRepo = new DuckDBUserRepository(new DatabaseConfig());
-          providers.push({
-            provide: IUserRepository,
-            useFactory: async () => {
-              await duckDbRepo['init']();
-              return duckDbRepo;
-            },
-          });
-        })();
+        providers.push({
+          provide: IUserRepository,
+          useFactory: async (config: DatabaseConfig) => {
+            const repo = new DuckDBUserRepository(config);
+            // L'initialisation se fera de manière paresseuse lors de la première utilisation
+            // grâce à la méthode waitForInitialization() dans le repository
+            return repo;
+          },
+          inject: [DatabaseConfig],
+        });
         break;
 
       default: // txt/filesystem

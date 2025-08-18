@@ -17,9 +17,17 @@ export class DuckDBProductRepository implements IProductRepository {
   private connection: DuckDBConnection;
   private readonly logger = new Logger(DuckDBProductRepository.name);
   private readonly tableName = 'products';
+  private isInitialized = false;
+  private initPromise: Promise<void>;
 
   constructor(private readonly config: DatabaseConfig) {
-    this.init();
+    this.initPromise = this.init();
+  }
+
+  private async waitForInitialization(): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initPromise;
+    }
   }
 
   private async init(): Promise<void> {
@@ -44,17 +52,19 @@ export class DuckDBProductRepository implements IProductRepository {
         )
       `);
       this.logger.log('DuckDB products table initialized successfully');
+      this.isInitialized = true;
     } catch (err) {
       this.logger.error('Failed to initialize products database', err);
       throw err;
     }
   }
 
-  async create(productDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto): Promise<Product> {
+    await this.waitForInitialization();
     const id = crypto.randomUUID();
     const now = new Date();
     const newProduct: ProductWithTimestamps = {
-      ...productDto,
+      ...createProductDto,
       id,
       createdAt: now,
       updatedAt: now,
@@ -93,6 +103,8 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async findById(id: string): Promise<Product | null> {
+    await this.waitForInitialization();
+
     try {
       const row = await this.queryOne(
         `SELECT * FROM ${this.tableName} WHERE id = ?`,
@@ -106,6 +118,7 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async findAll(): Promise<Product[]> {
+    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT * FROM ${this.tableName}`);
       return rows.map(row => this.mapRowToProduct(row));
@@ -116,6 +129,7 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async delete(id: string): Promise<void> {
+    await this.waitForInitialization();
     try {
       await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
     } catch (err) {
@@ -160,21 +174,22 @@ export class DuckDBProductRepository implements IProductRepository {
     }
   }
 
-  async update(id: string, updateData: Partial<Product>): Promise<Product | null> {
+  async update(id: string, updateProductDto: Partial<CreateProductDto>): Promise<Product | null> {
+    await this.waitForInitialization();
     const updates: string[] = [];
     const params: any[] = [];
 
-    if (updateData.name !== undefined) { 
+    if (updateProductDto.name !== undefined) { 
       updates.push('name = ?'); 
-      params.push(updateData.name); 
+      params.push(updateProductDto.name); 
     }
-    if (updateData.modelName !== undefined) { 
+    if (updateProductDto.modelName !== undefined) { 
       updates.push('modelName = ?'); 
-      params.push(updateData.modelName); 
+      params.push(updateProductDto.modelName); 
     }
-    if (updateData.price !== undefined) { 
+    if (updateProductDto.price !== undefined) { 
       updates.push('price = ?'); 
-      params.push(updateData.price); 
+      params.push(updateProductDto.price); 
     }
 
     if (updates.length === 0) {
