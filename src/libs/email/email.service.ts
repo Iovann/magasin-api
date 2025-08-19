@@ -57,7 +57,8 @@ export class EmailService {
 
             return true;
         } catch (error) {
-            this.logger.error(`ERR_EMAIL_SEND_EMAIL: Failed to send email to ${to}`, {
+            const errorMessage = `ERR_EMAIL_SEND_EMAIL: Failed to send email to ${to}`;
+            this.logger.error(errorMessage, {
                 error: {
                     message: error.message,
                     stack: error.stack,
@@ -65,8 +66,7 @@ export class EmailService {
                 },
                 context
             });
-
-            return false;
+            throw new Error(errorMessage);
         }
     }
 
@@ -80,13 +80,14 @@ export class EmailService {
                 currentYear: new Date().getFullYear()
             });
 
-            return this.sendMail(
+            return await this.sendMail(
                 email,
                 'Bienvenue sur MagasinX',
                 html
             );
         } catch (error) {
-            this.logger.error(`ERR_EMAIL_SEND_WELCOME_EMAIL: Failed to send welcome email to ${email}`, {
+            const errorMessage = `ERR_EMAIL_SEND_WELCOME_EMAIL: Failed to send welcome email to ${email}`;
+            this.logger.error(errorMessage, {
                 error: {
                     message: error.message,
                     stack: error.stack,
@@ -94,7 +95,7 @@ export class EmailService {
                 },
                 context: { email, name, role }
             });
-            return false;
+            throw new Error(errorMessage);
         }
     }
 
