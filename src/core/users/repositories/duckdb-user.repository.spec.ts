@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DuckDBUserRepository } from '../../../../src/core/users/repositories/duckdb-user.repository';
 import { DatabaseConfig } from '../../../../src/config/database.config';
 import { Role } from '../../../../src/common/enum/role.enum';
-import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
-
+import { DuckDBConnection } from '@duckdb/node-api';
+import { DuckDBService } from '../../../../src/libs/database/duckdb.service';
 
 // Mock crypto.randomUUID
 Object.defineProperty(global, 'crypto', {
@@ -15,7 +15,7 @@ Object.defineProperty(global, 'crypto', {
 describe('DuckDBUserRepository', () => {
   let repository: DuckDBUserRepository;
   let mockConnection: jest.Mocked<DuckDBConnection>;
-  let mockInstance: jest.Mocked<DuckDBInstance>;
+  let mockDuckDBService: jest.Mocked<DuckDBService>;
   
   const mockConfig: DatabaseConfig = {
     nodeEnv: 'development',
@@ -31,7 +31,7 @@ describe('DuckDBUserRepository', () => {
   };
 
   beforeEach(async () => {
-    // Create mock DuckDB instance and connection
+    // Create mock DuckDB connection
     mockConnection = {
       run: jest.fn().mockResolvedValue(undefined),
       runAndReadAll: jest.fn().mockResolvedValue({
@@ -49,17 +49,18 @@ describe('DuckDBUserRepository', () => {
       closeSync: jest.fn(),
     } as unknown as jest.Mocked<DuckDBConnection>;
 
-    mockInstance = {
-      connect: jest.fn().mockResolvedValue(mockConnection),
-      closeSync: jest.fn(),
-    } as unknown as jest.Mocked<DuckDBInstance>;
-
-    // Mock DuckDBInstance.create
-    jest.spyOn(DuckDBInstance, 'create').mockResolvedValue(mockInstance);
+    // Mock DuckDBService
+    mockDuckDBService = {
+      getConnection: jest.fn().mockResolvedValue(mockConnection)
+    } as unknown as jest.Mocked<DuckDBService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DuckDBUserRepository,
+        {
+          provide: DuckDBService,
+          useValue: mockDuckDBService,
+        },
         {
           provide: DatabaseConfig,
           useValue: mockConfig,
@@ -69,8 +70,8 @@ describe('DuckDBUserRepository', () => {
 
     repository = module.get<DuckDBUserRepository>(DuckDBUserRepository);
     
-    // Wait for init to complete
-    await new Promise(resolve => setTimeout(resolve, 0));
+    // Wait for onModuleInit to complete
+    await repository.onModuleInit();
   });
 
   afterEach(() => {
@@ -205,7 +206,7 @@ describe('DuckDBUserRepository', () => {
   //     await repository.onModuleDestroy();
       
   //     expect(mockConnection.closeSync).toHaveBeenCalled();
-  //     expect(mockInstance.closeSync).toHaveBeenCalled();
+  //     expect(mockDuckDBService.closeSync).toHaveBeenCalled();
   //   });
   // });
 });

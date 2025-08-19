@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { getQueueToken } from "@nestjs/bullmq";
 import { CacheModule } from "../../libs/cache/cache.module";
 import { UsersService } from "./services/users.service";
 import { IUserRepository } from "./repositories/user.repository";
@@ -46,6 +47,10 @@ describe("UsersModule", () => {
         {
           provide: ErrorHandlingService,
           useValue: mockErrorHandlingService,
+        },
+        {
+          provide: getQueueToken('email'),
+          useValue: { add: jest.fn() },
         },
       ],
     }).compile();

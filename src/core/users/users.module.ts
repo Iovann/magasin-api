@@ -17,6 +17,7 @@ import { Repository } from "typeorm";
 import { Model } from "mongoose";
 import { CacheModule } from "src/libs/cache/cache.module";
 import { BullModule } from "@nestjs/bullmq";
+import { DuckDBService } from 'src/libs/database/duckdb.service';
 
 @Global()
 @Module({})
@@ -27,6 +28,7 @@ export class UsersModule {
       UsersService,
       UserInitService,
       DatabaseConfig,
+      DuckDBService,
       EmailProcessor,
     ];
 
@@ -64,11 +66,11 @@ export class UsersModule {
       case "duckdb":
         providers.push({
           provide: IUserRepository,
-          useFactory: async (config: DatabaseConfig) => {
-            const repo = new DuckDBUserRepository(config);
+          useFactory: async (duckDBService: DuckDBService, config: DatabaseConfig) => {
+            const repo = new DuckDBUserRepository(duckDBService, config);
             return repo;
           },
-          inject: [DatabaseConfig],
+          inject: [DuckDBService, DatabaseConfig],
         });
         break;
 

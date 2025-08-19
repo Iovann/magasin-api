@@ -17,12 +17,13 @@ import { Repository } from "typeorm";
 import { Model } from "mongoose";
 import { CacheModule } from "../../libs/cache/cache.module";
 import { DuckDBProductRepository } from "./repositories/duckdb-product.reposetory";
+import { DuckDBService } from "../../libs/database/duckdb.service";
 
 @Module({})
 export class ProductsModule {
   static forRoot(): DynamicModule {
     const imports: any[] = [CacheModule]; // Plus besoin d'importer ErrorHandlingModule car il est global
-    const providers: Provider[] = [ProductsService, DatabaseConfig];
+    const providers: Provider[] = [ProductsService, DatabaseConfig, DuckDBService];
 
     // Configuration conditionnelle des imports et providers
     switch (process.env.DB_TYPE) {
@@ -62,18 +63,15 @@ export class ProductsModule {
         });
         break;
 
-      case "duckdb":
-        providers.push({
-          provide: IProductRepository,
-          useFactory: (config: DatabaseConfig) => {
-            const repo = new DuckDBProductRepository(config);
-            // L'initialisation se fera de manière paresseuse lors de la première utilisation
-            // grâce à la méthode waitForInitialization() dans le repository
-            return repo;
-          },
-          inject: [DatabaseConfig],
-        });
-        break;
+        case "duckdb":
+          providers.push({
+            provide: IProductRepository,
+            useFactory: (duckDBService: DuckDBService) => {
+              return new DuckDBProductRepository(duckDBService);
+            },
+            inject: [DuckDBService],
+          });
+          break;
 
       default: // filesystem
         providers.push({

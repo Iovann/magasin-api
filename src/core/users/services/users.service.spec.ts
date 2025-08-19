@@ -1,3 +1,4 @@
+import { getQueueToken } from "@nestjs/bullmq";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UsersService } from "./users.service";
 import { IUserRepository } from "../repositories/user.repository";
@@ -92,6 +93,10 @@ describe("UsersService", () => {
       }),
     };
 
+    const mockEmailQueue = {
+      add: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -110,6 +115,10 @@ describe("UsersService", () => {
         {
           provide: CacheService,
           useValue: mockCache,
+        },
+        {
+          provide: getQueueToken('email'),
+          useValue: mockEmailQueue,
         },
       ],
     }).compile();

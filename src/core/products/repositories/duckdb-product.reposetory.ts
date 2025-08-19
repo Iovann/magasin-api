@@ -1,10 +1,9 @@
-import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
-import { join } from 'path';
+import { DuckDBConnection } from '@duckdb/node-api';
 import { Injectable, Logger } from '@nestjs/common';
 import { IProductRepository } from './product.repository';
 import { Product } from '../entities/product.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
-import { DatabaseConfig } from '../../../config/database.config';
+import { DuckDBService } from '../../../libs/database/duckdb.service';
 
 interface ProductWithTimestamps extends Product {
   createdAt: Date;
@@ -13,27 +12,14 @@ interface ProductWithTimestamps extends Product {
 
 @Injectable()
 export class DuckDBProductRepository implements IProductRepository {
-  private instance: DuckDBInstance;
   private connection: DuckDBConnection;
   private readonly logger = new Logger(DuckDBProductRepository.name);
   private readonly tableName = 'products';
-  private isInitialized = false;
-  private initPromise: Promise<void>;
 
-  constructor(private readonly config: DatabaseConfig) {
-    this.initPromise = this.init();
-  }
+  constructor(private readonly duckDBService: DuckDBService) { }
 
-  private async waitForInitialization(): Promise<void> {
-    if (!this.isInitialized) {
-      await this.initPromise;
-    }
-  }
-
-  private async init(): Promise<void> {
-    const dbPath = join(process.cwd(), this.config.dbPath, 'products.duckdb');
-    this.instance = await DuckDBInstance.create(dbPath);
-    this.connection = await this.instance.connect();
+  async onModuleInit() {
+    this.connection = await this.duckDBService.getConnection();
     await this.initializeDatabase();
   }
 
@@ -52,7 +38,6 @@ export class DuckDBProductRepository implements IProductRepository {
         )
       `);
       this.logger.log('DuckDB products table initialized successfully');
-      this.isInitialized = true;
     } catch (err) {
       this.logger.error('Failed to initialize products database', err);
       throw err;
@@ -60,7 +45,6 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    await this.waitForInitialization();
     const id = crypto.randomUUID();
     const now = new Date();
     const newProduct: ProductWithTimestamps = {
@@ -103,7 +87,6 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async findById(id: string): Promise<Product | null> {
-    await this.waitForInitialization();
 
     try {
       const row = await this.queryOne(
@@ -118,7 +101,6 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async findAll(): Promise<Product[]> {
-    await this.waitForInitialization();
     try {
       const rows = await this.queryAll(`SELECT * FROM ${this.tableName}`);
       return rows.map(row => this.mapRowToProduct(row));
@@ -129,7 +111,6 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.waitForInitialization();
     try {
       await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
     } catch (err) {
@@ -175,7 +156,6 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async update(id: string, updateProductDto: Partial<CreateProductDto>): Promise<Product | null> {
-    await this.waitForInitialization();
     const updates: string[] = [];
     const params: any[] = [];
 
@@ -254,9 +234,6 @@ export class DuckDBProductRepository implements IProductRepository {
     try {
       if (this.connection) {
         this.connection.closeSync();
-      }
-      if (this.instance) {
-        this.instance.closeSync();
       }
     } catch (err) {
       this.logger.error('Failed to close DuckDB connections', err);

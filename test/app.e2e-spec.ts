@@ -8,7 +8,7 @@ import { TestCacheModule } from "./test-cache.config";
 describe("AppController (e2e)", () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         AppModule,
@@ -18,6 +18,10 @@ describe("AppController (e2e)", () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it("/ (GET)", () => {

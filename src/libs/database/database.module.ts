@@ -6,12 +6,14 @@ import { ConfigifyModule } from "@itgorillaz/configify";
 import { ConfigService } from "@nestjs/config";
 import { PostgresProduct } from "../../core/products/entities/postgres-product.entity";
 import { PostgresUser } from "../../core/users/entities/postgres-user.entity";
+import { DuckDBService } from "./duckdb.service";
 
 @Global()
 @Module({})
 export class DatabaseModule {
   static forRootAsync(): DynamicModule {
     const imports: any[] = [ConfigifyModule.forRootAsync()];
+    const providers: any[] = [];
 
     if (process.env.DB_TYPE === "postgres") {
       imports.push(
@@ -68,11 +70,14 @@ export class DatabaseModule {
 
     if (process.env.DB_TYPE === "duckdb") {
       console.log("Using DuckDB database. Configuration is handled by repository.");
+      providers.push(DuckDBService);
     }
 
     return {
       module: DatabaseModule,
       imports,
+      providers,
+      exports: providers,
     };
   }
 
