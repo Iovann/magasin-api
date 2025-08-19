@@ -56,7 +56,8 @@ export class UsersService {
       const user = await this.userRepository.create(userData);
       await this.emailQueue.add('email', {
         email: createUserDto.email,
-        name: createUserDto.role,
+        name: user.email.split('@')[0],
+        role: createUserDto.role,
       });
       await this.cacheService.delete("users:list");
       this.logger.log({

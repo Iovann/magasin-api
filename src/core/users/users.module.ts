@@ -18,18 +18,21 @@ import { Model } from "mongoose";
 import { CacheModule } from "src/libs/cache/cache.module";
 import { BullModule } from "@nestjs/bullmq";
 import { DuckDBService } from 'src/libs/database/duckdb.service';
+import { EmailModule } from 'src/libs/email/email.module';  
+import { EmailService } from 'src/libs/email/email.service';
 
 @Global()
 @Module({})
 export class UsersModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = [CacheModule, BullModule.registerQueue({name: 'email'})];
+    const imports: any[] = [CacheModule, BullModule.registerQueue({name: 'email'}), EmailModule];
     const providers: Provider[] = [
       UsersService,
       UserInitService,
       DatabaseConfig,
       DuckDBService,
       EmailProcessor,
+      EmailService, 
     ];
 
     // Configuration conditionnelle des imports et providers

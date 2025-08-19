@@ -1,18 +1,49 @@
-import { Processor, WorkerHost} from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
+import { EmailService } from '../../libs/email/email.service';
 
 @Processor('email')
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);
 
-  async process(job: Job<{ email: string; name: string }>) {
-    this.logger.log(`Traitement du job commencé: ${job.id}`);
-    const { email, name } = job.data;
-    this.logger.log(`Envoi d'email à ${email} (${name})`);
-    // Simulation d'envoi d'email
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    this.logger.log(`Email envoyé à ${email}`);
-    return true;
+  constructor(private readonly emailService: EmailService) {
+    super();
+  }
+
+  async process(job: Job<{ 
+    email: string;
+    name?: string;
+    role?: string; 
+  }>) {
+    try {
+      this.logger.log(`Traitement du job commencé: ${job.id}`);
+      const { email, name, role } = job.data;
+      
+      this.logger.debug(`Envoi d'email à ${email}${name ? ` (${name})` : ''}`, {
+        jobId: job.id,
+        email,
+        name : name || ' ',
+        role : role || 'Vendeur'
+      });
+
+      const isSent = await this.emailService.sendWelcomeEmail(email, name || ' ', role || 'Vendeur');
+
+      if (isSent) {
+        this.logger.log(`Email envoyé avec succès à ${email}`, {
+          jobId: job.id
+        });
+        return { success: true, messageId: job.id };
+      } else {
+        throw new Error(`Échec de l'envoi de l'email à ${email}`);
+      }
+    } catch (error) {
+      this.logger.error(`Erreur lors du traitement du job ${job.id}`, {
+        error: error.message,
+        stack: error.stack,
+        job: job.data
+      });
+      throw error; // BullMQ va gérer la réessai si configuré
+    }
   }
 }
