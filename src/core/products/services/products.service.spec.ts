@@ -578,60 +578,83 @@ describe("ProductsService", () => {
   });
 
   describe("getStockSummaryByModel", () => {
-    it("should return stock summary by model", async () => {
+    it("should return comprehensive stock statistics", async () => {
       const products = [
         { ...mockProduct, id: '1', modelName: 'Model A', quantity: 5 },
         { ...mockProduct, id: '2', modelName: 'Model A', quantity: 3 },
         { ...mockProduct, id: '3', modelName: 'Model B', quantity: 7 },
+        { ...mockProduct, id: '4', modelName: 'Model C', quantity: 0 },
+        { ...mockProduct, id: '5', modelName: 'Model D', quantity: 2 },
       ];
-      
-      // Premier appel: cache vide
+
+      mockProductRepository.findAll.mockResolvedValue(products);
+      mockProductRepository.count.mockResolvedValue(5);
+
       mockCacheService.getOrSet.mockImplementationOnce(async (key, callback) => {
         return callback();
       });
-      
-      mockProductRepository.findAll.mockResolvedValue(products);
-      
+
       const result = await service.getStockSummaryByModel();
-      
-      expect(result).toEqual([
-        { modelName: 'Model A', totalQuantity: 8 },
-        { modelName: 'Model B', totalQuantity: 7 },
-      ]);
-      
+
+      expect(result).toEqual({
+        totalProducts: 5,
+        stockSummary: [
+          { modelName: 'Model A', totalQuantity: 8 },
+          { modelName: 'Model B', totalQuantity: 7 },
+          { modelName: 'Model C', totalQuantity: 0 },
+          { modelName: 'Model D', totalQuantity: 2 },
+        ].sort((a, b) => a.modelName.localeCompare(b.modelName)),
+        modelsCount: 4,
+        outOfStockCount: 1,
+        lowStockCount: 1,
+      });
+
       expect(mockLogger.log).toHaveBeenCalledWith({
         message: 'Fetching stock summary by model',
       });
     });
-    
+
     it("should return cached result when available", async () => {
-      const cachedResult = [
-        { modelName: 'Model A', totalQuantity: 8 },
-        { modelName: 'Model B', totalQuantity: 7 },
-      ];
-      
+      const cachedResult = {
+        totalProducts: 5,
+        stockSummary: [
+          { modelName: 'Model A', totalQuantity: 8 },
+          { modelName: 'Model B', totalQuantity: 7 },
+        ],
+        modelsCount: 2,
+        outOfStockCount: 0,
+        lowStockCount: 0,
+      };
+
       mockCacheService.getOrSet.mockImplementationOnce(async () => {
         return cachedResult;
       });
-      
+
       const result = await service.getStockSummaryByModel();
-      
+
       expect(result).toEqual(cachedResult);
       expect(mockProductRepository.findAll).not.toHaveBeenCalled();
     });
-    
+
     it("should handle empty product list", async () => {
+      mockProductRepository.findAll.mockResolvedValue([]);
+      mockProductRepository.count.mockResolvedValue(0);
+
       mockCacheService.getOrSet.mockImplementationOnce(async (key, callback) => {
         return callback();
       });
-      
-      mockProductRepository.findAll.mockResolvedValue([]);
-      
+
       const result = await service.getStockSummaryByModel();
-      
-      expect(result).toEqual([]);
+
+      expect(result).toEqual({
+        totalProducts: 0,
+        stockSummary: [],
+        modelsCount: 0,
+        outOfStockCount: 0,
+        lowStockCount: 0,
+      });
     });
-    
+
     it("should handle errors gracefully", async () => {
       const error = new Error('Database error');
       const internalError = new InternalServerErrorException("An error occurred while fetching stock summary by model");

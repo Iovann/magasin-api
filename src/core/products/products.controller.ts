@@ -193,59 +193,38 @@ export class ProductsController {
     return await this.productsService.getProductsByName(name);
   }
 
-
-  /**
-   * Retrieves the count of products matching the model name.
-   * @param modelName - The model name to count.
-   * @returns The count of products matching the model name.
-   */
-
-  @Get("count-by-model/:modelName")
+  @Get("stats")
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
-    summary: "Count products by model name",
-    description: "Accessible by SuperAdmins, Storekeepers, and Salespersons.",
-  })
-  @ApiParam({
-    name: "modelName",
-    type: "string",
-    description: "The model name to count.",
+    summary: "Get products statistics",
+    description: "Returns various product statistics including counts by model and name. Accessible by SuperAdmins, Storekeepers, and Salespersons.",
   })
   @ApiResponse({
     status: 200,
-    description: "Returns the number of products for the given model.",
-    schema: { type: "object", properties: { count: { type: "number" } } },
+    description: "Returns product statistics",
+    schema: {
+      type: "object",
+      properties: {
+        totalProducts: { type: "number" },
+        stockSummary: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              modelName: { type: "string" },
+              totalQuantity: { type: "number" }
+            }
+          }
+        },
+        modelsCount: { type: "number" },
+        outOfStockCount: { type: "number" },
+        lowStockCount: { type: "number" }
+      }
+    }
   })
   @ApiResponse({ status: 403, description: "Forbidden resource." })
-  async countProductsByModelName(@Param("modelName") modelName: string) {
-    return await this.productsService.countProductsByModelName(modelName);
-  }
-
-  /**
-   * Retrieves the count of products matching the name.
-   * @param name - The name to count.
-   * @returns The count of products matching the name.
-   */
-
-  @Get("count-by-name/:name")
-  @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
-  @ApiOperation({
-    summary: "Count products by name",
-    description: "Accessible by SuperAdmins, Storekeepers, and Salespersons.",
-  })
-  @ApiParam({
-    name: "name",
-    type: "string",
-    description: "The product name to count.",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Returns the number of products for the given name.",
-    schema: { type: "object", properties: { count: { type: "number" } } },
-  })
-  @ApiResponse({ status: 403, description: "Forbidden resource." })
-  async countProductsByName(@Param("name") name: string) {
-    return await this.productsService.countProductsByName(name);
+  async getProductsStats() {
+    return await this.productsService.getStockSummaryByModel();
   }
 
   /**
@@ -286,9 +265,9 @@ export class ProductsController {
   @Put(":id/stock")
   @Roles(Role.SuperAdmin, Role.Magasinier)
   @ApiOperation({
-    summary: "Update product stock",
+    summary: "Update product",
     description:
-      "Updates the stock quantity of a product. Accessible by SuperAdmins and Storekeepers.",
+      "Update a product. Accessible by SuperAdmins and Storekeepers.",
   })
   @ApiParam({
     name: "id",

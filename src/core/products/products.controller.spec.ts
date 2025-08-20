@@ -19,8 +19,7 @@ const mockProductsService = {
   sellProduct: jest.fn(),
   getProductsByModelName: jest.fn(),
   getProductsByName: jest.fn(),
-  countProductsByModelName: jest.fn(),
-  countProductsByName: jest.fn(),
+  getStockSummaryByModel: jest.fn(),
 };
 
 describe("ProductsController", () => {
@@ -134,26 +133,6 @@ describe("ProductsController", () => {
       const name = "WaterBlaster";
       await controller.getProductsByName(name);
       expect(mockProductsService.getProductsByName).toHaveBeenCalledWith(name);
-    });
-  });
-
-  describe("countProductsByModelName", () => {
-    it("should call service.countProductsByModelName with correct model name", async () => {
-      const modelName = "WB-1";
-      await controller.countProductsByModelName(modelName);
-      expect(mockProductsService.countProductsByModelName).toHaveBeenCalledWith(
-        modelName,
-      );
-    });
-  });
-
-  describe("countProductsByName", () => {
-    it("should call service.countProductsByName with correct name", async () => {
-      const name = "WaterBlaster";
-      await controller.countProductsByName(name);
-      expect(mockProductsService.countProductsByName).toHaveBeenCalledWith(
-        name,
-      );
     });
   });
 });

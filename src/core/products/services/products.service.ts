@@ -467,41 +467,68 @@ export class ProductsService {
    * Gets a summary of stock quantities grouped by product model
    * @returns An array of objects containing model name and total quantity in stock
    */
-  async getStockSummaryByModel(): Promise<Array<{ modelName: string; totalQuantity: number }>> {
-    this.logger.log({ message: 'Fetching stock summary by model' });
-    
-    const cacheKey = 'products:stock-summary-by-model';
-    
+  async getStockSummaryByModel(): Promise<{
+    totalProducts: number;
+    stockSummary: { modelName: string; totalQuantity: number }[];
+    modelsCount: number;
+    outOfStockCount: number;
+    lowStockCount: number;
+  }> {
+    this.logger.log({ message: "Fetching stock summary by model" });
+
+    const cacheKey = "products:stock-summary-by-model";
+
     try {
       return await this.cacheService.getOrSet(
         cacheKey,
         async () => {
-          // Get all products
-          const products = await this.productRepository.findAll();
-          
+          const [total, products] = await Promise.all([
+            this.getTotalStock(),
+            this.productRepository.findAll(),
+          ]);
+
           // Group by model and calculate quantities
           const modelStock = new Map<string, number>();
-          
-          products.forEach(product => {
+          products.forEach((product) => {
             const currentQuantity = modelStock.get(product.modelName) || 0;
-            modelStock.set(product.modelName, currentQuantity + product.quantity);
+            modelStock.set(
+              product.modelName,
+              currentQuantity + product.quantity,
+            );
           });
-          
-          // Convert to array of objects and sort by model name
-          return Array.from(modelStock.entries())
+
+          const stockSummary = Array.from(modelStock.entries())
             .map(([modelName, totalQuantity]) => ({
               modelName,
-              totalQuantity
+              totalQuantity,
             }))
             .sort((a, b) => a.modelName.localeCompare(b.modelName));
+
+          const modelsCount = stockSummary.length;
+          const outOfStockCount = stockSummary.filter(
+            (item) => item.totalQuantity === 0,
+          ).length;
+          const lowStockCount = stockSummary.filter(
+            (item) => item.totalQuantity > 0 && item.totalQuantity <= 5,
+          ).length;
+
+          return {
+            totalProducts: total.count,
+            stockSummary,
+            modelsCount,
+            outOfStockCount,
+            lowStockCount,
+          };
         },
-        { ttl: 300 } // Cache for 5 minutes
+        { ttl: 300 }, // Cache for 5 minutes
       );
     } catch (error) {
-      this.logger.error(`[ERR_PROD_GET_STOCK_SUMMARY] Error: ${error.message}`, { stack: error.stack });
+      this.logger.error(`[ERR_PROD_GET_STOCK_SUMMARY] Error: ${error.message}`, {
+        stack: error.stack,
+      });
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_PROD_GET_STOCK_SUMMARY] Error getting stock summary: ${error.message}`,
-        "An error occurred while fetching stock summary by model"
+        "An error occurred while fetching stock summary by model",
       );
     }
   }
