@@ -7,6 +7,7 @@ import { ErrorHandlingService } from "../../../common/response/error-handling";
 import { CacheService } from "src/libs/cache/cache.service";
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { EncryptionService } from "src/helpers/encryption/encryption.service";
 
 /**
  * Service for handling user-related operations.
@@ -19,6 +20,7 @@ export class UsersService {
     @Inject(IUserRepository) private readonly userRepository: IUserRepository,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly cacheService: CacheService,
+    private readonly encryptionService: EncryptionService,  
     @InjectQueue('email') private readonly emailQueue: Queue,
   ) {}
 
@@ -28,7 +30,7 @@ export class UsersService {
    * @returns The created user. 
    */
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto):  Promise<User> {
     this.logger.log({
       level: "info",
       message: `Attempting to create a new user,
@@ -46,18 +48,24 @@ export class UsersService {
     }
 
     try {
-      const passwordHash = await bcrypt.hash(createUserDto.password, 10);
+      const passwordGenerate = this.encryptionService.generateStrongPassword(10);
+
+      const password = await bcrypt.hash(passwordGenerate, 10);
       const userData = {
         email: createUserDto.email,
-        passwordHash,
+        passwordHash: password,
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName,
+        phone: createUserDto.phone,
         role: createUserDto.role,
         isBlocked: false,
       };
       const user = await this.userRepository.create(userData);
       await this.emailQueue.add('email', {
         email: createUserDto.email,
-        name: user.email.split('@')[0],
+        name: user.firstName,
         role: createUserDto.role,
+        password: passwordGenerate
       });
       await this.cacheService.delete("users:list");
       this.logger.log({
@@ -65,7 +73,8 @@ export class UsersService {
         message: `User created successfully ${user.id}`,
         context: UsersService.name,
       });
-      return user;
+      
+      return user
     } catch (error) {
       return this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_USER_CREATE_CRITICAL] Critical error: ${error.message}`,

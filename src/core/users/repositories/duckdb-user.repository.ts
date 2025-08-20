@@ -33,6 +33,9 @@ export class DuckDBUserRepository implements IUserRepository {
         CREATE TABLE IF NOT EXISTS ${this.tableName} (
           id TEXT PRIMARY KEY,
           email TEXT UNIQUE NOT NULL,
+          firstName TEXT NOT NULL,
+          lastName TEXT NOT NULL,
+          phone TEXT,
           passwordHash TEXT,
           refreshToken TEXT,
           role TEXT NOT NULL,
@@ -61,8 +64,8 @@ export class DuckDBUserRepository implements IUserRepository {
 
     try {
       await this.connection.run(
-        `INSERT INTO ${this.tableName} (id, email, passwordHash, refreshToken, role, isBlocked, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [newUser.id, newUser.email, newUser.passwordHash || null, newUser.refreshToken || null, newUser.role, newUser.isBlocked, newUser.createdAt.toISOString(), newUser.updatedAt.toISOString()]
+        `INSERT INTO ${this.tableName} (id, email, firstName, lastName, phone, passwordHash, refreshToken, role, isBlocked, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [newUser.id, newUser.email, newUser.firstName, newUser.lastName, newUser.phone || null, newUser.passwordHash || null, newUser.refreshToken || null, newUser.role, newUser.isBlocked, newUser.createdAt.toISOString(), newUser.updatedAt.toISOString()]
       );
       return newUser;
     } catch (err) {
@@ -78,7 +81,7 @@ export class DuckDBUserRepository implements IUserRepository {
 
   async findById(id: string): Promise<UserWithTimestamps | null> {
     try {
-      const rows = await this.queryAll(`SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE id = ?`, [id]);
+      const rows = await this.queryAll(`SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE id = ?`, [id]);
       return rows[0] ? this.mapRowToUser(rows[0]) : null;
     } catch (err) {
       this.logger.error('Failed to find user by id', err);
@@ -88,7 +91,7 @@ export class DuckDBUserRepository implements IUserRepository {
 
   async findByEmail(email: string): Promise<UserWithTimestamps | null> {
     try {
-      const rows = await this.queryAll(`SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE email = ?`, [email]);
+      const rows = await this.queryAll(`SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE email = ?`, [email]);
       return rows[0] ? this.mapRowToUser(rows[0]) : null;
     } catch (err) {
       this.logger.error('Failed to find user by email', err);
@@ -120,7 +123,7 @@ export class DuckDBUserRepository implements IUserRepository {
 
   async findAll(): Promise<UserWithTimestamps[]> {
     try {
-      const rows = await this.queryAll(`SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName}`);
+      const rows = await this.queryAll(`SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName}`);
       return rows.map(row => this.mapRowToUser(row));
     } catch (err) {
       this.logger.error('Failed to find all users', err);
@@ -132,6 +135,9 @@ export class DuckDBUserRepository implements IUserRepository {
     const updates: string[] = [];
     const params: any[] = [];
     if (userData.email !== undefined) { updates.push('email = ?'); params.push(userData.email); }
+    if (userData.firstName !== undefined) { updates.push('firstName = ?'); params.push(userData.firstName); }
+    if (userData.lastName !== undefined) { updates.push('lastName = ?'); params.push(userData.lastName); }
+    if (userData.phone !== undefined) { updates.push('phone = ?'); params.push(userData.phone); }
     if (userData.role !== undefined) { updates.push('role = ?'); params.push(userData.role); }
     if (userData.passwordHash !== undefined) { updates.push('passwordHash = ?'); params.push(userData.passwordHash); }
     if (userData.refreshToken !== undefined) { updates.push('refreshToken = ?'); params.push(userData.refreshToken); }
@@ -162,6 +168,9 @@ export class DuckDBUserRepository implements IUserRepository {
     return {
       id: row.id,
       email: row.email,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      phone: row.phone || undefined,
       role: row.role as Role,
       isBlocked: Boolean(row.isBlocked),
       refreshToken: row.refreshToken || undefined,

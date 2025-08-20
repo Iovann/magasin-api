@@ -19,6 +19,15 @@ export class MongoUser extends Document implements User {
   @Prop({ required: true, unique: true, index: true })
   email: string;
 
+  @Prop({ required: true })
+  firstName: string;
+
+  @Prop({ required: true })
+  lastName: string;
+
+  @Prop({ required: false })
+  phone?: string;
+
   /**
    * The user's hashed password.
    * This field is not selected by default in queries.

@@ -6,7 +6,7 @@ import { ConfigifyModule } from "@itgorillaz/configify";
 import { ConfigService } from "@nestjs/config";
 import { PostgresProduct } from "../../core/products/entities/postgres-product.entity";
 import { PostgresUser } from "../../core/users/entities/postgres-user.entity";
-import { DuckDBService } from "./duckdb.service";
+// import { DuckDBService } from "./duckdb.service";
 
 @Global()
 @Module({})
@@ -68,10 +68,10 @@ export class DatabaseModule {
       console.log("Using file-based database (txt). No ORM module needed.");
     }
 
-    if (process.env.DB_TYPE === "duckdb") {
-      console.log("Using DuckDB database. Configuration is handled by repository.");
-      providers.push(DuckDBService);
-    }
+    // if (process.env.DB_TYPE === "duckdb") {
+    //   console.log("Using DuckDB database. Configuration is handled by repository.");
+    //   providers.push(DuckDBService);
+    // }
 
     return {
       module: DatabaseModule,

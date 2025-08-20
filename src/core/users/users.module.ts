@@ -20,19 +20,22 @@ import { BullModule } from "@nestjs/bullmq";
 import { DuckDBService } from 'src/libs/database/duckdb.service';
 import { EmailModule } from 'src/libs/email/email.module';  
 import { EmailService } from 'src/libs/email/email.service';
+import { EncryptionModule } from 'src/helpers/encryption/encryption.module';
+import { EncryptionService } from 'src/helpers/encryption/encryption.service';
+
 
 @Global()
 @Module({})
 export class UsersModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = [CacheModule, BullModule.registerQueue({name: 'email'}), EmailModule];
+    const imports: any[] = [CacheModule, BullModule.registerQueue({name: 'email'}), EmailModule, EncryptionModule];
     const providers: Provider[] = [
       UsersService,
       UserInitService,
       DatabaseConfig,
-      DuckDBService,
       EmailProcessor,
       EmailService, 
+      EncryptionService,
     ];
 
     // Configuration conditionnelle des imports et providers

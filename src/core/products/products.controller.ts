@@ -108,7 +108,6 @@ export class ProductsController {
   }
 
 
-
   /**
    * Retrieves the stock count for a specific model.
    * @param modelName - The model name of the product.

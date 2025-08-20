@@ -14,11 +14,12 @@ export class EmailProcessor extends WorkerHost {
   async process(job: Job<{ 
     email: string;
     name?: string;
-    role?: string; 
+    role?: string;
+    password?: string; 
   }>) {
     try {
       this.logger.log(`Traitement du job commencé: ${job.id}`);
-      const { email, name, role } = job.data;
+      const { email, name, role, password } = job.data;
       
       this.logger.debug(`Envoi d'email à ${email}${name ? ` (${name})` : ''}`, {
         jobId: job.id,
@@ -27,7 +28,7 @@ export class EmailProcessor extends WorkerHost {
         role : role || 'Vendeur'
       });
 
-      const isSent = await this.emailService.sendWelcomeEmail(email, name || ' ', role || 'Vendeur');
+      const isSent = await this.emailService.sendWelcomeEmail(email, name || ' ', role || 'Vendeur', password || ' ');
 
       if (isSent) {
         this.logger.log(`Email envoyé avec succès à ${email}`, {

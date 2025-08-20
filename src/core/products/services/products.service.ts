@@ -232,65 +232,101 @@ export class ProductsService {
   }
 
   /**
-   * Updates the stock for a product by adding a quantity.
-   * @param id - The ID of the product to update.
-   * @param quantity - The quantity to add to the stock.
-   * @returns The updated product.
-   * @throws {NotFoundException} If the product is not found.
-   * @throws {BadRequestException} If the quantity is negative.
+   * Updates a product with the provided data
+   * @param id - The ID of the product to update
+   * @param updateData - The data to update the product with
+   * @returns The updated product
+   * @throws {NotFoundException} If the product is not found
+   * @throws {ConflictException} If the update would create a duplicate model name
+   * @throws {BadRequestException} If the update data is invalid
    */
-  async updateStock(id: string, quantity: number): Promise<Product> {
+  async update(id: string, updateData: Partial<CreateProductDto>): Promise<Product> {
     this.logger.log({
-      message: `Attempting to update stock for product ${id}`,
-      quantityToAdd: quantity,
+      message: `Attempting to update product ${id}`,
+      updateData,
     });
-    if (quantity < 0) {
-      throw this.errorHandlingService.returnErrorOnBadRequest(
-        `[ERR_PROD_UPDATE_NEGATIVE_QTY] Negative quantity: ${quantity}`,
-        "Quantity cannot be negative",
-      );
-    }
 
-    const product = await this.getProductById(id); // Using cached version
-    if (!product) {
+    // Check if the product exists
+    const existingProduct = await this.getProductById(id);
+    if (!existingProduct) {
       throw this.errorHandlingService.returnErrorOnNotFound(
         `[ERR_PROD_UPDATE_NOT_FOUND] Product ${id} not found`,
         "Product not found",
       );
     }
 
+    // If modelName is being updated, check for conflicts
+    if (updateData.modelName && updateData.modelName !== existingProduct.modelName) {
+      const existingWithSameModel = await this.productRepository.countByModelName(updateData.modelName);
+      if (existingWithSameModel > 0) {
+        throw this.errorHandlingService.returnErrorOnConflict(
+          `[ERR_PROD_UPDATE_MODEL_CONFLICT] Model ${updateData.modelName} already exists`,
+          "A product with this model already exists",
+        );
+      }
+    }
+
     try {
-      const newQuantity = product.quantity + quantity;
-      const updatedProduct = await this.productRepository.update(id, {
-        quantity: newQuantity,
-      });
+      // If updating quantity, add to existing quantity instead of replacing
+      if (updateData.quantity !== undefined) {
+        if (updateData.quantity < 0) {
+          throw this.errorHandlingService.returnErrorOnBadRequest(
+            `[ERR_PROD_UPDATE_NEGATIVE_QTY] Negative quantity: ${updateData.quantity}`,
+            "Quantity cannot be negative",
+          );
+        }
+        updateData.quantity = (existingProduct.quantity || 0) + updateData.quantity;
+      }
+
+      const updatedProduct = await this.productRepository.update(id, updateData);
 
       if (!updatedProduct) {
         throw this.errorHandlingService.returnErrorOnInternalServerError(
-          "[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: Failed to update product stock",
-          "Failed to update product stock",
+          "[ERR_PROD_UPDATE_CRITICAL] Critical error: Failed to update product",
+          "Failed to update product",
         );
       }
 
       // Invalidate relevant caches
-      await Promise.all([
+      const cacheDeletions = [
         this.cacheService.delete(`products:findOne:${id}`),
         this.cacheService.delete('products:list'),
-        this.cacheService.delete(`products:count:model:${product.modelName}`),
-        this.cacheService.delete(`products:count:name:${product.name}`)
-      ]);
+      ];
+
+      // Invalidate model and name caches if those fields were updated
+      if (updateData.modelName) {
+        cacheDeletions.push(this.cacheService.delete(`products:count:model:${existingProduct.modelName}`));
+        cacheDeletions.push(this.cacheService.delete(`products:count:model:${updateData.modelName}`));
+      }
+      if (updateData.name) {
+        cacheDeletions.push(this.cacheService.delete(`products:count:name:${existingProduct.name}`));
+        cacheDeletions.push(this.cacheService.delete(`products:count:name:${updateData.name}`));
+      }
+
+      await Promise.all(cacheDeletions);
 
       this.logger.log({
-        message: `Stock for product ${id} updated successfully`,
-        newStock: updatedProduct.quantity,
+        message: `Product ${id} updated successfully`,
+        updatedFields: Object.keys(updateData),
       });
       return updatedProduct;
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
-        `[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: ${error?.message}`,
-        "An error occurred while updating the stock",
+        `[ERR_PROD_UPDATE_CRITICAL] Critical error: ${error?.message}`,
+        "An error occurred while updating the product",
       );
     }
+  }
+
+  /**
+   * Updates the stock for a product by adding a quantity.
+   * @param id - The ID of the product to update.
+   * @param quantity - The quantity to add to the stock.
+   * @returns The updated product.
+   * @deprecated Use update() method instead
+   */
+  async updateStock(id: string, quantity: number): Promise<Product> {
+    return this.update(id, { quantity });
   }
 
   /**
@@ -423,6 +459,49 @@ export class ProductsService {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_PROD_REMOVE_CRITICAL] Critical error: ${error.message}`,
         "Failed to delete product",
+      );
+    }
+  }
+
+  /**
+   * Gets a summary of stock quantities grouped by product model
+   * @returns An array of objects containing model name and total quantity in stock
+   */
+  async getStockSummaryByModel(): Promise<Array<{ modelName: string; totalQuantity: number }>> {
+    this.logger.log({ message: 'Fetching stock summary by model' });
+    
+    const cacheKey = 'products:stock-summary-by-model';
+    
+    try {
+      return await this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          // Get all products
+          const products = await this.productRepository.findAll();
+          
+          // Group by model and calculate quantities
+          const modelStock = new Map<string, number>();
+          
+          products.forEach(product => {
+            const currentQuantity = modelStock.get(product.modelName) || 0;
+            modelStock.set(product.modelName, currentQuantity + product.quantity);
+          });
+          
+          // Convert to array of objects and sort by model name
+          return Array.from(modelStock.entries())
+            .map(([modelName, totalQuantity]) => ({
+              modelName,
+              totalQuantity
+            }))
+            .sort((a, b) => a.modelName.localeCompare(b.modelName));
+        },
+        { ttl: 300 } // Cache for 5 minutes
+      );
+    } catch (error) {
+      this.logger.error(`[ERR_PROD_GET_STOCK_SUMMARY] Error: ${error.message}`, { stack: error.stack });
+      throw this.errorHandlingService.returnErrorOnInternalServerError(
+        `[ERR_PROD_GET_STOCK_SUMMARY] Error getting stock summary: ${error.message}`,
+        "An error occurred while fetching stock summary by model"
       );
     }
   }

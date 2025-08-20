@@ -42,6 +42,9 @@ export class UserInitService implements OnApplicationBootstrap {
         email: "admin@gunshop.com",
         password: "SuperAdmin123!",
         role: Role.SuperAdmin,
+        firstName: "Super",
+        lastName: "Admin",
+        phoneNumber: "+2290191323202",
       };
 
       const createdAdmin = await this.usersService.create(defaultAdmin);

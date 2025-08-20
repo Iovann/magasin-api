@@ -70,13 +70,14 @@ export class EmailService {
         }
     }
 
-    async sendWelcomeEmail(email: string, name: string, role: string) {
+    async sendWelcomeEmail(email: string, name: string, role: string, password: string) {
         try {
             this.logger.debug(`Sending welcome email to: ${email}`, { email, name, role });
             const html = await this.templateService.render('welcome', {
                 name,
                 email,
                 role,
+                password,
                 currentYear: new Date().getFullYear()
             });
 

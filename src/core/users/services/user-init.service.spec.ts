@@ -12,6 +12,9 @@ describe("UserInitService", () => {
 
   const mockSuperAdmin: User = {
     id: "1",
+    firstName: "Super",
+    lastName: "Admin",
+    passwordHash: "SuperAdmin123!",
     email: "admin@gunshop.com",
     role: Role.SuperAdmin,
     createdAt: new Date("2024-01-01T00:00:00.000Z"),
@@ -20,6 +23,9 @@ describe("UserInitService", () => {
 
   const mockVendeur: User = {
     id: "2",
+    firstName: "Vendeur",
+    lastName: "Vendeur",
+    passwordHash: "Vendeur123!",
     email: "vendeur@gunshop.com",
     role: Role.Vendeur,
     createdAt: new Date("2024-01-01T00:00:00.000Z"),
@@ -93,6 +99,9 @@ describe("UserInitService", () => {
         email: "admin@gunshop.com",
         password: "SuperAdmin123!",
         role: Role.SuperAdmin,
+        firstName: "Super",
+        lastName: "Admin",
+        phoneNumber: "+2290191323202",
       });
       expect(logger.log).toHaveBeenCalledWith(
         "🔐 Default Super Admin created:",
@@ -132,6 +141,9 @@ describe("UserInitService", () => {
         email: "admin@gunshop.com",
         password: "SuperAdmin123!",
         role: Role.SuperAdmin,
+        firstName: "Super",
+        lastName: "Admin",
+        phoneNumber: "+2290191323202",
       });
       expect(logger.log).toHaveBeenCalledWith(
         "🔐 Default Super Admin created:",
@@ -205,6 +217,9 @@ describe("UserInitService", () => {
         email: "admin@gunshop.com",
         password: "SuperAdmin123!",
         role: Role.SuperAdmin,
+        firstName: "Super",
+        lastName: "Admin",
+        phoneNumber: "+2290191323202",
       });
     });
 

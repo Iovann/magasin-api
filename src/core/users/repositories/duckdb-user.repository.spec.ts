@@ -28,6 +28,9 @@ describe('DuckDBUserRepository', () => {
     passwordHash: 'hashedPassword123',
     role: Role.Vendeur,
     isBlocked: false,
+    firstName: 'Test',
+    lastName: 'User',
+    phone: '1234567890',
   };
 
   beforeEach(async () => {
@@ -44,6 +47,9 @@ describe('DuckDBUserRepository', () => {
           refreshToken: 'refresh-token',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          firstName: 'Test',
+          lastName: 'User',
+          phone: '1234567890',
         }])
       }),
       closeSync: jest.fn(),
@@ -89,6 +95,7 @@ describe('DuckDBUserRepository', () => {
       expect(result).toHaveProperty('id', 'mocked-uuid-1234');
       expect(result.email).toBe(mockUser.email);
       expect(result.role).toBe(mockUser.role);
+      expect(result.firstName).toBe(mockUser.firstName);
       expect(mockConnection.run).toHaveBeenCalled();
     });
   });
@@ -101,7 +108,7 @@ describe('DuckDBUserRepository', () => {
       expect(user).toBeDefined();
       expect(user?.id).toBe('1');
       expect(mockConnection.runAndReadAll).toHaveBeenCalledWith(
-        `SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM users WHERE id = ?`,
+        `SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM users WHERE id = ?`,
         [userId]
       );
     });
@@ -124,7 +131,7 @@ describe('DuckDBUserRepository', () => {
       expect(user).toBeDefined();
       expect(user?.email).toBe(email);
       expect(mockConnection.runAndReadAll).toHaveBeenCalledWith(
-        `SELECT id, email, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM users WHERE email = ?`,
+        `SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM users WHERE email = ?`,
         [email]
       );
     });
@@ -149,8 +156,8 @@ describe('DuckDBUserRepository', () => {
     it('should return all users', async () => {
       mockConnection.runAndReadAll = jest.fn().mockResolvedValueOnce({
         getRowObjectsJS: jest.fn().mockReturnValue([
-          { id: '1', email: 'test1@example.com', role: Role.Vendeur, isBlocked: false },
-          { id: '2', email: 'test2@example.com', role: Role.SuperAdmin, isBlocked: false }
+          { id: '1', email: 'test1@example.com', role: Role.Vendeur, isBlocked: false, firstName: 'A', lastName: 'B' },
+          { id: '2', email: 'test2@example.com', role: Role.SuperAdmin, isBlocked: false, firstName: 'C', lastName: 'D' }
         ])
       });
       
@@ -159,31 +166,35 @@ describe('DuckDBUserRepository', () => {
       expect(users).toHaveLength(2);
       expect(users[0]?.email).toBe('test1@example.com');
       expect(users[1]?.email).toBe('test2@example.com');
+      expect(mockConnection.runAndReadAll).toHaveBeenCalledWith(
+        `SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM users`,
+        []
+      );
     });
   });
 
   describe('update', () => {
     it('should update a user', async () => {
       const userId = '1';
-      const updateData = { email: 'updated@example.com', role: Role.SuperAdmin };
+      const updateData = { email: 'updated@example.com', role: Role.SuperAdmin, firstName: 'NewName' };
       
       await repository.update(userId, updateData);
       
       expect(mockConnection.run).toHaveBeenCalledWith(
-        `UPDATE users SET email = ?, role = ?, updatedAt = ? WHERE id = ?`,
-        [updateData.email, updateData.role, expect.any(String), userId]
+        `UPDATE users SET email = ?, firstName = ?, role = ?, updatedAt = ? WHERE id = ?`,
+        [updateData.email, updateData.firstName, updateData.role, expect.any(String), userId]
       );
     });
 
     it('should only update provided fields', async () => {
       const userId = '1';
-      const updateData = { email: 'updated@example.com' };
+      const updateData = { lastName: 'NewLastName' };
       
       await repository.update(userId, updateData);
       
       expect(mockConnection.run).toHaveBeenCalledWith(
-        `UPDATE users SET email = ?, updatedAt = ? WHERE id = ?`,
-        [updateData.email, expect.any(String), userId]
+        `UPDATE users SET lastName = ?, updatedAt = ? WHERE id = ?`,
+        [updateData.lastName, expect.any(String), userId]
       );
     });
   });
@@ -200,13 +211,4 @@ describe('DuckDBUserRepository', () => {
       );
     });
   });
-
-  // describe('onModuleDestroy', () => {
-  //   it('should close database connections', async () => {
-  //     await repository.onModuleDestroy();
-      
-  //     expect(mockConnection.closeSync).toHaveBeenCalled();
-  //     expect(mockDuckDBService.closeSync).toHaveBeenCalled();
-  //   });
-  // });
 });

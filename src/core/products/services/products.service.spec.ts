@@ -488,91 +488,73 @@ describe("ProductsService", () => {
     });
   });
 
-  describe("updateStock", () => {
-    it("should update stock successfully when adding positive quantity", async () => {
+  describe("update", () => {
+    it("should update product successfully with valid data", async () => {
+      const updateData = { name: "Updated Product", price: 39.99 };
+      const updatedProduct = { ...mockProduct, ...updateData };
+      
+      mockProductRepository.findById.mockResolvedValue(mockProduct);
+      mockProductRepository.countByModelName.mockResolvedValue(0);
+      mockProductRepository.update.mockResolvedValue(updatedProduct);
+
+      const result = await service.update("1", updateData);
+
+      expect(mockProductRepository.update).toHaveBeenCalledWith("1", updateData);
+      expect(result).toEqual(updatedProduct);
+      expect(mockLogger.log).toHaveBeenCalledWith({
+        message: "Product 1 updated successfully",
+        updatedFields: ["name", "price"],
+      });
+    });
+
+    it("should update stock by adding quantity when quantity is provided", async () => {
+      const updateData = { quantity: 5 };
       const updatedProduct = { ...mockProduct, quantity: 15 };
+      
       mockProductRepository.findById.mockResolvedValue(mockProduct);
       mockProductRepository.update.mockResolvedValue(updatedProduct);
 
-      const result = await service.updateStock("1", 5);
+      await service.update("1", updateData);
 
-      expect(mockProductRepository.findById).toHaveBeenCalledWith("1");
       expect(mockProductRepository.update).toHaveBeenCalledWith("1", {
-        quantity: 15,
-      });
-      expect(result).toEqual(updatedProduct);
-      expect(mockLogger.log).toHaveBeenCalledWith({
-        message: "Stock for product 1 updated successfully",
-        newStock: 15,
+        quantity: 15, // 10 (existing) + 5 (update)
       });
     });
 
-    it("should throw bad request error when quantity is negative", async () => {
-      const badRequestError = new BadRequestException(
-        "Quantity cannot be negative",
-      );
-      mockErrorHandlingService.returnErrorOnBadRequest.mockImplementation(
-        () => {
-          throw badRequestError;
-        },
-      );
-
-      await expect(service.updateStock("1", -5)).rejects.toThrow(
-        BadRequestException,
-      );
-
-      expect(
-        mockErrorHandlingService.returnErrorOnBadRequest,
-      ).toHaveBeenCalledWith(
-        "[ERR_PROD_UPDATE_NEGATIVE_QTY] Negative quantity: -5",
-        "Quantity cannot be negative",
-      );
-    });
-
-    it("should throw not found error when product does not exist", async () => {
-      const notFoundError = new NotFoundException("Product not found");
-      mockProductRepository.findById.mockResolvedValue(null);
-      mockErrorHandlingService.returnErrorOnNotFound.mockImplementation(() => {
-        throw notFoundError;
+    it("should throw conflict error when updating to existing model name", async () => {
+      const updateData = { modelName: "Existing Model" };
+      
+      mockProductRepository.findById.mockResolvedValue(mockProduct);
+      mockProductRepository.countByModelName.mockResolvedValue(1);
+      
+      const conflictError = new ConflictException("A product with this model already exists");
+      mockErrorHandlingService.returnErrorOnConflict.mockImplementation(() => {
+        throw conflictError;
       });
 
-      await expect(service.updateStock("999", 5)).rejects.toThrow(
-        NotFoundException,
-      );
-
-      expect(
-        mockErrorHandlingService.returnErrorOnNotFound,
-      ).toHaveBeenCalledWith(
-        "[ERR_PROD_UPDATE_NOT_FOUND] Product 999 not found",
-        "Product not found",
+      await expect(service.update("1", updateData)).rejects.toThrow(ConflictException);
+      
+      expect(mockErrorHandlingService.returnErrorOnConflict).toHaveBeenCalledWith(
+        "[ERR_PROD_UPDATE_MODEL_CONFLICT] Model Existing Model already exists",
+        "A product with this model already exists"
       );
     });
 
-    // it('should throw error when update fails', async () => {
-    //   const mockProduct = {
-    //     id: '1',
-    //     name: 'Test Product',
-    //     modelName: 'Test Model',
-    //     price: 29.99,
-    //     quantity: 10,
-    //     createdAt: new Date(),
-    //     updatedAt: new Date(),
-    //   };
+    it("should not check for model conflict when modelName is not updated", async () => {
+      const updateData = { name: "New Name" };
+      const updatedProduct = { ...mockProduct, ...updateData };
+      
+      mockProductRepository.findById.mockResolvedValue(mockProduct);
+      mockProductRepository.update.mockResolvedValue(updatedProduct);
 
-    //   mockProductRepository.findById.mockResolvedValue(mockProduct);
-    //   mockProductRepository.update.mockResolvedValue(null);
+      await service.update("1", updateData);
 
-    //   await expect(service.updateStock('1', 5)).rejects.toThrow(InternalServerErrorException);
-
-    //   expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalledWith(
-    //     '[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: Failed to update product stock',
-    //     'An error occurred while updating the stock'
-    //   );
-    // });
+      expect(mockProductRepository.countByModelName).not.toHaveBeenCalled();
+    });
 
     it("should throw internal server error when update throws error", async () => {
       const internalError = new InternalServerErrorException(
-        "An error occurred while updating the stock",
+        "An error occurred while updating the product",
       );
       mockProductRepository.findById.mockResolvedValue(mockProduct);
       mockProductRepository.update.mockRejectedValue(
@@ -584,15 +566,91 @@ describe("ProductsService", () => {
         },
       );
 
-      await expect(service.updateStock("1", 5)).rejects.toThrow(
-        InternalServerErrorException,
-      );
+      await expect(service.update("1", { name: "New Name" })).rejects.toThrow(InternalServerErrorException);
 
       expect(
         mockErrorHandlingService.returnErrorOnInternalServerError,
       ).toHaveBeenCalledWith(
-        "[ERR_PROD_UPDATE_STOCK_CRITICAL] Critical error: Update failed",
-        "An error occurred while updating the stock",
+        "[ERR_PROD_UPDATE_CRITICAL] Critical error: Update failed",
+        "An error occurred while updating the product",
+      );
+    });
+  });
+
+  describe("getStockSummaryByModel", () => {
+    it("should return stock summary by model", async () => {
+      const products = [
+        { ...mockProduct, id: '1', modelName: 'Model A', quantity: 5 },
+        { ...mockProduct, id: '2', modelName: 'Model A', quantity: 3 },
+        { ...mockProduct, id: '3', modelName: 'Model B', quantity: 7 },
+      ];
+      
+      // Premier appel: cache vide
+      mockCacheService.getOrSet.mockImplementationOnce(async (key, callback) => {
+        return callback();
+      });
+      
+      mockProductRepository.findAll.mockResolvedValue(products);
+      
+      const result = await service.getStockSummaryByModel();
+      
+      expect(result).toEqual([
+        { modelName: 'Model A', totalQuantity: 8 },
+        { modelName: 'Model B', totalQuantity: 7 },
+      ]);
+      
+      expect(mockLogger.log).toHaveBeenCalledWith({
+        message: 'Fetching stock summary by model',
+      });
+    });
+    
+    it("should return cached result when available", async () => {
+      const cachedResult = [
+        { modelName: 'Model A', totalQuantity: 8 },
+        { modelName: 'Model B', totalQuantity: 7 },
+      ];
+      
+      mockCacheService.getOrSet.mockImplementationOnce(async () => {
+        return cachedResult;
+      });
+      
+      const result = await service.getStockSummaryByModel();
+      
+      expect(result).toEqual(cachedResult);
+      expect(mockProductRepository.findAll).not.toHaveBeenCalled();
+    });
+    
+    it("should handle empty product list", async () => {
+      mockCacheService.getOrSet.mockImplementationOnce(async (key, callback) => {
+        return callback();
+      });
+      
+      mockProductRepository.findAll.mockResolvedValue([]);
+      
+      const result = await service.getStockSummaryByModel();
+      
+      expect(result).toEqual([]);
+    });
+    
+    it("should handle errors gracefully", async () => {
+      const error = new Error('Database error');
+      const internalError = new InternalServerErrorException("An error occurred while fetching stock summary by model");
+
+      mockCacheService.getOrSet.mockRejectedValueOnce(error);
+      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(() => {
+        throw internalError;
+      });
+
+      await expect(service.getStockSummaryByModel()).rejects.toThrow(InternalServerErrorException);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ERR_PROD_GET_STOCK_SUMMARY] Error: Database error',
+        { stack: expect.any(String) }
+      );
+      
+      expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalledWith(
+        `[ERR_PROD_GET_STOCK_SUMMARY] Error getting stock summary: ${error.message}`,
+        "An error occurred while fetching stock summary by model"
       );
     });
   });

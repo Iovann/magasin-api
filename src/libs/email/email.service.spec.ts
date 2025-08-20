@@ -105,17 +105,19 @@ describe('EmailService', () => {
     const email = 'newuser@example.com';
     const name = 'Test User';
     const role = 'USER';
+    const password = 'test-password';
 
     it('should send welcome email with correct template', async () => {
       const mockSendMail = (nodemailer.createTransport() as any).sendMail;
       mockSendMail.mockResolvedValueOnce({ messageId: 'test-message-id' });
 
-      const result = await service.sendWelcomeEmail(email, name, role);
+      const result = await service.sendWelcomeEmail(email, name, role, password);
 
       expect(templateService.render).toHaveBeenCalledWith('welcome', {
         name,
         email,
         role,
+        password,
         currentYear: expect.any(Number)
       });
       expect(mockSendMail).toHaveBeenCalled();

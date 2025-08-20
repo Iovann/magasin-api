@@ -1,22 +1,31 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { INestApplication } from "@nestjs/common";
-import request from "supertest";
-import { App } from "supertest/types";
-import { AppModule } from "./../src/app.module";
-import { TestCacheModule } from "./test-cache.config";
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../src/common/guards/roles.guard';
+import request from 'supertest';
 
-describe("AppController (e2e)", () => {
-  let app: INestApplication<App>;
+describe('UsersController (e2e)', () => {
+  let app: INestApplication;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TestCacheModule,
-      ],
-    }).compile();
+      imports: [AppModule],
+    })
+    .overrideGuard(JwtAuthGuard)
+    .useValue({ canActivate: () => true })
+    .overrideGuard(RolesGuard)
+    .useValue({ canActivate: () => true })
+    .compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
   });
 
@@ -24,10 +33,11 @@ describe("AppController (e2e)", () => {
     await app.close();
   });
 
-  it("/ (GET)", () => {
+  it('/ (GET) should return Hello World!', () => {
     return request(app.getHttpServer())
-      .get("/")
+      .get('/')
       .expect(200)
-      .expect("Hello World!");
+      .expect('Hello World!');
   });
+
 });

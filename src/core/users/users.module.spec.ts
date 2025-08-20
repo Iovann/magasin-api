@@ -5,6 +5,7 @@ import { UsersService } from "./services/users.service";
 import { IUserRepository } from "./repositories/user.repository";
 import { ErrorHandlingService } from "../../common/response/error-handling";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { EncryptionService } from "../../helpers/encryption/encryption.service";
 
 describe("UsersModule", () => {
   let module: TestingModule;
@@ -51,6 +52,10 @@ describe("UsersModule", () => {
         {
           provide: getQueueToken('email'),
           useValue: { add: jest.fn() },
+        },
+        {
+          provide: EncryptionService,
+          useValue: { generateStrongPassword: jest.fn() },
         },
       ],
     }).compile();

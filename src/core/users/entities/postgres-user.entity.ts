@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
 } from "typeorm";
 import { User } from "./user.entity";
+import { Exclude } from "class-transformer";
 import { Role } from "../../../common/enum/role.enum";
 
 /**
@@ -24,10 +25,20 @@ export class PostgresUser implements User {
   @Column({ unique: true })
   email: string;
 
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ nullable: true })
+  phone?: string;
+
   /**
    * The user's hashed password.
    */
   @Column({ select: false })
+  @Exclude()
   passwordHash: string;
 
   /**
@@ -57,5 +68,6 @@ export class PostgresUser implements User {
    * Stores the hashed refresh token for the user.
    */
   @Column({ nullable: true, select: false })
+  @Exclude()
   refreshToken?: string;
 }

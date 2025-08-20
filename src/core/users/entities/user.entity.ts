@@ -28,6 +28,36 @@ export class User {
   email: string;
 
   /**
+   * The user's first name.
+   * @example "John"
+   */
+  @ApiProperty({
+    description: "The user's first name",
+    example: "John",
+  })
+  firstName: string;
+
+  /**
+   * The user's last name.
+   * @example "Doe"
+   */
+  @ApiProperty({
+    description: "The user's last name",
+    example: "Doe",
+  })
+  lastName: string;
+
+  /**
+   * The user's phone number.
+   * @example "+14155552671"
+   */
+  @ApiPropertyOptional({
+    description: "The user's phone number",
+    example: "+14155552671",
+  })
+  phone?: string;
+
+  /**
    * The user's password hash.
    * This property is write-only and is never returned in API responses.
    */

@@ -15,6 +15,8 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import * as bcrypt from "bcrypt";
 import { Role } from "../../../common/enum/role.enum";
 import { CacheService } from "../../../libs/cache/cache.service";
+import { EncryptionService } from "../../../helpers/encryption/encryption.service";
+
 
 // Mock bcrypt
 jest.mock("bcrypt");
@@ -25,9 +27,12 @@ describe("UsersService", () => {
   let mockUserRepository: jest.Mocked<IUserRepository>;
   let mockErrorHandlingService: jest.Mocked<ErrorHandlingService>;
   let mockLogger: jest.Mocked<Logger>;
+  let mockEncryptionService: jest.Mocked<EncryptionService>;
 
   const mockUser: User = {
     id: "1",
+    firstName: "John",
+    lastName: "Doe",
     email: "test@example.com",
     role: Role.Vendeur,
     isBlocked: false,
@@ -40,8 +45,9 @@ describe("UsersService", () => {
   };
 
   const createUserDto: CreateUserDto = {
+    firstName: "John",
+    lastName: "Doe",
     email: "new@example.com",
-    password: "password123",
     role: Role.Vendeur,
   };
 
@@ -93,6 +99,10 @@ describe("UsersService", () => {
       }),
     };
 
+    const mockEncryptionServiceObject = {
+      generateStrongPassword: jest.fn(),
+    };
+
     const mockEmailQueue = {
       add: jest.fn(),
     };
@@ -120,6 +130,10 @@ describe("UsersService", () => {
           provide: getQueueToken('email'),
           useValue: mockEmailQueue,
         },
+        {
+          provide: EncryptionService,
+          useValue: mockEncryptionServiceObject,
+        },
       ],
     }).compile();
 
@@ -127,10 +141,11 @@ describe("UsersService", () => {
     mockUserRepository = module.get(IUserRepository);
     mockErrorHandlingService = module.get(ErrorHandlingService);
     mockLogger = module.get(WINSTON_MODULE_PROVIDER);
+    mockEncryptionService = module.get(EncryptionService);
 
     // Reset bcrypt mock
     mockBcrypt.hash.mockReset();
-  });
+  }); 
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -147,19 +162,16 @@ describe("UsersService", () => {
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
         createUserDto.email,
       );
-      expect(mockBcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(mockEncryptionService.generateStrongPassword).toHaveBeenCalled();
       expect(mockUserRepository.create).toHaveBeenCalledWith({
         email: createUserDto.email,
-        passwordHash: "hashedPassword123",
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName,
         role: createUserDto.role,
         isBlocked: false,
+        passwordHash: "hashedPassword123",
       });
       expect(result).toEqual(mockUser);
-      // expect(mockLogger.log).toHaveBeenCalledWith(expect.objectContaining({
-      //   message: expect.any(String),
-      //   context: UsersService.name,
-      //   level: 'info'
-      // }));
     });
 
     it("should throw conflict error when email already exists", async () => {

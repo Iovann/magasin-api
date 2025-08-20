@@ -16,14 +16,14 @@ import { PostgresProduct } from "./entities/postgres-product.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
 import { CacheModule } from "../../libs/cache/cache.module";
-import { DuckDBProductRepository } from "./repositories/duckdb-product.reposetory";
-import { DuckDBService } from "../../libs/database/duckdb.service";
+// import { DuckDBProductRepository } from "./repositories/duckdb-product.reposetory";
+// import { DuckDBService } from "../../libs/database/duckdb.service";
 
 @Module({})
 export class ProductsModule {
   static forRoot(): DynamicModule {
     const imports: any[] = [CacheModule]; // Plus besoin d'importer ErrorHandlingModule car il est global
-    const providers: Provider[] = [ProductsService, DatabaseConfig, DuckDBService];
+    const providers: Provider[] = [ProductsService, DatabaseConfig];
 
     // Configuration conditionnelle des imports et providers
     switch (process.env.DB_TYPE) {
@@ -63,15 +63,15 @@ export class ProductsModule {
         });
         break;
 
-        case "duckdb":
-          providers.push({
-            provide: IProductRepository,
-            useFactory: (duckDBService: DuckDBService) => {
-              return new DuckDBProductRepository(duckDBService);
-            },
-            inject: [DuckDBService],
-          });
-          break;
+        // case "duckdb":
+        //   providers.push({
+        //     provide: IProductRepository,
+        //     useFactory: (duckDBService: DuckDBService) => {
+        //       return new DuckDBProductRepository(duckDBService);
+        //     },
+        //     inject: [DuckDBService],
+        //   });
+        //   break;
 
       default: // filesystem
         providers.push({

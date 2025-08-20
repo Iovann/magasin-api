@@ -8,6 +8,8 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -30,6 +32,7 @@ import { Throttle } from "@nestjs/throttler";
 @ApiTags("users")
 @Controller("users")
 @ApiBearerAuth("JWT-auth")
+@UseInterceptors(ClassSerializerInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard, ThrottlerGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
