@@ -1,6 +1,7 @@
 import { Injectable, OnApplicationBootstrap, Logger } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { Role } from "../../../common/enum/role.enum";
+import { InitUserConfig } from "../../../config/initUser.config";
 
 /**
  * Service responsible for initializing a default SuperAdmin user on application startup.
@@ -9,7 +10,7 @@ import { Role } from "../../../common/enum/role.enum";
 export class UserInitService implements OnApplicationBootstrap {
   private readonly logger = new Logger(UserInitService.name);
 
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly initUserConfig: InitUserConfig) {}
 
   /**
    * Lifecycle hook that runs once the application has fully started.
@@ -39,12 +40,12 @@ export class UserInitService implements OnApplicationBootstrap {
 
       // Create the default Super Admin
       const defaultAdmin = {
-        email: "admin@gunshop.com",
-        password: "SuperAdmin123!",
+        email: this.initUserConfig.adminEmail,
+        password: this.initUserConfig.adminPassword,
         role: Role.SuperAdmin,
-        firstName: "Super",
-        lastName: "Admin",
-        phoneNumber: "+2290191323202",
+        firstName: this.initUserConfig.adminFirstName,
+        lastName: this.initUserConfig.adminLastName,
+        phoneNumber: this.initUserConfig.adminPhoneNumber,
       };
 
       const createdAdmin = await this.usersService.create(defaultAdmin);

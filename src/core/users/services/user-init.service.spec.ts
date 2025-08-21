@@ -4,6 +4,7 @@ import { UserInitService } from "./user-init.service";
 import { UsersService } from "./users.service";
 import { Role } from "../../../common/enum/role.enum";
 import { User } from "../entities/user.entity";
+import { InitUserConfig } from "../../../config/initUser.config";
 
 describe("UserInitService", () => {
   let service: UserInitService;
@@ -44,6 +45,16 @@ describe("UserInitService", () => {
         {
           provide: UsersService,
           useValue: mockUsersService,
+        },
+        {
+          provide: InitUserConfig,
+          useValue: {
+            adminFirstName: "Super",
+            adminLastName: "Admin",
+            adminEmail: "admin@gunshop.com",
+            adminPassword: "SuperAdmin123!",
+            adminPhoneNumber: "+2290191323202",
+          },
         },
       ],
     }).compile();

@@ -1,20 +1,39 @@
-# Use an official Node.js runtime as the base image
-FROM node:24.1.0-alpine
+# Etape 1: Build the application
+FROM node:20-alpine AS builder
 
-# Set the working directory in the container to /app
-WORKDIR /app
+# Set the working directory inside the container
+WORKDIR /usr/src/app
 
 # Copy package.json and pnpm-lock.yaml (if available) into the root directory of the container
 COPY package.json pnpm-lock.yaml* ./
 
-# Install any needed packages specified in package.json
-RUN npm install -g pnpm && pnpm install
+# Install pnpm and dependencies
+RUN npm install -g pnpm && \
+    pnpm install --frozen-lockfile --prod=false
 
-# Bundle the app source inside the Docker image
+# Copy the rest of the application files
 COPY . .
 
-# Make port 3000 available to the outside world
+# Build the NestJS application
+RUN pnpm build
+
+# Étape 2: Production image
+FROM node:20-alpine
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the rest of the application files
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/dist ./dist
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Expose the port
 EXPOSE 3000
 
-# Define the command to run the app
-CMD [ "pnpm", "start" ]
+# Command to run the application
+CMD ["node", "dist/main.js"]

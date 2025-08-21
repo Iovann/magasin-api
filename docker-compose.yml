@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Application NestJS
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: magasinx-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - magasinx-network
+
+  # Base de données MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: magasinx-mongodb
+    profiles: ["mongo"]
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - magasinx-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: magasinx-postgres
+    profiles: ["postgres"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - magasinx-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache Valkey
+  valkey:
+    image: valkey/valkey
+    container_name: magasinx-valkey
+    restart: unless-stopped
+    ports:
+      - "${CACHE_PORT}:6379"
+    volumes:
+      - valkey_data:/data
+    networks:
+      - magasinx-network
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Réseau et volumes
+networks:
+  magasinx-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  valkey_data:
+  postgres_data:
