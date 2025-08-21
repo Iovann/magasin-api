@@ -10,7 +10,10 @@ import { InitUserConfig } from "../../../config/initUser.config";
 export class UserInitService implements OnApplicationBootstrap {
   private readonly logger = new Logger(UserInitService.name);
 
-  constructor(private readonly usersService: UsersService, private readonly initUserConfig: InitUserConfig) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly initUserConfig: InitUserConfig,
+  ) {}
 
   /**
    * Lifecycle hook that runs once the application has fully started.

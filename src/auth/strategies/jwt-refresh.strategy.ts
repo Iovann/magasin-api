@@ -6,7 +6,6 @@ import { UsersService } from "../../core/users/services/users.service";
 import { ConfigService } from "@nestjs/config";
 import { ErrorHandlingService } from "../../common/response/error-handling";
 
-
 /**
  * Strategy for validating JWT refresh tokens.
  */

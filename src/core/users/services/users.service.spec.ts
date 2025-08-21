@@ -17,7 +17,6 @@ import { Role } from "../../../common/enum/role.enum";
 import { CacheService } from "../../../libs/cache/cache.service";
 import { EncryptionService } from "../../../helpers/encryption/encryption.service";
 
-
 // Mock bcrypt
 jest.mock("bcrypt");
 const mockBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
@@ -84,7 +83,7 @@ describe("UsersService", () => {
       info: jest.fn(),
       verbose: jest.fn(),
       silly: jest.fn(),
-      child: jest.fn().mockReturnThis()
+      child: jest.fn().mockReturnThis(),
     } as unknown as jest.Mocked<Logger>;
 
     const mockCache = {
@@ -93,10 +92,12 @@ describe("UsersService", () => {
       delete: jest.fn().mockResolvedValue(undefined),
       clear: jest.fn().mockResolvedValue(undefined),
       wrap: jest.fn(),
-      getOrSet: jest.fn().mockImplementation(async (key: string, fn: () => Promise<any>) => {
-        // Simulate cache miss - execute the function directly
-        return await fn();
-      }),
+      getOrSet: jest
+        .fn()
+        .mockImplementation(async (key: string, fn: () => Promise<any>) => {
+          // Simulate cache miss - execute the function directly
+          return await fn();
+        }),
     };
 
     const mockEncryptionServiceObject = {
@@ -127,7 +128,7 @@ describe("UsersService", () => {
           useValue: mockCache,
         },
         {
-          provide: getQueueToken('email'),
+          provide: getQueueToken("email"),
           useValue: mockEmailQueue,
         },
         {
@@ -145,7 +146,7 @@ describe("UsersService", () => {
 
     // Reset bcrypt mock
     mockBcrypt.hash.mockReset();
-  }); 
+  });
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -670,7 +671,7 @@ describe("UsersService", () => {
       const result = await service.removeRefreshToken("1");
 
       expect(mockUserRepository.update).toHaveBeenCalledWith("1", {
-        refreshToken: '',
+        refreshToken: "",
       });
       expect(result).toEqual(updatedUser);
       // expect(mockLogger.log).toHaveBeenCalledWith(expect.objectContaining({

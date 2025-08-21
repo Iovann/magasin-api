@@ -42,7 +42,7 @@ export class UsersController {
    * @param createUserDto - The data for the new user.
    * @returns The created user.
    */
-  
+
   @Post()
   @Throttle({ default: { limit: 8, ttl: 60000 } })
   @Roles(Role.SuperAdmin)
@@ -229,7 +229,7 @@ export class UsersController {
   @ApiParam({
     name: "id",
     description: "The unique ID of the user to unblock.",
-    type: "string", 
+    type: "string",
     example: "a-valid-uuid-or-id",
   })
   @ApiResponse({

@@ -36,7 +36,10 @@ export class AuthService {
         "Your account has been blocked.",
       );
     }
-    if (user && (await this.bcryptService.comparePassword(pass, user.passwordHash!))) {
+    if (
+      user &&
+      (await this.bcryptService.comparePassword(pass, user.passwordHash!))
+    ) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordHash, ...userWithoutPassword } = user;
       return userWithoutPassword;
@@ -68,9 +71,11 @@ export class AuthService {
    */
   async logout(userId: string, accessToken: string): Promise<void> {
     let blacklistSuccess = false;
-    
+
     try {
-      const decodedToken = this.jwtService.decode(accessToken) as { exp: number };
+      const decodedToken = this.jwtService.decode(accessToken) as {
+        exp: number;
+      };
       if (decodedToken && decodedToken.exp) {
         const expirationTimestamp = decodedToken.exp;
         const now = Math.floor(Date.now() / 1000);
@@ -81,11 +86,16 @@ export class AuthService {
           blacklistSuccess = true;
           // console.log(`[AuthService] Token successfully blacklisted for user ${userId} with TTL: ${ttl}s`);
         } else {
-          console.log(`[AuthService] Token already expired for user ${userId}, skipping blacklist`);
+          console.log(
+            `[AuthService] Token already expired for user ${userId}, skipping blacklist`,
+          );
         }
       }
     } catch (error) {
-      console.error(`[AuthService] Error blacklisting token for user ${userId}:`, error);
+      console.error(
+        `[AuthService] Error blacklisting token for user ${userId}:`,
+        error,
+      );
     }
 
     try {
@@ -93,7 +103,10 @@ export class AuthService {
       await this.usersService.removeRefreshToken(userId);
       console.log(`[AuthService] Refresh token removed for user ${userId}`);
     } catch (error) {
-      console.error(`[AuthService] Error removing refresh token for user ${userId}:`, error);
+      console.error(
+        `[AuthService] Error removing refresh token for user ${userId}:`,
+        error,
+      );
       // Si on ne peut pas supprimer le refresh token, c'est plus critique
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         "ERR_AUTH_SERVICE_006_LOGOUT",
@@ -102,7 +115,9 @@ export class AuthService {
     }
 
     if (!blacklistSuccess) {
-      console.warn(`[AuthService] Warning: Token blacklisting failed for user ${userId}, but logout completed`);
+      console.warn(
+        `[AuthService] Warning: Token blacklisting failed for user ${userId}, but logout completed`,
+      );
     }
   }
 
@@ -180,7 +195,8 @@ export class AuthService {
       );
     }
 
-    const hashedNewPassword = await this.bcryptService.hashPassword(newPassword);
+    const hashedNewPassword =
+      await this.bcryptService.hashPassword(newPassword);
     try {
       await this.usersService.updatePasswordHash(userId, hashedNewPassword);
       return { message: "Password changed successfully." };
@@ -208,36 +224,40 @@ export class AuthService {
   async checkRedisStatus(): Promise<any> {
     try {
       // Test de connexion Redis
-      const testKey = 'redis-test-connection';
-      const testValue = 'test-value-' + Date.now();
-      
+      const testKey = "redis-test-connection";
+      const testValue = "test-value-" + Date.now();
+
       // Test SET
-      await this.tokenBlacklistService['cacheService'].set(testKey, testValue, { ttl: 60 });
-      
+      await this.tokenBlacklistService["cacheService"].set(testKey, testValue, {
+        ttl: 60,
+      });
+
       // Test GET
-      const retrievedValue = await this.tokenBlacklistService['cacheService'].get(testKey);
-      
+      const retrievedValue =
+        await this.tokenBlacklistService["cacheService"].get(testKey);
+
       // Test HAS
-      const hasKey = await this.tokenBlacklistService['cacheService'].has(testKey);
-      
+      const hasKey =
+        await this.tokenBlacklistService["cacheService"].has(testKey);
+
       // Nettoyer le test
-      await this.tokenBlacklistService['cacheService'].delete(testKey);
-      
+      await this.tokenBlacklistService["cacheService"].delete(testKey);
+
       return {
-        status: 'connected',
+        status: "connected",
         tests: {
           set: retrievedValue === testValue,
           get: retrievedValue === testValue,
           has: hasKey,
-          delete: true
+          delete: true,
         },
-        message: 'Redis connection is working properly'
+        message: "Redis connection is working properly",
       };
     } catch (error) {
       return {
-        status: 'error',
+        status: "error",
         error: error.message,
-        message: 'Redis connection failed'
+        message: "Redis connection failed",
       };
     }
   }

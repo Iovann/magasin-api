@@ -5,8 +5,8 @@ import { User } from "../entities/user.entity";
 import * as bcrypt from "bcrypt";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
 import { CacheService } from "src/libs/cache/cache.service";
-import { Queue } from 'bullmq';
-import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from "bullmq";
+import { InjectQueue } from "@nestjs/bullmq";
 import { EncryptionService } from "src/helpers/encryption/encryption.service";
 
 /**
@@ -20,17 +20,17 @@ export class UsersService {
     @Inject(IUserRepository) private readonly userRepository: IUserRepository,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly cacheService: CacheService,
-    private readonly encryptionService: EncryptionService,  
-    @InjectQueue('email') private readonly emailQueue: Queue,
+    private readonly encryptionService: EncryptionService,
+    @InjectQueue("email") private readonly emailQueue: Queue,
   ) {}
 
   /**
    * Creates a new user.
    * @param createUserDto - The data for the new user.
-   * @returns The created user. 
+   * @returns The created user.
    */
 
-  async create(createUserDto: CreateUserDto):  Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     this.logger.log({
       level: "info",
       message: `Attempting to create a new user,
@@ -48,7 +48,8 @@ export class UsersService {
     }
 
     try {
-      const passwordGenerate = this.encryptionService.generateStrongPassword(10);
+      const passwordGenerate =
+        this.encryptionService.generateStrongPassword(10);
 
       const password = await bcrypt.hash(passwordGenerate, 10);
       const userData = {
@@ -61,11 +62,11 @@ export class UsersService {
         isBlocked: false,
       };
       const user = await this.userRepository.create(userData);
-      await this.emailQueue.add('email', {
+      await this.emailQueue.add("email", {
         email: createUserDto.email,
         name: user.firstName,
         role: createUserDto.role,
-        password: passwordGenerate
+        password: passwordGenerate,
       });
       await this.cacheService.delete("users:list");
       this.logger.log({
@@ -73,8 +74,8 @@ export class UsersService {
         message: `User created successfully ${user.id}`,
         context: UsersService.name,
       });
-      
-      return user
+
+      return user;
     } catch (error) {
       return this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_USER_CREATE_CRITICAL] Critical error: ${error.message}`,
@@ -320,7 +321,6 @@ export class UsersService {
     }
   }
 
-
   /**
    * Gets the user if the refresh token matches.
    * @param refreshToken - The refresh token to match.
@@ -329,7 +329,11 @@ export class UsersService {
    */
   async getUserIfRefreshTokenMatches(refreshToken: string, userId: string) {
     const user = await this.userRepository.findById(userId);
-    if (!user || user.refreshToken === null || user.refreshToken === undefined) {
+    if (
+      !user ||
+      user.refreshToken === null ||
+      user.refreshToken === undefined
+    ) {
       return null;
     }
 
@@ -358,7 +362,7 @@ export class UsersService {
     });
     try {
       const updatedUser = await this.userRepository.update(userId, {
-        refreshToken: '',
+        refreshToken: "",
       });
 
       if (!updatedUser) {
@@ -422,7 +426,6 @@ export class UsersService {
       );
     }
   }
-
 
   /**
    * Removes a user by ID.
@@ -529,7 +532,6 @@ export class UsersService {
 
     try {
       await this.userRepository.update(id, { isBlocked: true });
-
     } catch (error) {
       return this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_USER_BLOCK_CRITICAL] Critical error: ${error.message}`,
@@ -538,7 +540,7 @@ export class UsersService {
     }
 
     const updatedUser = await this.userRepository.findById(id);
-    
+
     if (!updatedUser) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_USER_BLOCK_CRITICAL] Failed to retrieve updated user ${id}`,

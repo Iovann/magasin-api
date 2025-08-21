@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CacheService } from '../../libs/cache/cache.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { CacheService } from "../../libs/cache/cache.service";
 
 @Injectable()
 export class TokenBlacklistService {
   private readonly logger = new Logger(TokenBlacklistService.name);
-  private readonly blacklistPrefix = 'blacklist:';
+  private readonly blacklistPrefix = "blacklist:";
 
   constructor(private readonly cacheService: CacheService) {}
 
@@ -16,10 +16,12 @@ export class TokenBlacklistService {
   async addToBlacklist(token: string, ttl: number): Promise<void> {
     const key = this.blacklistPrefix + token;
     const effectiveTtl = ttl > 0 ? Math.ceil(ttl) : undefined;
-    
+
     try {
       await this.cacheService.set(key, true, { ttl: effectiveTtl });
-      this.logger.log(`Token blacklisted successfully with TTL: ${effectiveTtl}s`);
+      this.logger.log(
+        `Token blacklisted successfully with TTL: ${effectiveTtl}s`,
+      );
     } catch (error) {
       this.logger.error(`Failed to blacklist token: ${error.message}`);
       throw error;
@@ -35,7 +37,9 @@ export class TokenBlacklistService {
     const key = this.blacklistPrefix + token;
     try {
       const isBlacklisted = await this.cacheService.has(key);
-      this.logger.log(`Token blacklist check: ${isBlacklisted ? 'BLACKLISTED' : 'VALID'} (${token.substring(0, 20)}...)`);
+      this.logger.log(
+        `Token blacklist check: ${isBlacklisted ? "BLACKLISTED" : "VALID"} (${token.substring(0, 20)}...)`,
+      );
       return isBlacklisted;
     } catch (error) {
       this.logger.error(`Failed to check token blacklist: ${error.message}`);
@@ -51,9 +55,11 @@ export class TokenBlacklistService {
     const key = this.blacklistPrefix + token;
     try {
       await this.cacheService.delete(key);
-      this.logger.log('Token removed from blacklist');
+      this.logger.log("Token removed from blacklist");
     } catch (error) {
-      this.logger.error(`Failed to remove token from blacklist: ${error.message}`);
+      this.logger.error(
+        `Failed to remove token from blacklist: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -63,10 +69,10 @@ export class TokenBlacklistService {
    * Note: This can be a heavy operation depending on the cache store.
    */
   async clearBlacklist(): Promise<void> {
-    this.logger.warn('Clearing entire blacklist - this is a heavy operation');
+    this.logger.warn("Clearing entire blacklist - this is a heavy operation");
     try {
       await this.cacheService.clear();
-      this.logger.log('Blacklist cleared successfully');
+      this.logger.log("Blacklist cleared successfully");
     } catch (error) {
       this.logger.error(`Failed to clear blacklist: ${error.message}`);
       throw error;

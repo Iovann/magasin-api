@@ -50,7 +50,7 @@ describe("UsersModule", () => {
           useValue: mockErrorHandlingService,
         },
         {
-          provide: getQueueToken('email'),
+          provide: getQueueToken("email"),
           useValue: { add: jest.fn() },
         },
         {
@@ -75,7 +75,9 @@ describe("UsersModule", () => {
     });
 
     it("should resolve UsersService", () => {
-      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(UsersService);
+      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(
+        UsersService,
+      );
     });
   });
 
@@ -89,7 +91,9 @@ describe("UsersModule", () => {
     });
 
     it("should resolve UsersService", () => {
-      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(UsersService);
+      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(
+        UsersService,
+      );
     });
   });
 
@@ -103,7 +107,9 @@ describe("UsersModule", () => {
     });
 
     it("should resolve UsersService", () => {
-      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(UsersService);
+      expect(module.get<UsersService>(UsersService)).toBeInstanceOf(
+        UsersService,
+      );
     });
   });
 });

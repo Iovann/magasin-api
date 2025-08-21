@@ -46,14 +46,14 @@ describe("DatabaseModule", () => {
       expect(MongooseModule.forRootAsync).toHaveBeenCalled();
     });
 
-    it('should handle txt DB_TYPE', () => {
-      process.env.DB_TYPE = 'txt';
+    it("should handle txt DB_TYPE", () => {
+      process.env.DB_TYPE = "txt";
       const module = DatabaseModule.forRootAsync();
       expect(module.imports).toHaveLength(1); // Only ConfigifyModule
     });
 
-    it('should handle duckdb DB_TYPE', () => {
-      process.env.DB_TYPE = 'duckdb';
+    it("should handle duckdb DB_TYPE", () => {
+      process.env.DB_TYPE = "duckdb";
       const module = DatabaseModule.forRootAsync();
       expect(module.imports).toHaveLength(1); // Only ConfigifyModule
     });
@@ -76,7 +76,7 @@ describe("DatabaseModule", () => {
 
     it("should return a simple module and warn for other types", () => {
       process.env.DB_TYPE = "mongodb";
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
       const module = DatabaseModule.forFeature([]);
       expect(module.module).toBe(DatabaseModule);
       expect(TypeOrmModule.forFeature).not.toHaveBeenCalled();

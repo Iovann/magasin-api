@@ -1,6 +1,6 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { DuckDBInstance, DuckDBConnection } from '@duckdb/node-api';
-import { join } from 'path';
+import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { DuckDBInstance, DuckDBConnection } from "@duckdb/node-api";
+import { join } from "path";
 
 @Injectable()
 export class DuckDBService implements OnModuleDestroy {
@@ -20,21 +20,21 @@ export class DuckDBService implements OnModuleDestroy {
 
     this.initializationPromise = (async () => {
       try {
-        const dbPath = join(process.cwd(), 'data', 'app.duckdb');
-        
+        const dbPath = join(process.cwd(), "data", "app.duckdb");
+
         // Création de l'instance
         this.instance = await DuckDBInstance.create(dbPath);
         this.connection = await this.instance.connect();
-        
+
         // Configuration des performances
         await this.connection.run("PRAGMA threads=4");
         await this.connection.run("PRAGMA memory_limit='2GB'");
         await this.connection.run("PRAGMA enable_profiling='json'");
-        
+
         this.isInitialized = true;
-        console.log('DuckDB connection initialized');
+        console.log("DuckDB connection initialized");
       } catch (error) {
-        console.error('Failed to initialize DuckDB:', error);
+        console.error("Failed to initialize DuckDB:", error);
         throw error;
       }
     })();

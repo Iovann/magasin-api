@@ -7,7 +7,7 @@ import { ErrorHandlingService } from "./error-handling";
 @Module({
   imports: [
     WinstonModule.forRoot({
-      level: 'info',
+      level: "info",
       transports: [
         new winston.transports.Console({
           format: winston.format.combine(

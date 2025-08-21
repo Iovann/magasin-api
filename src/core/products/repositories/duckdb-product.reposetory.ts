@@ -1,9 +1,9 @@
-import { DuckDBConnection } from '@duckdb/node-api';
-import { Injectable, Logger } from '@nestjs/common';
-import { IProductRepository } from './product.repository';
-import { Product } from '../entities/product.entity';
-import { CreateProductDto } from '../dto/create-product.dto';
-import { DuckDBService } from '../../../libs/database/duckdb.service';
+import { DuckDBConnection } from "@duckdb/node-api";
+import { Injectable, Logger } from "@nestjs/common";
+import { IProductRepository } from "./product.repository";
+import { Product } from "../entities/product.entity";
+import { CreateProductDto } from "../dto/create-product.dto";
+import { DuckDBService } from "../../../libs/database/duckdb.service";
 
 interface ProductWithTimestamps extends Product {
   createdAt: Date;
@@ -14,9 +14,9 @@ interface ProductWithTimestamps extends Product {
 export class DuckDBProductRepository implements IProductRepository {
   private connection: DuckDBConnection;
   private readonly logger = new Logger(DuckDBProductRepository.name);
-  private readonly tableName = 'products';
+  private readonly tableName = "products";
 
-  constructor(private readonly duckDBService: DuckDBService) { }
+  constructor(private readonly duckDBService: DuckDBService) {}
 
   async onModuleInit() {
     this.connection = await this.duckDBService.getConnection();
@@ -37,9 +37,9 @@ export class DuckDBProductRepository implements IProductRepository {
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      this.logger.log('DuckDB products table initialized successfully');
+      this.logger.log("DuckDB products table initialized successfully");
     } catch (err) {
-      this.logger.error('Failed to initialize products database', err);
+      this.logger.error("Failed to initialize products database", err);
       throw err;
     }
   }
@@ -65,12 +65,12 @@ export class DuckDBProductRepository implements IProductRepository {
           newProduct.price || null,
           newProduct.quantity || null,
           newProduct.createdAt.toISOString(),
-          newProduct.updatedAt.toISOString()
-        ]
+          newProduct.updatedAt.toISOString(),
+        ],
       );
       return newProduct;
     } catch (err) {
-      this.logger.error('Failed to create product', err);
+      this.logger.error("Failed to create product", err);
       throw err;
     }
   }
@@ -87,15 +87,14 @@ export class DuckDBProductRepository implements IProductRepository {
   }
 
   async findById(id: string): Promise<Product | null> {
-
     try {
       const row = await this.queryOne(
         `SELECT * FROM ${this.tableName} WHERE id = ?`,
-        [id]
+        [id],
       );
       return row ? this.mapRowToProduct(row) : null;
     } catch (err) {
-      this.logger.error('Failed to find product by id', err);
+      this.logger.error("Failed to find product by id", err);
       throw err;
     }
   }
@@ -103,28 +102,32 @@ export class DuckDBProductRepository implements IProductRepository {
   async findAll(): Promise<Product[]> {
     try {
       const rows = await this.queryAll(`SELECT * FROM ${this.tableName}`);
-      return rows.map(row => this.mapRowToProduct(row));
+      return rows.map((row) => this.mapRowToProduct(row));
     } catch (err) {
-      this.logger.error('Failed to find all products', err);
+      this.logger.error("Failed to find all products", err);
       throw err;
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
-      await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
+      await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [
+        id,
+      ]);
     } catch (err) {
-      this.logger.error('Failed to delete product', err);
+      this.logger.error("Failed to delete product", err);
       throw err;
     }
   }
 
   async count(): Promise<number> {
     try {
-      const row = await this.queryOne(`SELECT COUNT(*) as count FROM ${this.tableName}`);
+      const row = await this.queryOne(
+        `SELECT COUNT(*) as count FROM ${this.tableName}`,
+      );
       return parseInt(row.count, 10);
     } catch (err) {
-      this.logger.error('Failed to count products', err);
+      this.logger.error("Failed to count products", err);
       throw err;
     }
   }
@@ -133,11 +136,11 @@ export class DuckDBProductRepository implements IProductRepository {
     try {
       const row = await this.queryOne(
         `SELECT COUNT(*) as count FROM ${this.tableName} WHERE modelName = ?`,
-        [modelName]
+        [modelName],
       );
       return parseInt(row.count, 10);
     } catch (err) {
-      this.logger.error('Failed to count products by model name', err);
+      this.logger.error("Failed to count products by model name", err);
       throw err;
     }
   }
@@ -146,48 +149,51 @@ export class DuckDBProductRepository implements IProductRepository {
     try {
       const row = await this.queryOne(
         `SELECT COUNT(*) as count FROM ${this.tableName} WHERE name = ?`,
-        [name]
+        [name],
       );
       return parseInt(row.count, 10);
     } catch (err) {
-      this.logger.error('Failed to count products by name', err);
+      this.logger.error("Failed to count products by name", err);
       throw err;
     }
   }
 
-  async update(id: string, updateProductDto: Partial<CreateProductDto>): Promise<Product | null> {
+  async update(
+    id: string,
+    updateProductDto: Partial<CreateProductDto>,
+  ): Promise<Product | null> {
     const updates: string[] = [];
     const params: any[] = [];
 
-    if (updateProductDto.name !== undefined) { 
-      updates.push('name = ?'); 
-      params.push(updateProductDto.name); 
+    if (updateProductDto.name !== undefined) {
+      updates.push("name = ?");
+      params.push(updateProductDto.name);
     }
-    if (updateProductDto.modelName !== undefined) { 
-      updates.push('modelName = ?'); 
-      params.push(updateProductDto.modelName); 
+    if (updateProductDto.modelName !== undefined) {
+      updates.push("modelName = ?");
+      params.push(updateProductDto.modelName);
     }
-    if (updateProductDto.price !== undefined) { 
-      updates.push('price = ?'); 
-      params.push(updateProductDto.price); 
+    if (updateProductDto.price !== undefined) {
+      updates.push("price = ?");
+      params.push(updateProductDto.price);
     }
 
     if (updates.length === 0) {
       return this.findById(id);
     }
 
-    updates.push('updatedAt = ?');
+    updates.push("updatedAt = ?");
     params.push(new Date().toISOString());
     params.push(id);
 
     try {
       await this.connection.run(
-        `UPDATE ${this.tableName} SET ${updates.join(', ')} WHERE id = ?`,
-        params
+        `UPDATE ${this.tableName} SET ${updates.join(", ")} WHERE id = ?`,
+        params,
       );
       return await this.findById(id);
     } catch (err) {
-      this.logger.error('Failed to update product', err);
+      this.logger.error("Failed to update product", err);
       throw err;
     }
   }
@@ -196,11 +202,11 @@ export class DuckDBProductRepository implements IProductRepository {
     try {
       const rows = await this.queryAll(
         `SELECT * FROM ${this.tableName} WHERE modelName = ?`,
-        [modelName]
+        [modelName],
       );
-      return rows.map(row => this.mapRowToProduct(row));
+      return rows.map((row) => this.mapRowToProduct(row));
     } catch (err) {
-      this.logger.error('Failed to find products by model name', err);
+      this.logger.error("Failed to find products by model name", err);
       throw err;
     }
   }
@@ -209,11 +215,11 @@ export class DuckDBProductRepository implements IProductRepository {
     try {
       const rows = await this.queryAll(
         `SELECT * FROM ${this.tableName} WHERE name = ?`,
-        [name]
+        [name],
       );
-      return rows.map(row => this.mapRowToProduct(row));
+      return rows.map((row) => this.mapRowToProduct(row));
     } catch (err) {
-      this.logger.error('Failed to find products by name', err);
+      this.logger.error("Failed to find products by name", err);
       throw err;
     }
   }
@@ -236,7 +242,7 @@ export class DuckDBProductRepository implements IProductRepository {
         this.connection.closeSync();
       }
     } catch (err) {
-      this.logger.error('Failed to close DuckDB connections', err);
+      this.logger.error("Failed to close DuckDB connections", err);
     }
   }
 }

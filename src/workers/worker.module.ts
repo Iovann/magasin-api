@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { EmailProcessor } from './email/email.processor';
-import { EmailModule } from '../libs/email/email.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Module } from "@nestjs/common";
+import { BullModule } from "@nestjs/bullmq";
+import { EmailProcessor } from "./email/email.processor";
+import { EmailModule } from "../libs/email/email.module";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -11,18 +11,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         connection: {
-          host: configService.get<string>('CACHE_HOST', 'localhost'),
-          port: configService.get<number>('CACHE_PORT', 6379),
+          host: configService.get<string>("CACHE_HOST", "localhost"),
+          port: configService.get<number>("CACHE_PORT", 6379),
         },
       }),
       inject: [ConfigService],
     }),
     BullModule.registerQueue({
-      name: 'email',
+      name: "email",
       defaultJobOptions: {
         attempts: 3,
         backoff: {
-          type: 'exponential',
+          type: "exponential",
           delay: 1000,
         },
       },

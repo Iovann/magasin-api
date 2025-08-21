@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TokenBlacklistService } from './token-blacklist.service';
-import { CacheService } from '../../libs/cache/cache.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { TokenBlacklistService } from "./token-blacklist.service";
+import { CacheService } from "../../libs/cache/cache.service";
 
-describe('TokenBlacklistModule', () => {
+describe("TokenBlacklistModule", () => {
   let module: TestingModule;
 
   const mockCacheService = {
@@ -25,24 +25,24 @@ describe('TokenBlacklistModule', () => {
     }).compile();
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(module).toBeDefined();
   });
 
-  it('should provide TokenBlacklistService', () => {
+  it("should provide TokenBlacklistService", () => {
     const service = module.get<TokenBlacklistService>(TokenBlacklistService);
     expect(service).toBeDefined();
     expect(service).toBeInstanceOf(TokenBlacklistService);
   });
 
-  it('should have CacheService available', () => {
+  it("should have CacheService available", () => {
     const cacheService = module.get(CacheService);
     expect(cacheService).toBeDefined();
   });
 
-  it('should be able to use TokenBlacklistService', async () => {
+  it("should be able to use TokenBlacklistService", async () => {
     const service = module.get<TokenBlacklistService>(TokenBlacklistService);
-    const token = 'test-token';
+    const token = "test-token";
     const ttl = 3600;
 
     mockCacheService.set.mockResolvedValue(undefined);

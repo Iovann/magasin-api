@@ -5,16 +5,15 @@ import {
   CallHandler,
   UnauthorizedException,
   Logger,
-} from '@nestjs/common';
-import { Observable, from, switchMap } from 'rxjs';
-import { TokenBlacklistService } from '../services/token-blacklist.service';
+} from "@nestjs/common";
+import { Observable, from, switchMap } from "rxjs";
+import { TokenBlacklistService } from "../services/token-blacklist.service";
 
 @Injectable()
 export class TokenRevocationInterceptor implements NestInterceptor {
   private readonly logger = new Logger(TokenRevocationInterceptor.name);
 
   constructor(private readonly tokenBlacklistService: TokenBlacklistService) {}
-
 
   /**
    * Intercepts the request to check if the token is blacklisted.
@@ -30,15 +29,19 @@ export class TokenRevocationInterceptor implements NestInterceptor {
 
     this.logger.log(`[Interceptor] Checking route: ${route}`);
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      this.logger.log(`[Interceptor] Token found: ${token.substring(0, 20)}...`);
-      
+      this.logger.log(
+        `[Interceptor] Token found: ${token.substring(0, 20)}...`,
+      );
+
       return from(this.checkToken(token, route)).pipe(
-        switchMap(() => next.handle())
+        switchMap(() => next.handle()),
       );
     } else {
-      this.logger.log(`[Interceptor] No Bearer token found for route: ${route}`);
+      this.logger.log(
+        `[Interceptor] No Bearer token found for route: ${route}`,
+      );
       return next.handle();
     }
   }
@@ -52,19 +55,25 @@ export class TokenRevocationInterceptor implements NestInterceptor {
 
   private async checkToken(token: string, route: string): Promise<void> {
     try {
-      const isBlacklisted = await this.tokenBlacklistService.isBlacklisted(token);
-      this.logger.log(`[Interceptor] Blacklist check result: ${isBlacklisted ? 'BLACKLISTED' : 'VALID'}`);
-      
+      const isBlacklisted =
+        await this.tokenBlacklistService.isBlacklisted(token);
+      this.logger.log(
+        `[Interceptor] Blacklist check result: ${isBlacklisted ? "BLACKLISTED" : "VALID"}`,
+      );
+
       if (isBlacklisted) {
-        this.logger.warn(`[Interceptor] Revoked token detected! Blocking access for route: ${route}`);
-        throw new UnauthorizedException('Token has been revoked');
+        this.logger.warn(
+          `[Interceptor] Revoked token detected! Blocking access for route: ${route}`,
+        );
+        throw new UnauthorizedException("Token has been revoked");
       }
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      this.logger.error(`[Interceptor] Error checking token blacklist: ${error.message}`);
+      this.logger.error(
+        `[Interceptor] Error checking token blacklist: ${error.message}`,
+      );
     }
   }
 }
-

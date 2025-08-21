@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TokenBlacklistService } from './token-blacklist.service';
-import { CacheService } from '../../libs/cache/cache.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { TokenBlacklistService } from "./token-blacklist.service";
+import { CacheService } from "../../libs/cache/cache.service";
 
-describe('TokenBlacklistService', () => {
+describe("TokenBlacklistService", () => {
   let service: TokenBlacklistService;
   let cacheService: jest.Mocked<CacheService>;
 
@@ -36,9 +36,9 @@ describe('TokenBlacklistService', () => {
     jest.clearAllMocks();
   });
 
-  describe('addToBlacklist', () => {
-    it('should add token to blacklist successfully', async () => {
-      const token = 'test-token';
+  describe("addToBlacklist", () => {
+    it("should add token to blacklist successfully", async () => {
+      const token = "test-token";
       const ttl = 3600;
 
       mockCacheService.set.mockResolvedValue(undefined);
@@ -46,29 +46,31 @@ describe('TokenBlacklistService', () => {
       await service.addToBlacklist(token, ttl);
 
       expect(cacheService.set).toHaveBeenCalledWith(
-        'blacklist:test-token',
+        "blacklist:test-token",
         true,
-        { ttl: 3600 }
+        { ttl: 3600 },
       );
     });
 
-    it('should handle cache service errors', async () => {
-      const token = 'test-token';
+    it("should handle cache service errors", async () => {
+      const token = "test-token";
       const ttl = 3600;
-      const error = new Error('Cache error');
+      const error = new Error("Cache error");
 
       mockCacheService.set.mockRejectedValue(error);
 
-      await expect(service.addToBlacklist(token, ttl)).rejects.toThrow('Cache error');
+      await expect(service.addToBlacklist(token, ttl)).rejects.toThrow(
+        "Cache error",
+      );
       expect(cacheService.set).toHaveBeenCalledWith(
-        'blacklist:test-token',
+        "blacklist:test-token",
         true,
-        { ttl: 3600 }
+        { ttl: 3600 },
       );
     });
 
-    it('should handle zero TTL', async () => {
-      const token = 'test-token';
+    it("should handle zero TTL", async () => {
+      const token = "test-token";
       const ttl = 0;
 
       mockCacheService.set.mockResolvedValue(undefined);
@@ -76,73 +78,75 @@ describe('TokenBlacklistService', () => {
       await service.addToBlacklist(token, ttl);
 
       expect(cacheService.set).toHaveBeenCalledWith(
-        'blacklist:test-token',
+        "blacklist:test-token",
         true,
-        { ttl: undefined }
+        { ttl: undefined },
       );
     });
   });
 
-  describe('isBlacklisted', () => {
-    it('should return true when token is blacklisted', async () => {
-      const token = 'test-token';
+  describe("isBlacklisted", () => {
+    it("should return true when token is blacklisted", async () => {
+      const token = "test-token";
 
       mockCacheService.has.mockResolvedValue(true);
 
       const result = await service.isBlacklisted(token);
 
       expect(result).toBe(true);
-      expect(cacheService.has).toHaveBeenCalledWith('blacklist:test-token');
+      expect(cacheService.has).toHaveBeenCalledWith("blacklist:test-token");
     });
 
-    it('should return false when token is not blacklisted', async () => {
-      const token = 'test-token';
+    it("should return false when token is not blacklisted", async () => {
+      const token = "test-token";
 
       mockCacheService.has.mockResolvedValue(false);
 
       const result = await service.isBlacklisted(token);
 
       expect(result).toBe(false);
-      expect(cacheService.has).toHaveBeenCalledWith('blacklist:test-token');
+      expect(cacheService.has).toHaveBeenCalledWith("blacklist:test-token");
     });
 
-    it('should return false when cache service throws error', async () => {
-      const token = 'test-token';
-      const error = new Error('Cache error');
+    it("should return false when cache service throws error", async () => {
+      const token = "test-token";
+      const error = new Error("Cache error");
 
       mockCacheService.has.mockRejectedValue(error);
 
       const result = await service.isBlacklisted(token);
 
       expect(result).toBe(false);
-      expect(cacheService.has).toHaveBeenCalledWith('blacklist:test-token');
+      expect(cacheService.has).toHaveBeenCalledWith("blacklist:test-token");
     });
   });
 
-  describe('removeFromBlacklist', () => {
-    it('should remove token from blacklist successfully', async () => {
-      const token = 'test-token';
+  describe("removeFromBlacklist", () => {
+    it("should remove token from blacklist successfully", async () => {
+      const token = "test-token";
 
       mockCacheService.delete.mockResolvedValue(undefined);
 
       await service.removeFromBlacklist(token);
 
-      expect(cacheService.delete).toHaveBeenCalledWith('blacklist:test-token');
+      expect(cacheService.delete).toHaveBeenCalledWith("blacklist:test-token");
     });
 
-    it('should handle cache service errors', async () => {
-      const token = 'test-token';
-      const error = new Error('Cache error');
+    it("should handle cache service errors", async () => {
+      const token = "test-token";
+      const error = new Error("Cache error");
 
       mockCacheService.delete.mockRejectedValue(error);
 
-      await expect(service.removeFromBlacklist(token)).rejects.toThrow('Cache error');
-      expect(cacheService.delete).toHaveBeenCalledWith('blacklist:test-token');
+      await expect(service.removeFromBlacklist(token)).rejects.toThrow(
+        "Cache error",
+      );
+      expect(cacheService.delete).toHaveBeenCalledWith("blacklist:test-token");
     });
   });
 
-  describe('clearBlacklist', () => {
-    it('should clear entire blacklist successfully', async () => {
+  describe("clearBlacklist", () => {
+    it("should clear entire blacklist successfully", async () => {
       mockCacheService.clear.mockResolvedValue(undefined);
 
       await service.clearBlacklist();
@@ -150,19 +154,19 @@ describe('TokenBlacklistService', () => {
       expect(cacheService.clear).toHaveBeenCalled();
     });
 
-    it('should handle cache service errors', async () => {
-      const error = new Error('Cache error');
+    it("should handle cache service errors", async () => {
+      const error = new Error("Cache error");
 
       mockCacheService.clear.mockRejectedValue(error);
 
-      await expect(service.clearBlacklist()).rejects.toThrow('Cache error');
+      await expect(service.clearBlacklist()).rejects.toThrow("Cache error");
       expect(cacheService.clear).toHaveBeenCalled();
     });
   });
 
-  describe('blacklist prefix', () => {
-    it('should use correct prefix for all operations', async () => {
-      const token = 'test-token';
+  describe("blacklist prefix", () => {
+    it("should use correct prefix for all operations", async () => {
+      const token = "test-token";
       const ttl = 3600;
 
       mockCacheService.set.mockResolvedValue(undefined);
@@ -173,9 +177,13 @@ describe('TokenBlacklistService', () => {
       await service.isBlacklisted(token);
       await service.removeFromBlacklist(token);
 
-      expect(cacheService.set).toHaveBeenCalledWith('blacklist:test-token', true, { ttl: 3600 });
-      expect(cacheService.has).toHaveBeenCalledWith('blacklist:test-token');
-      expect(cacheService.delete).toHaveBeenCalledWith('blacklist:test-token');
+      expect(cacheService.set).toHaveBeenCalledWith(
+        "blacklist:test-token",
+        true,
+        { ttl: 3600 },
+      );
+      expect(cacheService.has).toHaveBeenCalledWith("blacklist:test-token");
+      expect(cacheService.delete).toHaveBeenCalledWith("blacklist:test-token");
     });
   });
 });

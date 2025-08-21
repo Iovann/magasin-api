@@ -1,10 +1,10 @@
-import { DuckDBService } from './../../../libs/database/duckdb.service';
-import { DuckDBConnection } from '@duckdb/node-api';
-import { Injectable, Logger } from '@nestjs/common';
-import { IUserRepository } from './user.repository';
-import { User } from '../entities/user.entity';
-import { Role } from '../../../common/enum/role.enum';
-import { DatabaseConfig } from '../../../config/database.config';
+import { DuckDBService } from "./../../../libs/database/duckdb.service";
+import { DuckDBConnection } from "@duckdb/node-api";
+import { Injectable, Logger } from "@nestjs/common";
+import { IUserRepository } from "./user.repository";
+import { User } from "../entities/user.entity";
+import { Role } from "../../../common/enum/role.enum";
+import { DatabaseConfig } from "../../../config/database.config";
 
 interface UserWithTimestamps extends User {
   createdAt: Date;
@@ -14,13 +14,13 @@ interface UserWithTimestamps extends User {
 @Injectable()
 export class DuckDBUserRepository implements IUserRepository {
   private readonly logger = new Logger(DuckDBUserRepository.name);
-  private readonly tableName = 'users';
+  private readonly tableName = "users";
   private connection: DuckDBConnection;
 
   constructor(
     private readonly duckDBService: DuckDBService,
-    private readonly config: DatabaseConfig
-  ) { }
+    private readonly config: DatabaseConfig,
+  ) {}
 
   async onModuleInit() {
     this.connection = await this.duckDBService.getConnection();
@@ -44,14 +44,16 @@ export class DuckDBUserRepository implements IUserRepository {
           updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      this.logger.log('DuckDB initialized successfully');
+      this.logger.log("DuckDB initialized successfully");
     } catch (err) {
-      this.logger.error('Failed to initialize database', err);
+      this.logger.error("Failed to initialize database", err);
       throw err;
     }
   }
 
-  async create(user: Omit<User, 'id' | 'createdAt'>): Promise<UserWithTimestamps> {
+  async create(
+    user: Omit<User, "id" | "createdAt">,
+  ): Promise<UserWithTimestamps> {
     const id = crypto.randomUUID();
     const now = new Date();
     const newUser: UserWithTimestamps = {
@@ -65,11 +67,23 @@ export class DuckDBUserRepository implements IUserRepository {
     try {
       await this.connection.run(
         `INSERT INTO ${this.tableName} (id, email, firstName, lastName, phone, passwordHash, refreshToken, role, isBlocked, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [newUser.id, newUser.email, newUser.firstName, newUser.lastName, newUser.phone || null, newUser.passwordHash || null, newUser.refreshToken || null, newUser.role, newUser.isBlocked, newUser.createdAt.toISOString(), newUser.updatedAt.toISOString()]
+        [
+          newUser.id,
+          newUser.email,
+          newUser.firstName,
+          newUser.lastName,
+          newUser.phone || null,
+          newUser.passwordHash || null,
+          newUser.refreshToken || null,
+          newUser.role,
+          newUser.isBlocked,
+          newUser.createdAt.toISOString(),
+          newUser.updatedAt.toISOString(),
+        ],
       );
       return newUser;
     } catch (err) {
-      this.logger.error('Failed to create user', err);
+      this.logger.error("Failed to create user", err);
       throw err;
     }
   }
@@ -81,85 +95,143 @@ export class DuckDBUserRepository implements IUserRepository {
 
   async findById(id: string): Promise<UserWithTimestamps | null> {
     try {
-      const rows = await this.queryAll(`SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE id = ?`, [id]);
+      const rows = await this.queryAll(
+        `SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE id = ?`,
+        [id],
+      );
       return rows[0] ? this.mapRowToUser(rows[0]) : null;
     } catch (err) {
-      this.logger.error('Failed to find user by id', err);
+      this.logger.error("Failed to find user by id", err);
       throw err;
     }
   }
 
   async findByEmail(email: string): Promise<UserWithTimestamps | null> {
     try {
-      const rows = await this.queryAll(`SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE email = ?`, [email]);
+      const rows = await this.queryAll(
+        `SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName} WHERE email = ?`,
+        [email],
+      );
       return rows[0] ? this.mapRowToUser(rows[0]) : null;
     } catch (err) {
-      this.logger.error('Failed to find user by email', err);
+      this.logger.error("Failed to find user by email", err);
       throw err;
     }
   }
 
-  async findByEmailWithPassword(email: string): Promise<(UserWithTimestamps & { passwordHash: string }) | null> {
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<(UserWithTimestamps & { passwordHash: string }) | null> {
     try {
-      const rows = await this.queryAll(`SELECT * FROM ${this.tableName} WHERE email = ?`, [email]);
+      const rows = await this.queryAll(
+        `SELECT * FROM ${this.tableName} WHERE email = ?`,
+        [email],
+      );
       if (!rows[0]) return null;
-      return { ...this.mapRowToUser(rows[0]), passwordHash: rows[0].passwordHash };
+      return {
+        ...this.mapRowToUser(rows[0]),
+        passwordHash: rows[0].passwordHash,
+      };
     } catch (err) {
-      this.logger.error('Failed to find user by email with password', err);
+      this.logger.error("Failed to find user by email with password", err);
       throw err;
     }
   }
 
-  async findByIdWithPassword(id: string): Promise<(UserWithTimestamps & { passwordHash: string }) | null> {
+  async findByIdWithPassword(
+    id: string,
+  ): Promise<(UserWithTimestamps & { passwordHash: string }) | null> {
     try {
-      const rows = await this.queryAll(`SELECT * FROM ${this.tableName} WHERE id = ?`, [id]);
+      const rows = await this.queryAll(
+        `SELECT * FROM ${this.tableName} WHERE id = ?`,
+        [id],
+      );
       if (!rows[0]) return null;
-      return { ...this.mapRowToUser(rows[0]), passwordHash: rows[0].passwordHash };
+      return {
+        ...this.mapRowToUser(rows[0]),
+        passwordHash: rows[0].passwordHash,
+      };
     } catch (err) {
-      this.logger.error('Failed to find user by id with password', err);
+      this.logger.error("Failed to find user by id with password", err);
       throw err;
     }
   }
 
   async findAll(): Promise<UserWithTimestamps[]> {
     try {
-      const rows = await this.queryAll(`SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName}`);
-      return rows.map(row => this.mapRowToUser(row));
+      const rows = await this.queryAll(
+        `SELECT id, email, firstName, lastName, phone, role, isBlocked, refreshToken, passwordHash, createdAt, updatedAt FROM ${this.tableName}`,
+      );
+      return rows.map((row) => this.mapRowToUser(row));
     } catch (err) {
-      this.logger.error('Failed to find all users', err);
+      this.logger.error("Failed to find all users", err);
       throw err;
     }
   }
 
-  async update(id: string, userData: Partial<User>): Promise<UserWithTimestamps | null> {
+  async update(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<UserWithTimestamps | null> {
     const updates: string[] = [];
     const params: any[] = [];
-    if (userData.email !== undefined) { updates.push('email = ?'); params.push(userData.email); }
-    if (userData.firstName !== undefined) { updates.push('firstName = ?'); params.push(userData.firstName); }
-    if (userData.lastName !== undefined) { updates.push('lastName = ?'); params.push(userData.lastName); }
-    if (userData.phone !== undefined) { updates.push('phone = ?'); params.push(userData.phone); }
-    if (userData.role !== undefined) { updates.push('role = ?'); params.push(userData.role); }
-    if (userData.passwordHash !== undefined) { updates.push('passwordHash = ?'); params.push(userData.passwordHash); }
-    if (userData.refreshToken !== undefined) { updates.push('refreshToken = ?'); params.push(userData.refreshToken); }
-    if (userData.isBlocked !== undefined) { updates.push('isBlocked = ?'); params.push(userData.isBlocked); }
-    if (updates.length === 0) { return this.findById(id); }
-    updates.push('updatedAt = ?');
+    if (userData.email !== undefined) {
+      updates.push("email = ?");
+      params.push(userData.email);
+    }
+    if (userData.firstName !== undefined) {
+      updates.push("firstName = ?");
+      params.push(userData.firstName);
+    }
+    if (userData.lastName !== undefined) {
+      updates.push("lastName = ?");
+      params.push(userData.lastName);
+    }
+    if (userData.phone !== undefined) {
+      updates.push("phone = ?");
+      params.push(userData.phone);
+    }
+    if (userData.role !== undefined) {
+      updates.push("role = ?");
+      params.push(userData.role);
+    }
+    if (userData.passwordHash !== undefined) {
+      updates.push("passwordHash = ?");
+      params.push(userData.passwordHash);
+    }
+    if (userData.refreshToken !== undefined) {
+      updates.push("refreshToken = ?");
+      params.push(userData.refreshToken);
+    }
+    if (userData.isBlocked !== undefined) {
+      updates.push("isBlocked = ?");
+      params.push(userData.isBlocked);
+    }
+    if (updates.length === 0) {
+      return this.findById(id);
+    }
+    updates.push("updatedAt = ?");
     params.push(new Date().toISOString());
     params.push(id);
     try {
-      await this.connection.run(`UPDATE ${this.tableName} SET ${updates.join(', ')} WHERE id = ?`, params);
+      await this.connection.run(
+        `UPDATE ${this.tableName} SET ${updates.join(", ")} WHERE id = ?`,
+        params,
+      );
       return await this.findById(id);
     } catch (err) {
-      this.logger.error('Failed to update user', err);
+      this.logger.error("Failed to update user", err);
       throw err;
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
-      await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
+      await this.connection.run(`DELETE FROM ${this.tableName} WHERE id = ?`, [
+        id,
+      ]);
     } catch (err) {
-      this.logger.error('Failed to delete user', err);
+      this.logger.error("Failed to delete user", err);
       throw err;
     }
   }

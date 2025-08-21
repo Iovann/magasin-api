@@ -31,7 +31,6 @@ import { Throttle } from "@nestjs/throttler";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-
   /**
    * Logs in a user and returns JWT tokens.
    * @param req The HTTP request.
@@ -69,9 +68,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: "Unauthorized." })
   async logout(
     @Request() req: { user: User },
-    @Headers('authorization') authHeader: string,
+    @Headers("authorization") authHeader: string,
   ) {
-    const token = authHeader?.split(' ')[1];
+    const token = authHeader?.split(" ")[1];
     if (token) {
       await this.authService.logout(req.user.id, token);
     }
@@ -148,10 +147,10 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Token is valid" })
   @ApiResponse({ status: 401, description: "Token is revoked or invalid" })
   async testToken(@Request() req: { user: User }) {
-    return { 
-      message: "Token is valid", 
+    return {
+      message: "Token is valid",
       userId: req.user.id,
-      email: req.user.email 
+      email: req.user.email,
     };
   }
 
@@ -163,19 +162,21 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Blacklist status" })
   async checkBlacklist(
     @Request() req: { user: User },
-    @Headers('authorization') authHeader: string,
+    @Headers("authorization") authHeader: string,
   ) {
-    const token = authHeader?.split(' ')[1];
+    const token = authHeader?.split(" ")[1];
     if (!token) {
       return { message: "No token provided", blacklisted: false };
     }
 
     const isBlacklisted = await this.authService.checkTokenBlacklist(token);
     return {
-      message: isBlacklisted ? "Token is blacklisted" : "Token is not blacklisted",
+      message: isBlacklisted
+        ? "Token is blacklisted"
+        : "Token is not blacklisted",
       blacklisted: isBlacklisted,
       userId: req.user.id,
-      email: req.user.email
+      email: req.user.email,
     };
   }
 

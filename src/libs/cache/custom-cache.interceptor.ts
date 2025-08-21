@@ -1,17 +1,20 @@
-import { Injectable, ExecutionContext, CallHandler } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { CacheService } from './cache.service';
+import { Injectable, ExecutionContext, CallHandler } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { Observable, of } from "rxjs";
+import { tap } from "rxjs/operators";
+import { CacheService } from "./cache.service";
 
 @Injectable()
 export class CustomCacheInterceptor {
   constructor(
     private readonly cacheService: CacheService,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
   ) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Promise<Observable<any>> {
     const httpContext = context.switchToHttp();
     const request = httpContext.getRequest();
 
@@ -29,12 +32,14 @@ export class CustomCacheInterceptor {
       return next.handle().pipe(
         tap((data) => {
           this.cacheService.set(cacheKey, data, { ttl: 3600 }).catch((err) => {
-            this.cacheService['logger'].error(`Failed to cache response: ${err.message}`);
+            this.cacheService["logger"].error(
+              `Failed to cache response: ${err.message}`,
+            );
           });
-        })
+        }),
       );
     } catch (error) {
-      this.cacheService['logger'].error(`Cache error: ${error.message}`);
+      this.cacheService["logger"].error(`Cache error: ${error.message}`);
       return next.handle();
     }
   }

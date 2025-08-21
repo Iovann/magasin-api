@@ -33,38 +33,53 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   async validate(request: any, payload: any) {
     const route = `${request.method} ${request.url}`;
     this.logger.log(`[JwtStrategy] Validating token for route: ${route}`);
-    
+
     // Récupérer le token depuis la requête
     const authHeader = request.headers?.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
-    
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.substring(7)
+      : null;
+
     if (token) {
-      this.logger.log(`[JwtStrategy] Token found: ${token.substring(0, 20)}...`);
+      this.logger.log(
+        `[JwtStrategy] Token found: ${token.substring(0, 20)}...`,
+      );
       // Vérifier si le token est dans la blacklist
-      const isBlacklisted = await this.tokenBlacklistService.isBlacklisted(token);
-      this.logger.log(`[JwtStrategy] Blacklist check result: ${isBlacklisted ? 'BLACKLISTED' : 'VALID'}`);
-      
+      const isBlacklisted =
+        await this.tokenBlacklistService.isBlacklisted(token);
+      this.logger.log(
+        `[JwtStrategy] Blacklist check result: ${isBlacklisted ? "BLACKLISTED" : "VALID"}`,
+      );
+
       if (isBlacklisted) {
-        this.logger.warn(`[JwtStrategy] Revoked token detected! Blocking access for route: ${route}`);
+        this.logger.warn(
+          `[JwtStrategy] Revoked token detected! Blocking access for route: ${route}`,
+        );
         throw this.errorHandlingService.returnOnAuthorized(
           "ERR_JWT_STRATEGY_002_TOKEN_REVOKED",
           "Token has been revoked",
         );
       }
     } else {
-      this.logger.warn(`[JwtStrategy] No token found in request for route: ${route}`);
+      this.logger.warn(
+        `[JwtStrategy] No token found in request for route: ${route}`,
+      );
     }
 
     const user = await this.usersService.findOne(payload.sub);
     if (!user) {
-      this.logger.error(`[JwtStrategy] User not found for payload.sub: ${payload.sub}`);
+      this.logger.error(
+        `[JwtStrategy] User not found for payload.sub: ${payload.sub}`,
+      );
       throw this.errorHandlingService.returnOnAuthorized(
         "ERR_JWT_STRATEGY_001_VALIDATE",
         "Invalid token",
       );
     }
-    
-    this.logger.log(`[JwtStrategy] Token validation successful for user: ${user.email}`);
+
+    this.logger.log(
+      `[JwtStrategy] Token validation successful for user: ${user.email}`,
+    );
     return user;
   }
 }

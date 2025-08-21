@@ -49,14 +49,15 @@ export class CreateUserDto {
   @IsOptional()
   @IsPhoneNumber()
   phone?: string;
-  
+
   /**
    * The unique email address of the user.
    * A temporary password will be generated and sent to this email.
    * @example "admin@gunshop.com"
    */
   @ApiProperty({
-    description: "The unique email address of the user. A temporary password will be generated and sent to this email.",
+    description:
+      "The unique email address of the user. A temporary password will be generated and sent to this email.",
     example: "admin@gunshop.com",
     format: "email",
   })

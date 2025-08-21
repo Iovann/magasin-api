@@ -41,14 +41,14 @@ export class ProductsService {
 
     try {
       const product = await this.productRepository.create(createProductDto);
-      
+
       // Invalidate relevant caches
       await Promise.all([
-        this.cacheService.delete('products:list'),
+        this.cacheService.delete("products:list"),
         this.cacheService.delete(`products:count:model:${product.modelName}`),
-        this.cacheService.delete(`products:count:name:${product.name}`)
+        this.cacheService.delete(`products:count:name:${product.name}`),
       ]);
-      
+
       this.logger.log({
         message: "Product created successfully",
         id: product.id,
@@ -121,13 +121,16 @@ export class ProductsService {
         async () => {
           const product = await this.productRepository.findById(id);
           if (product) {
-            this.logger.log({ message: `Found product with ID ${id}`, product });
+            this.logger.log({
+              message: `Found product with ID ${id}`,
+              product,
+            });
           } else {
             this.logger.log({ message: `Product with ID ${id} not found` });
           }
           return product;
         },
-        { ttl: 3600 }
+        { ttl: 3600 },
       );
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -151,7 +154,7 @@ export class ProductsService {
         async () => {
           return await this.productRepository.countByModelName(modelName);
         },
-        { ttl: 3600 }
+        { ttl: 3600 },
       );
       this.logger.log({
         message: `Stock count for model ${modelName}: ${count}`,
@@ -212,9 +215,9 @@ export class ProductsService {
       // Invalidate relevant caches
       await Promise.all([
         this.cacheService.delete(`products:findOne:${id}`),
-        this.cacheService.delete('products:list'),
+        this.cacheService.delete("products:list"),
         this.cacheService.delete(`products:count:model:${product.modelName}`),
-        this.cacheService.delete(`products:count:name:${product.name}`)
+        this.cacheService.delete(`products:count:name:${product.name}`),
       ]);
 
       this.logger.log({
@@ -240,7 +243,10 @@ export class ProductsService {
    * @throws {ConflictException} If the update would create a duplicate model name
    * @throws {BadRequestException} If the update data is invalid
    */
-  async update(id: string, updateData: Partial<CreateProductDto>): Promise<Product> {
+  async update(
+    id: string,
+    updateData: Partial<CreateProductDto>,
+  ): Promise<Product> {
     this.logger.log({
       message: `Attempting to update product ${id}`,
       updateData,
@@ -256,8 +262,12 @@ export class ProductsService {
     }
 
     // If modelName is being updated, check for conflicts
-    if (updateData.modelName && updateData.modelName !== existingProduct.modelName) {
-      const existingWithSameModel = await this.productRepository.countByModelName(updateData.modelName);
+    if (
+      updateData.modelName &&
+      updateData.modelName !== existingProduct.modelName
+    ) {
+      const existingWithSameModel =
+        await this.productRepository.countByModelName(updateData.modelName);
       if (existingWithSameModel > 0) {
         throw this.errorHandlingService.returnErrorOnConflict(
           `[ERR_PROD_UPDATE_MODEL_CONFLICT] Model ${updateData.modelName} already exists`,
@@ -275,10 +285,14 @@ export class ProductsService {
             "Quantity cannot be negative",
           );
         }
-        updateData.quantity = (existingProduct.quantity || 0) + updateData.quantity;
+        updateData.quantity =
+          (existingProduct.quantity || 0) + updateData.quantity;
       }
 
-      const updatedProduct = await this.productRepository.update(id, updateData);
+      const updatedProduct = await this.productRepository.update(
+        id,
+        updateData,
+      );
 
       if (!updatedProduct) {
         throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -290,17 +304,31 @@ export class ProductsService {
       // Invalidate relevant caches
       const cacheDeletions = [
         this.cacheService.delete(`products:findOne:${id}`),
-        this.cacheService.delete('products:list'),
+        this.cacheService.delete("products:list"),
       ];
 
       // Invalidate model and name caches if those fields were updated
       if (updateData.modelName) {
-        cacheDeletions.push(this.cacheService.delete(`products:count:model:${existingProduct.modelName}`));
-        cacheDeletions.push(this.cacheService.delete(`products:count:model:${updateData.modelName}`));
+        cacheDeletions.push(
+          this.cacheService.delete(
+            `products:count:model:${existingProduct.modelName}`,
+          ),
+        );
+        cacheDeletions.push(
+          this.cacheService.delete(
+            `products:count:model:${updateData.modelName}`,
+          ),
+        );
       }
       if (updateData.name) {
-        cacheDeletions.push(this.cacheService.delete(`products:count:name:${existingProduct.name}`));
-        cacheDeletions.push(this.cacheService.delete(`products:count:name:${updateData.name}`));
+        cacheDeletions.push(
+          this.cacheService.delete(
+            `products:count:name:${existingProduct.name}`,
+          ),
+        );
+        cacheDeletions.push(
+          this.cacheService.delete(`products:count:name:${updateData.name}`),
+        );
       }
 
       await Promise.all(cacheDeletions);
@@ -391,7 +419,7 @@ export class ProductsService {
         async () => {
           return await this.productRepository.countByModelName(modelName);
         },
-        { ttl: 3600 } // 1 hour cache for model counts
+        { ttl: 3600 }, // 1 hour cache for model counts
       );
       this.logger.log({ message: `Count for model ${modelName}: ${count}` });
       return { count };
@@ -417,7 +445,7 @@ export class ProductsService {
         async () => {
           return await this.productRepository.countByName(name);
         },
-        { ttl: 3600 } // 1 hour cache for name counts
+        { ttl: 3600 }, // 1 hour cache for name counts
       );
       this.logger.log({ message: `Count for name ${name}: ${count}` });
       return { count };
@@ -445,15 +473,15 @@ export class ProductsService {
 
     try {
       await this.productRepository.delete(id);
-      
+
       // Invalidate all related caches
       await Promise.all([
         this.cacheService.delete(`products:findOne:${id}`),
-        this.cacheService.delete('products:list'),
+        this.cacheService.delete("products:list"),
         this.cacheService.delete(`products:count:model:${product.modelName}`),
-        this.cacheService.delete(`products:count:name:${product.name}`)
+        this.cacheService.delete(`products:count:name:${product.name}`),
       ]);
-      
+
       this.logger.log({ message: `Product ${id} removed successfully` });
     } catch (error) {
       throw this.errorHandlingService.returnErrorOnInternalServerError(
@@ -523,9 +551,12 @@ export class ProductsService {
         { ttl: 300 }, // Cache for 5 minutes
       );
     } catch (error) {
-      this.logger.error(`[ERR_PROD_GET_STOCK_SUMMARY] Error: ${error.message}`, {
-        stack: error.stack,
-      });
+      this.logger.error(
+        `[ERR_PROD_GET_STOCK_SUMMARY] Error: ${error.message}`,
+        {
+          stack: error.stack,
+        },
+      );
       throw this.errorHandlingService.returnErrorOnInternalServerError(
         `[ERR_PROD_GET_STOCK_SUMMARY] Error getting stock summary: ${error.message}`,
         "An error occurred while fetching stock summary by model",

@@ -63,7 +63,7 @@ export class ErrorHandlingService {
     this.logger.error(loggerMessage);
     throw new ConflictException(ErrorMessage);
   }
-  
+
   returnErrorTooManyRequests(loggerMessage: string, ErrorMessage: string) {
     this.logger.error(loggerMessage);
     throw new HttpException(ErrorMessage, HttpStatus.TOO_MANY_REQUESTS);
@@ -109,9 +109,14 @@ export class ErrorHandlingService {
    *   this.errorHandlingService.handleCacheError(error);
    * }
    */
-  handleCacheError(error: any, loggerMessage?: string, userMessage?: string): never {
-    const log = loggerMessage ?? `Cache operation failed: ${error?.message || error}`;
-    const message = userMessage ?? 'Cache service is currently unavailable.';
+  handleCacheError(
+    error: any,
+    loggerMessage?: string,
+    userMessage?: string,
+  ): never {
+    const log =
+      loggerMessage ?? `Cache operation failed: ${error?.message || error}`;
+    const message = userMessage ?? "Cache service is currently unavailable.";
     this.logger.error(log);
     throw new InternalServerErrorException(message);
   }
@@ -121,8 +126,10 @@ export class ErrorHandlingService {
    * Parameters are optional and have sensible defaults to simplify usage.
    */
   returnErrorOnLocked(loggerMessage?: string, errorMessage?: string) {
-    const log = loggerMessage ?? 'Resource is locked or request cannot be processed';
-    const message = errorMessage ?? 'The request cannot be processed at this time.';
+    const log =
+      loggerMessage ?? "Resource is locked or request cannot be processed";
+    const message =
+      errorMessage ?? "The request cannot be processed at this time.";
     this.logger.error(log);
     throw new HttpException(message, HttpStatus.UNPROCESSABLE_ENTITY);
   }

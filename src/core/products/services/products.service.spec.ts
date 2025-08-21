@@ -238,33 +238,37 @@ describe("ProductsService", () => {
       expect(mockProductRepository.findAll).toHaveBeenCalled();
       // Vérifier que le résultat est correct
       expect(result).toEqual([mockProduct]);
-      
+
       // Vérifier que les messages de log contiennent les textes attendus
       expect(mockLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: "Fetching all products"
-        })
+          message: "Fetching all products",
+        }),
       );
       expect(mockLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining("Found")
-        })
+          message: expect.stringContaining("Found"),
+        }),
       );
     });
 
     it("should throw internal server error when repository fails", async () => {
       const error = new Error("Database error");
-      
+
       // Simuler que le cache est vide (premier appel à get retourne undefined)
       mockCacheService.get.mockResolvedValueOnce(undefined);
       // Simuler que le repository échoue
       mockProductRepository.findAll.mockRejectedValueOnce(error);
-      
+
       // Configurer le mock pour retourner l'erreur
-      const expectedError = new InternalServerErrorException("An error occurred while getting all products");
-      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(() => {
-        throw expectedError;
-      });
+      const expectedError = new InternalServerErrorException(
+        "An error occurred while getting all products",
+      );
+      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(
+        () => {
+          throw expectedError;
+        },
+      );
 
       // S'attendre à ce que l'erreur soit propagée
       await expect(service.getAllProducts()).rejects.toThrow(
@@ -273,7 +277,7 @@ describe("ProductsService", () => {
 
       // Vérifier que la méthode du repository a bien été appelée
       expect(mockProductRepository.findAll).toHaveBeenCalled();
-      
+
       // Vérifier que le service d'erreur a été appelé avec les bons paramètres
       expect(
         mockErrorHandlingService.returnErrorOnInternalServerError,
@@ -281,13 +285,13 @@ describe("ProductsService", () => {
         expect.stringMatching(/\[ERR_PROD_GET_ALL_PRODUCTS\].*Database error/),
         "An error occurred while getting all products",
       );
-      
+
       // Vérifier que le logger a été appelé avec le message d'erreur
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[ERR_PROD_GET_ALL_PRODUCTS]'),
+        expect.stringContaining("[ERR_PROD_GET_ALL_PRODUCTS]"),
         expect.objectContaining({
-          stack: expect.any(String)
-        })
+          stack: expect.any(String),
+        }),
       );
     });
   });
@@ -492,14 +496,17 @@ describe("ProductsService", () => {
     it("should update product successfully with valid data", async () => {
       const updateData = { name: "Updated Product", price: 39.99 };
       const updatedProduct = { ...mockProduct, ...updateData };
-      
+
       mockProductRepository.findById.mockResolvedValue(mockProduct);
       mockProductRepository.countByModelName.mockResolvedValue(0);
       mockProductRepository.update.mockResolvedValue(updatedProduct);
 
       const result = await service.update("1", updateData);
 
-      expect(mockProductRepository.update).toHaveBeenCalledWith("1", updateData);
+      expect(mockProductRepository.update).toHaveBeenCalledWith(
+        "1",
+        updateData,
+      );
       expect(result).toEqual(updatedProduct);
       expect(mockLogger.log).toHaveBeenCalledWith({
         message: "Product 1 updated successfully",
@@ -510,7 +517,7 @@ describe("ProductsService", () => {
     it("should update stock by adding quantity when quantity is provided", async () => {
       const updateData = { quantity: 5 };
       const updatedProduct = { ...mockProduct, quantity: 15 };
-      
+
       mockProductRepository.findById.mockResolvedValue(mockProduct);
       mockProductRepository.update.mockResolvedValue(updatedProduct);
 
@@ -523,27 +530,33 @@ describe("ProductsService", () => {
 
     it("should throw conflict error when updating to existing model name", async () => {
       const updateData = { modelName: "Existing Model" };
-      
+
       mockProductRepository.findById.mockResolvedValue(mockProduct);
       mockProductRepository.countByModelName.mockResolvedValue(1);
-      
-      const conflictError = new ConflictException("A product with this model already exists");
+
+      const conflictError = new ConflictException(
+        "A product with this model already exists",
+      );
       mockErrorHandlingService.returnErrorOnConflict.mockImplementation(() => {
         throw conflictError;
       });
 
-      await expect(service.update("1", updateData)).rejects.toThrow(ConflictException);
-      
-      expect(mockErrorHandlingService.returnErrorOnConflict).toHaveBeenCalledWith(
+      await expect(service.update("1", updateData)).rejects.toThrow(
+        ConflictException,
+      );
+
+      expect(
+        mockErrorHandlingService.returnErrorOnConflict,
+      ).toHaveBeenCalledWith(
         "[ERR_PROD_UPDATE_MODEL_CONFLICT] Model Existing Model already exists",
-        "A product with this model already exists"
+        "A product with this model already exists",
       );
     });
 
     it("should not check for model conflict when modelName is not updated", async () => {
       const updateData = { name: "New Name" };
       const updatedProduct = { ...mockProduct, ...updateData };
-      
+
       mockProductRepository.findById.mockResolvedValue(mockProduct);
       mockProductRepository.update.mockResolvedValue(updatedProduct);
 
@@ -566,7 +579,9 @@ describe("ProductsService", () => {
         },
       );
 
-      await expect(service.update("1", { name: "New Name" })).rejects.toThrow(InternalServerErrorException);
+      await expect(service.update("1", { name: "New Name" })).rejects.toThrow(
+        InternalServerErrorException,
+      );
 
       expect(
         mockErrorHandlingService.returnErrorOnInternalServerError,
@@ -580,29 +595,31 @@ describe("ProductsService", () => {
   describe("getStockSummaryByModel", () => {
     it("should return comprehensive stock statistics", async () => {
       const products = [
-        { ...mockProduct, id: '1', modelName: 'Model A', quantity: 5 },
-        { ...mockProduct, id: '2', modelName: 'Model A', quantity: 3 },
-        { ...mockProduct, id: '3', modelName: 'Model B', quantity: 7 },
-        { ...mockProduct, id: '4', modelName: 'Model C', quantity: 0 },
-        { ...mockProduct, id: '5', modelName: 'Model D', quantity: 2 },
+        { ...mockProduct, id: "1", modelName: "Model A", quantity: 5 },
+        { ...mockProduct, id: "2", modelName: "Model A", quantity: 3 },
+        { ...mockProduct, id: "3", modelName: "Model B", quantity: 7 },
+        { ...mockProduct, id: "4", modelName: "Model C", quantity: 0 },
+        { ...mockProduct, id: "5", modelName: "Model D", quantity: 2 },
       ];
 
       mockProductRepository.findAll.mockResolvedValue(products);
       mockProductRepository.count.mockResolvedValue(5);
 
-      mockCacheService.getOrSet.mockImplementationOnce(async (key, callback) => {
-        return callback();
-      });
+      mockCacheService.getOrSet.mockImplementationOnce(
+        async (key, callback) => {
+          return callback();
+        },
+      );
 
       const result = await service.getStockSummaryByModel();
 
       expect(result).toEqual({
         totalProducts: 5,
         stockSummary: [
-          { modelName: 'Model A', totalQuantity: 8 },
-          { modelName: 'Model B', totalQuantity: 7 },
-          { modelName: 'Model C', totalQuantity: 0 },
-          { modelName: 'Model D', totalQuantity: 2 },
+          { modelName: "Model A", totalQuantity: 8 },
+          { modelName: "Model B", totalQuantity: 7 },
+          { modelName: "Model C", totalQuantity: 0 },
+          { modelName: "Model D", totalQuantity: 2 },
         ].sort((a, b) => a.modelName.localeCompare(b.modelName)),
         modelsCount: 4,
         outOfStockCount: 1,
@@ -610,7 +627,7 @@ describe("ProductsService", () => {
       });
 
       expect(mockLogger.log).toHaveBeenCalledWith({
-        message: 'Fetching stock summary by model',
+        message: "Fetching stock summary by model",
       });
     });
 
@@ -618,8 +635,8 @@ describe("ProductsService", () => {
       const cachedResult = {
         totalProducts: 5,
         stockSummary: [
-          { modelName: 'Model A', totalQuantity: 8 },
-          { modelName: 'Model B', totalQuantity: 7 },
+          { modelName: "Model A", totalQuantity: 8 },
+          { modelName: "Model B", totalQuantity: 7 },
         ],
         modelsCount: 2,
         outOfStockCount: 0,
@@ -640,9 +657,11 @@ describe("ProductsService", () => {
       mockProductRepository.findAll.mockResolvedValue([]);
       mockProductRepository.count.mockResolvedValue(0);
 
-      mockCacheService.getOrSet.mockImplementationOnce(async (key, callback) => {
-        return callback();
-      });
+      mockCacheService.getOrSet.mockImplementationOnce(
+        async (key, callback) => {
+          return callback();
+        },
+      );
 
       const result = await service.getStockSummaryByModel();
 
@@ -656,24 +675,32 @@ describe("ProductsService", () => {
     });
 
     it("should handle errors gracefully", async () => {
-      const error = new Error('Database error');
-      const internalError = new InternalServerErrorException("An error occurred while fetching stock summary by model");
+      const error = new Error("Database error");
+      const internalError = new InternalServerErrorException(
+        "An error occurred while fetching stock summary by model",
+      );
 
       mockCacheService.getOrSet.mockRejectedValueOnce(error);
-      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(() => {
-        throw internalError;
-      });
+      mockErrorHandlingService.returnErrorOnInternalServerError.mockImplementation(
+        () => {
+          throw internalError;
+        },
+      );
 
-      await expect(service.getStockSummaryByModel()).rejects.toThrow(InternalServerErrorException);
+      await expect(service.getStockSummaryByModel()).rejects.toThrow(
+        InternalServerErrorException,
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        '[ERR_PROD_GET_STOCK_SUMMARY] Error: Database error',
-        { stack: expect.any(String) }
+        "[ERR_PROD_GET_STOCK_SUMMARY] Error: Database error",
+        { stack: expect.any(String) },
       );
-      
-      expect(mockErrorHandlingService.returnErrorOnInternalServerError).toHaveBeenCalledWith(
+
+      expect(
+        mockErrorHandlingService.returnErrorOnInternalServerError,
+      ).toHaveBeenCalledWith(
         `[ERR_PROD_GET_STOCK_SUMMARY] Error getting stock summary: ${error.message}`,
-        "An error occurred while fetching stock summary by model"
+        "An error occurred while fetching stock summary by model",
       );
     });
   });

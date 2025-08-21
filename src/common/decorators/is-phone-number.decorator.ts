@@ -1,17 +1,16 @@
-
 import {
   registerDecorator,
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationArguments,
-} from 'class-validator';
-import { PhoneNumberUtil } from 'google-libphonenumber';
+} from "class-validator";
+import { PhoneNumberUtil } from "google-libphonenumber";
 
 @ValidatorConstraint({ async: false })
 export class IsPhoneNumberConstraint implements ValidatorConstraintInterface {
   validate(phoneNumber: any, args: ValidationArguments) {
-    if (typeof phoneNumber !== 'string') {
+    if (typeof phoneNumber !== "string") {
       return false;
     }
     const phoneUtil = PhoneNumberUtil.getInstance();
@@ -24,7 +23,7 @@ export class IsPhoneNumberConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments) {
-    return 'Phone number ($value) is not valid.';
+    return "Phone number ($value) is not valid.";
   }
 }
 

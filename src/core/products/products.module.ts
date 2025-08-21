@@ -63,15 +63,15 @@ export class ProductsModule {
         });
         break;
 
-        // case "duckdb":
-        //   providers.push({
-        //     provide: IProductRepository,
-        //     useFactory: (duckDBService: DuckDBService) => {
-        //       return new DuckDBProductRepository(duckDBService);
-        //     },
-        //     inject: [DuckDBService],
-        //   });
-        //   break;
+      // case "duckdb":
+      //   providers.push({
+      //     provide: IProductRepository,
+      //     useFactory: (duckDBService: DuckDBService) => {
+      //       return new DuckDBProductRepository(duckDBService);
+      //     },
+      //     inject: [DuckDBService],
+      //   });
+      //   break;
 
       default: // filesystem
         providers.push({

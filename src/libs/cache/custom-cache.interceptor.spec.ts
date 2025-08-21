@@ -1,20 +1,20 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CustomCacheInterceptor } from './custom-cache.interceptor';
-import { CacheService } from './cache.service';
-import { Reflector } from '@nestjs/core';
-import { of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Test, TestingModule } from "@nestjs/testing";
+import { CustomCacheInterceptor } from "./custom-cache.interceptor";
+import { CacheService } from "./cache.service";
+import { Reflector } from "@nestjs/core";
+import { of } from "rxjs";
+import { tap } from "rxjs/operators";
 
-describe('CustomCacheInterceptor', () => {
+describe("CustomCacheInterceptor", () => {
   let interceptor: CustomCacheInterceptor;
   let cacheService: jest.Mocked<CacheService>;
 
   const mockCacheService = {
     get: jest.fn(),
     set: jest.fn().mockResolvedValue(undefined),
-    ['logger']: {
-        error: jest.fn(),
-    }
+    ["logger"]: {
+      error: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -33,31 +33,31 @@ describe('CustomCacheInterceptor', () => {
     cacheService = module.get(CacheService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(interceptor).toBeDefined();
   });
 
-  describe('intercept', () => {
+  describe("intercept", () => {
     const context = {
       switchToHttp: () => ({
         getRequest: () => ({
-          method: 'GET',
-          url: '/test',
+          method: "GET",
+          url: "/test",
         }),
       }),
     } as any;
 
     const next = {
-      handle: () => of('live data'),
+      handle: () => of("live data"),
     };
 
-    it('should return cached value if it exists', (done) => {
-      cacheService.get.mockResolvedValue('cached data');
-      interceptor.intercept(context, next).then(result => {
-        result.subscribe(data => {
-            expect(data).toBe('cached data');
-            expect(cacheService.get).toHaveBeenCalledWith('cache:GET:/test');
-            done();
+    it("should return cached value if it exists", (done) => {
+      cacheService.get.mockResolvedValue("cached data");
+      interceptor.intercept(context, next).then((result) => {
+        result.subscribe((data) => {
+          expect(data).toBe("cached data");
+          expect(cacheService.get).toHaveBeenCalledWith("cache:GET:/test");
+          done();
         });
       });
     });
@@ -75,15 +75,15 @@ describe('CustomCacheInterceptor', () => {
     //     });
     // });
 
-    it('should handle cache get error', (done) => {
-        cacheService.get.mockRejectedValue(new Error('Cache error'));
-        interceptor.intercept(context, next).then(result => {
-            result.subscribe(data => {
-                expect(data).toBe('live data');
-                expect(cacheService.set).not.toHaveBeenCalled();
-                done();
-            });
+    it("should handle cache get error", (done) => {
+      cacheService.get.mockRejectedValue(new Error("Cache error"));
+      interceptor.intercept(context, next).then((result) => {
+        result.subscribe((data) => {
+          expect(data).toBe("live data");
+          expect(cacheService.set).not.toHaveBeenCalled();
+          done();
         });
+      });
     });
   });
 });

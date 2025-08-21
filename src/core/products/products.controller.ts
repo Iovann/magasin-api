@@ -39,7 +39,7 @@ export class ProductsController {
    * @param createProductDto - The data for the new product.
    * @returns The created product.
    */
-  
+
   @Post()
   @Roles(Role.SuperAdmin, Role.Magasinier)
   @ApiOperation({
@@ -107,7 +107,6 @@ export class ProductsController {
     return await this.productsService.getAllProducts();
   }
 
-
   /**
    * Retrieves the stock count for a specific model.
    * @param modelName - The model name of the product.
@@ -135,14 +134,11 @@ export class ProductsController {
     return await this.productsService.getStockByModel(modelName);
   }
 
-
-
   /**
    * Retrieves a list of products matching the model name.
    * @param modelName - The model name to search for.
    * @returns An array of products matching the model name.
    */
-
 
   @Get("by-model/:modelName")
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
@@ -164,7 +160,6 @@ export class ProductsController {
   async getProductsByModelName(@Param("modelName") modelName: string) {
     return await this.productsService.getProductsByModelName(modelName);
   }
-
 
   /**
    * Retrieves a list of products matching the name.
@@ -197,7 +192,8 @@ export class ProductsController {
   @Roles(Role.SuperAdmin, Role.Magasinier, Role.Vendeur)
   @ApiOperation({
     summary: "Get products statistics",
-    description: "Returns various product statistics including counts by model and name. Accessible by SuperAdmins, Storekeepers, and Salespersons.",
+    description:
+      "Returns various product statistics including counts by model and name. Accessible by SuperAdmins, Storekeepers, and Salespersons.",
   })
   @ApiResponse({
     status: 200,
@@ -212,15 +208,15 @@ export class ProductsController {
             type: "object",
             properties: {
               modelName: { type: "string" },
-              totalQuantity: { type: "number" }
-            }
-          }
+              totalQuantity: { type: "number" },
+            },
+          },
         },
         modelsCount: { type: "number" },
         outOfStockCount: { type: "number" },
-        lowStockCount: { type: "number" }
-      }
-    }
+        lowStockCount: { type: "number" },
+      },
+    },
   })
   @ApiResponse({ status: 403, description: "Forbidden resource." })
   async getProductsStats() {
@@ -254,7 +250,6 @@ export class ProductsController {
   async getProductById(@Param("id") id: string) {
     return await this.productsService.getProductById(id);
   }
-
 
   /**
    * Updates the stock quantity of a product.

@@ -40,11 +40,11 @@ describe("PostgresProductRepository", () => {
   };
 
   beforeAll(() => {
-    jest.spyOn(global, 'Date').mockImplementation(() => fixedDate);
+    jest.spyOn(global, "Date").mockImplementation(() => fixedDate);
   });
 
   afterAll(() => {
-    jest.spyOn(global, 'Date').mockRestore();
+    jest.spyOn(global, "Date").mockRestore();
   });
 
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-import { EmailProcessor } from './../../workers/email/email.processor';
+import { EmailProcessor } from "./../../workers/email/email.processor";
 import { Module, DynamicModule, Provider, Global } from "@nestjs/common";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./services/users.service";
@@ -17,24 +17,28 @@ import { Repository } from "typeorm";
 import { Model } from "mongoose";
 import { CacheModule } from "src/libs/cache/cache.module";
 import { BullModule } from "@nestjs/bullmq";
-import { DuckDBService } from 'src/libs/database/duckdb.service';
-import { EmailModule } from 'src/libs/email/email.module';  
-import { EmailService } from 'src/libs/email/email.service';
-import { EncryptionModule } from 'src/helpers/encryption/encryption.module';
-import { EncryptionService } from 'src/helpers/encryption/encryption.service';
-
+import { DuckDBService } from "src/libs/database/duckdb.service";
+import { EmailModule } from "src/libs/email/email.module";
+import { EmailService } from "src/libs/email/email.service";
+import { EncryptionModule } from "src/helpers/encryption/encryption.module";
+import { EncryptionService } from "src/helpers/encryption/encryption.service";
 
 @Global()
 @Module({})
 export class UsersModule {
   static forRoot(): DynamicModule {
-    const imports: any[] = [CacheModule, BullModule.registerQueue({name: 'email'}), EmailModule, EncryptionModule];
+    const imports: any[] = [
+      CacheModule,
+      BullModule.registerQueue({ name: "email" }),
+      EmailModule,
+      EncryptionModule,
+    ];
     const providers: Provider[] = [
       UsersService,
       UserInitService,
       DatabaseConfig,
       EmailProcessor,
-      EmailService, 
+      EmailService,
       EncryptionService,
     ];
 
@@ -72,7 +76,10 @@ export class UsersModule {
       case "duckdb":
         providers.push({
           provide: IUserRepository,
-          useFactory: async (duckDBService: DuckDBService, config: DatabaseConfig) => {
+          useFactory: async (
+            duckDBService: DuckDBService,
+            config: DatabaseConfig,
+          ) => {
             const repo = new DuckDBUserRepository(duckDBService, config);
             return repo;
           },

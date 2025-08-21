@@ -6,9 +6,7 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { User } from "../core/users/entities/user.entity";
 import { Role } from "../common/enum/role.enum";
-import {
-  UnauthorizedException,
-} from "@nestjs/common";
+import { UnauthorizedException } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
 
 describe("AuthController", () => {
@@ -74,7 +72,10 @@ describe("AuthController", () => {
       const authHeader = `Bearer ${mockAccessToken}`;
 
       await controller.logout(req as any, authHeader);
-      expect(authService.logout).toHaveBeenCalledWith(mockUser.id, mockAccessToken);
+      expect(authService.logout).toHaveBeenCalledWith(
+        mockUser.id,
+        mockAccessToken,
+      );
     });
 
     it("should not call authService.logout if token is missing", async () => {
@@ -115,10 +116,7 @@ describe("AuthController", () => {
       });
       const req = { user: mockUser };
 
-      await controller.changePassword(
-        req as any,
-        changePasswordDto,
-      );
+      await controller.changePassword(req as any, changePasswordDto);
 
       expect(authService.changePassword).toHaveBeenCalledWith(
         mockUser.id,
@@ -169,10 +167,10 @@ describe("AuthController", () => {
       expect(result.blacklisted).toBe(true);
     });
 
-    it('should return a message if no token is provided', async () => {
+    it("should return a message if no token is provided", async () => {
       const req = { user: mockUser };
-      const result = await controller.checkBlacklist(req as any, '');
-      expect(result.message).toBe('No token provided');
+      const result = await controller.checkBlacklist(req as any, "");
+      expect(result.message).toBe("No token provided");
       expect(result.blacklisted).toBe(false);
       expect(authService.checkTokenBlacklist).not.toHaveBeenCalled();
     });
