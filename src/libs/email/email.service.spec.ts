@@ -23,6 +23,7 @@ jest.mock("nodemailer", () => {
 
 describe("EmailService", () => {
   let service: EmailService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let configService: ConfigService;
   let templateService: TemplateService;
   let mockLogger: any;

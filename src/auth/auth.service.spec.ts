@@ -130,6 +130,7 @@ describe("AuthService", () => {
         "test@example.com",
         "password",
       );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordHash, ...userWithoutPassword } = userWithPassword;
       expect(result).toEqual(userWithoutPassword);
     });

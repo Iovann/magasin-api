@@ -15,13 +15,13 @@ import { TypeOrmModule, getRepositoryToken } from "@nestjs/typeorm";
 import { PostgresUser } from "./entities/postgres-user.entity";
 import { Repository } from "typeorm";
 import { Model } from "mongoose";
-import { CacheModule } from "src/libs/cache/cache.module";
+import { CacheModule } from "../../libs/cache/cache.module";
 import { BullModule } from "@nestjs/bullmq";
-import { DuckDBService } from "src/libs/database/duckdb.service";
-import { EmailModule } from "src/libs/email/email.module";
-import { EmailService } from "src/libs/email/email.service";
-import { EncryptionModule } from "src/helpers/encryption/encryption.module";
-import { EncryptionService } from "src/helpers/encryption/encryption.service";
+import { DuckDBService } from "../../libs/database/duckdb.service";
+import { EmailModule } from "../../libs/email/email.module";
+import { EmailService } from "../../libs/email/email.service";
+import { EncryptionModule } from "../../helpers/encryption/encryption.module";
+import { EncryptionService } from "../../helpers/encryption/encryption.service";
 
 @Global()
 @Module({})

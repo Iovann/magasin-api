@@ -4,8 +4,8 @@ import { ConfigifyModule } from "@itgorillaz/configify";
 import { CacheService } from "./cache.service";
 import Keyv from "keyv";
 import KeyvValkey from "@keyv/valkey";
-import { CacheConfig } from "src/config/cache.config";
-import { ErrorHandlingModule } from "src/common/response/error-handling.module";
+import { CacheConfig } from "../../config/cache.config";
+import { ErrorHandlingModule } from "../../common/response/error-handling.module";
 
 @Global()
 @Module({

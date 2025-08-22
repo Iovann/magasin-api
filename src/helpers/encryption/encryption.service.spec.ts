@@ -44,6 +44,7 @@ describe("EncryptionService", () => {
     });
 
     it("should log and throw an error if encryption fails", () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const cryptoModule = require("crypto");
       jest.spyOn(cryptoModule, "createCipheriv").mockImplementationOnce(() => {
         throw new Error("Invalid IV length");

@@ -25,6 +25,7 @@ describe("UsersService", () => {
   let service: UsersService;
   let mockUserRepository: jest.Mocked<IUserRepository>;
   let mockErrorHandlingService: jest.Mocked<ErrorHandlingService>;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let mockLogger: jest.Mocked<Logger>;
   let mockEncryptionService: jest.Mocked<EncryptionService>;
 

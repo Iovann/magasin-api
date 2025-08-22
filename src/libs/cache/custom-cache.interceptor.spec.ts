@@ -3,7 +3,6 @@ import { CustomCacheInterceptor } from "./custom-cache.interceptor";
 import { CacheService } from "./cache.service";
 import { Reflector } from "@nestjs/core";
 import { of } from "rxjs";
-import { tap } from "rxjs/operators";
 
 describe("CustomCacheInterceptor", () => {
   let interceptor: CustomCacheInterceptor;

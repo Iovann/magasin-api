@@ -4,10 +4,10 @@ import { CreateUserDto } from "../dto/create-user.dto";
 import { User } from "../entities/user.entity";
 import * as bcrypt from "bcrypt";
 import { ErrorHandlingService } from "../../../common/response/error-handling";
-import { CacheService } from "src/libs/cache/cache.service";
+import { CacheService } from "../../../libs/cache/cache.service";
 import { Queue } from "bullmq";
 import { InjectQueue } from "@nestjs/bullmq";
-import { EncryptionService } from "src/helpers/encryption/encryption.service";
+import { EncryptionService } from "../../../helpers/encryption/encryption.service";
 
 /**
  * Service for handling user-related operations.

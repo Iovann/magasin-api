@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
-import { ErrorHandlingService } from "src/common/response/error-handling";
+import { ErrorHandlingService } from "../../common/response/error-handling";
 
 /**
  * A wrapper service for the NestJS CacheManager to provide a consistent API
