@@ -1,5 +1,5 @@
 # Etape 1: Build the application
-FROM node:20-alpine AS builder
+FROM node:24.1.0-alpine AS builder
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -18,7 +18,7 @@ COPY . .
 RUN pnpm build
 
 # Étape 2: Production image
-FROM node:20-alpine
+FROM node:24.1.0-alpine
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
