@@ -2,7 +2,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { CacheModule } from "./cache.module";
 import { CacheService } from "./cache.service";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { ConfigifyModule } from "@itgorillaz/configify";
 import { CacheConfig } from "src/config/cache.config";
 import Keyv from "keyv";
 import KeyvValkey from "@keyv/valkey";

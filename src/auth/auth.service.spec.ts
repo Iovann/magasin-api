@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { ErrorHandlingService } from "../common/response/error-handling";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
-import { BcryptService } from "../utils/bcrypt/bcrypt.service";
+import { passwordHash } from "../utils/passwordHash/passwordHash.service";
 
 describe("AuthService", () => {
   let authService: AuthService;
@@ -21,7 +21,7 @@ describe("AuthService", () => {
   let jwtService: jest.Mocked<JwtService>;
   let errorHandlingService: jest.Mocked<ErrorHandlingService>;
   let tokenBlacklistService: jest.Mocked<TokenBlacklistService>;
-  let bcryptService: jest.Mocked<BcryptService>;
+  let bcryptService: jest.Mocked<passwordHash>;
 
   const mockUser: User = {
     id: "1",
@@ -34,7 +34,7 @@ describe("AuthService", () => {
   };
 
   beforeEach(async () => {
-    const mockBcryptService = {
+    const mockpasswordHash = {
       hashPassword: jest.fn().mockResolvedValue("hashedpassword"),
       comparePassword: jest.fn().mockResolvedValue(true),
     };
@@ -106,8 +106,8 @@ describe("AuthService", () => {
           },
         },
         {
-          provide: BcryptService,
-          useValue: mockBcryptService,
+          provide: passwordHash,
+          useValue: mockpasswordHash,
         },
       ],
     }).compile();
@@ -117,7 +117,7 @@ describe("AuthService", () => {
     jwtService = module.get(JwtService);
     errorHandlingService = module.get(ErrorHandlingService);
     tokenBlacklistService = module.get(TokenBlacklistService);
-    bcryptService = module.get(BcryptService) as jest.Mocked<BcryptService>;
+    bcryptService = module.get(passwordHash) as jest.Mocked<passwordHash>;
   });
 
   describe("validateUser", () => {

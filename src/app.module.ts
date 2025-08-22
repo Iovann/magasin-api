@@ -13,7 +13,7 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
 import { CacheModule } from "./libs/cache/cache.module";
 import { TokenBlacklistModule } from "./auth/services/token-blacklist.module";
 import { TokenRevocationInterceptor } from "./auth/interceptors/token-revocation.interceptor";
-import { BcryptModule } from "./utils/bcrypt/bcrypt.module";
+import { passwordHashModule } from "./utils/passwordHash/passwordHash.module";
 import { WorkersModule } from "./workers/worker.module";
 
 @Module({
@@ -31,7 +31,7 @@ import { WorkersModule } from "./workers/worker.module";
     AuthModule,
     CacheModule,
     ThrottlerModule.forRoot(),
-    BcryptModule,
+    passwordHashModule,
     WorkersModule,
   ],
   controllers: [AppController],

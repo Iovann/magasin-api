@@ -9,13 +9,13 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { JwtRefreshStrategy } from "./strategies/jwt-refresh.strategy";
 import { LocalStrategy } from "./strategies/local.strategy";
 import { TokenBlacklistModule } from "./services/token-blacklist.module";
-import { BcryptModule } from "../utils/bcrypt/bcrypt.module";
+import { passwordHashModule } from "../utils/passwordHash/passwordHash.module";
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     TokenBlacklistModule,
-    BcryptModule,
+    passwordHashModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

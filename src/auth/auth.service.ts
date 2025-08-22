@@ -5,7 +5,7 @@ import { User } from "../core/users/entities/user.entity";
 import { ConfigService } from "@nestjs/config";
 import { ErrorHandlingService } from "../common/response/error-handling";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
-import { BcryptService } from "../utils/bcrypt/bcrypt.service";
+import { passwordHash } from "../utils/passwordHash/passwordHash.service";
 import { Logger } from "@nestjs/common";
 
 @Injectable()
@@ -16,7 +16,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly tokenBlacklistService: TokenBlacklistService,
-    private readonly bcryptService: BcryptService,
+    private readonly bcryptService: passwordHash,
     private readonly logger: Logger,
   ) {}
 

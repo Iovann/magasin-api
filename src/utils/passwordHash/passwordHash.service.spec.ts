@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { BcryptService } from "./bcrypt.service";
+import { passwordHash } from "./passwordHash.service";
 import * as bcrypt from "bcrypt";
 
 jest.mock("bcrypt", () => ({
@@ -11,15 +11,15 @@ jest.mock("bcrypt", () => ({
   ),
 }));
 
-describe("BcryptService", () => {
-  let service: BcryptService;
+describe("passwordHash", () => {
+  let service: passwordHash;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BcryptService],
+      providers: [passwordHash],
     }).compile();
 
-    service = module.get<BcryptService>(BcryptService);
+    service = module.get<passwordHash>(passwordHash);
   });
 
   it("should be defined", () => {
