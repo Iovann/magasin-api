@@ -1,5 +1,12 @@
 # Etape 1: Build the application
-FROM node:24.1.0-alpine AS builder
+FROM node:24.1.0 AS builder
+
+# Install system dependencies needed for native modules
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -18,7 +25,9 @@ COPY . .
 RUN pnpm build
 
 # Étape 2: Production image
-FROM node:24.1.0-alpine
+FROM node:24.1.0
+
+# No additional dependencies needed for Ubuntu base
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
