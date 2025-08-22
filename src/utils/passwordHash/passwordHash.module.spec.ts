@@ -11,6 +11,10 @@ describe('passwordHashModule', () => {
     }).compile();
   });
 
+  afterEach(() => {
+    module.close();
+  });
+
   it('should be defined', () => {
     expect(module).toBeDefined();
   });

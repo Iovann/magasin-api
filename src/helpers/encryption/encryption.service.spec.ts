@@ -18,8 +18,9 @@ describe("EncryptionService", () => {
     }),
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         EncryptionService,
         { provide: WINSTON_MODULE_PROVIDER, useValue: mockLogger },
@@ -28,6 +29,11 @@ describe("EncryptionService", () => {
     }).compile();
 
     service = module.get<EncryptionService>(EncryptionService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

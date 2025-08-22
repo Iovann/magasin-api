@@ -42,8 +42,9 @@ describe("MongoUserRepository", () => {
     select: jest.fn().mockReturnThis(),
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         MongoUserRepository,
         {
@@ -66,8 +67,10 @@ describe("MongoUserRepository", () => {
     userModel.findOne = jest.fn().mockReturnValue(mockQuery);
     userModel.find = jest.fn().mockReturnValue(mockQuery);
     userModel.findByIdAndDelete = jest.fn().mockReturnValue(mockQuery);
+  });
 
-    // Reset mocks before each test
+  afterEach(() => {
+    module.close();
     jest.clearAllMocks();
   });
 

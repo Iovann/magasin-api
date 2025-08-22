@@ -16,8 +16,9 @@ describe("CustomCacheInterceptor", () => {
     },
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         CustomCacheInterceptor,
         {
@@ -30,6 +31,11 @@ describe("CustomCacheInterceptor", () => {
 
     interceptor = module.get<CustomCacheInterceptor>(CustomCacheInterceptor);
     cacheService = module.get(CacheService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

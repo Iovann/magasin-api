@@ -33,13 +33,14 @@ describe("UserInitService", () => {
     isBlocked: false,
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
     const mockUsersService: Partial<jest.Mocked<UsersService>> = {
       findAll: jest.fn(),
       create: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         UserInitService,
         {
@@ -71,8 +72,10 @@ describe("UserInitService", () => {
 
     // Replace the private logger with our mock
     (service as any).logger = logger;
+  });
 
-    // Reset mocks
+  afterEach(() => {
+    module.close();
     jest.clearAllMocks();
   });
 

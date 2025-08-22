@@ -25,8 +25,9 @@ const mockProductsService = {
 describe("ProductsController", () => {
   let controller: ProductsController;
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [ProductsController],
       providers: [
         {
@@ -42,6 +43,10 @@ describe("ProductsController", () => {
       .compile();
 
     controller = module.get<ProductsController>(ProductsController);
+  });
+
+  afterEach(() => {
+    module.close();
     jest.clearAllMocks();
   });
 

@@ -17,16 +17,18 @@ jest.mock("ejs", () => ({
 describe("TemplateService", () => {
   let service: TemplateService;
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [TemplateService],
     }).compile();
 
     service = module.get<TemplateService>(TemplateService);
+  });
 
-    // Clear mocks before each test
-    (fs.readFileSync as jest.Mock).mockClear();
-    (ejs.render as jest.Mock).mockClear();
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

@@ -30,6 +30,7 @@ describe("UsersController", () => {
     role: Role.Magasinier,
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
     const mockUsersService: Partial<jest.Mocked<UsersService>> = {
       create: jest.fn(),
@@ -52,7 +53,7 @@ describe("UsersController", () => {
       returnErrorOnBadRequest: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [TestCacheModule],
       controllers: [UsersController],
       providers: [
@@ -80,8 +81,10 @@ describe("UsersController", () => {
 
     controller = module.get<UsersController>(UsersController);
     usersService = module.get(UsersService);
+  });
 
-    // Reset mocks
+  afterEach(() => {
+    module.close();
     jest.clearAllMocks();
   });
 

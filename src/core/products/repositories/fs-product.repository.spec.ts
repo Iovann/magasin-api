@@ -9,12 +9,13 @@ describe("FsProductRepository", () => {
   const mockDataPath = "/tmp/test-data";
   const mockProductsFilePath = "/tmp/test-data/products.json";
 
+  let module: TestingModule;
   beforeEach(async () => {
     mockDatabaseConfig = {
       dbPath: mockDataPath,
     } as DatabaseConfig;
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         FsProductRepository,
         {
@@ -25,6 +26,10 @@ describe("FsProductRepository", () => {
     }).compile();
 
     repository = module.get<FsProductRepository>(FsProductRepository);
+  });
+
+  afterEach(() => {
+    module.close();
   });
 
   describe("constructor", () => {

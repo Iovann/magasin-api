@@ -6,8 +6,9 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 describe("EncryptionService", () => {
   let service: EncryptionService;
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         EncryptionService,
         {
@@ -34,6 +35,11 @@ describe("EncryptionService", () => {
     }).compile();
 
     service = module.get<EncryptionService>(EncryptionService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

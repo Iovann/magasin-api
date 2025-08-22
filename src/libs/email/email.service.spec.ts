@@ -31,10 +31,8 @@ describe("EmailService", () => {
   const mockEmailFrom = "test@example.com";
   const mockGoogleAppPassword = "mock-password";
 
+  let module: TestingModule;
   beforeEach(async () => {
-    // Reset all mocks
-    jest.clearAllMocks();
-
     // Mock ConfigService
     const mockConfigService = {
       get: jest.fn((key: string) => {
@@ -62,7 +60,7 @@ describe("EmailService", () => {
       debug: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         EmailService,
         { provide: ConfigService, useValue: mockConfigService },
@@ -74,6 +72,11 @@ describe("EmailService", () => {
     service = module.get<EmailService>(EmailService);
     configService = module.get<ConfigService>(ConfigService);
     templateService = module.get<TemplateService>(TemplateService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

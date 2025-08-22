@@ -37,6 +37,10 @@ describe("CacheConfig", () => {
     });
   });
 
+  afterEach(() => {
+    config = null;
+  });
+
   describe("Validation", () => {
     it("should validate correct configuration", async () => {
       const config = createConfig();

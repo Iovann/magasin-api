@@ -10,8 +10,9 @@ describe("RolesGuard", () => {
   let reflector: Reflector;
   let mockExecutionContext: ExecutionContext;
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         RolesGuard,
         {
@@ -35,6 +36,11 @@ describe("RolesGuard", () => {
       getHandler: jest.fn(),
       getClass: jest.fn(),
     } as any;
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

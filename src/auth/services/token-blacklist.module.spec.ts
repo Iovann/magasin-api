@@ -25,6 +25,11 @@ describe("TokenBlacklistModule", () => {
     }).compile();
   });
 
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
+  });
+
   it("should be defined", () => {
     expect(module).toBeDefined();
   });

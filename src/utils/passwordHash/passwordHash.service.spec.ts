@@ -13,13 +13,19 @@ jest.mock("bcrypt", () => ({
 
 describe("passwordHash", () => {
   let service: passwordHash;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [passwordHash],
     }).compile();
 
     service = module.get<passwordHash>(passwordHash);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

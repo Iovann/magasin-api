@@ -19,8 +19,9 @@ describe("JwtRefreshStrategy", () => {
     isBlocked: false,
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         JwtRefreshStrategy,
         {
@@ -49,6 +50,11 @@ describe("JwtRefreshStrategy", () => {
     jwtRefreshStrategy = module.get<JwtRefreshStrategy>(JwtRefreshStrategy);
     usersService = module.get(UsersService);
     configService = module.get(ConfigService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

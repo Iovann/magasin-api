@@ -16,13 +16,14 @@ describe("ErrorHandlingService", () => {
   let service: ErrorHandlingService;
   let mockLogger: any;
 
+  let module: TestingModule;
   beforeEach(async () => {
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         ErrorHandlingService,
         {
@@ -33,6 +34,11 @@ describe("ErrorHandlingService", () => {
     }).compile();
 
     service = module.get<ErrorHandlingService>(ErrorHandlingService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

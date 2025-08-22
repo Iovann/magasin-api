@@ -39,8 +39,9 @@ class MockProductModel {
 describe("MongoProductRepository", () => {
   let repository: MongoProductRepository;
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         MongoProductRepository,
         {
@@ -51,6 +52,10 @@ describe("MongoProductRepository", () => {
     }).compile();
 
     repository = module.get<MongoProductRepository>(MongoProductRepository);
+  });
+
+  afterEach(() => {
+    module.close();
     jest.clearAllMocks();
   });
 

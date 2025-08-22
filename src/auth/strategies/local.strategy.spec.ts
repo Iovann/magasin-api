@@ -18,8 +18,9 @@ describe("LocalStrategy", () => {
     isBlocked: false,
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         LocalStrategy,
         {
@@ -41,6 +42,11 @@ describe("LocalStrategy", () => {
 
     localStrategy = module.get<LocalStrategy>(LocalStrategy);
     authService = module.get(AuthService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

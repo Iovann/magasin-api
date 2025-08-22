@@ -20,8 +20,9 @@ describe("JwtStrategy", () => {
     isBlocked: false,
   };
 
+  let module: TestingModule;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         JwtStrategy,
         {
@@ -55,6 +56,11 @@ describe("JwtStrategy", () => {
 
     jwtStrategy = module.get<JwtStrategy>(JwtStrategy);
     usersService = module.get(UsersService);
+  });
+
+  afterEach(() => {
+    module.close();
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {

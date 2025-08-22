@@ -15,14 +15,17 @@ describe("AuthController", () => {
 
   const mockUser: User = {
     id: "1",
+    firstName: "John",
+    lastName: "Doe",
     email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date(),
     isBlocked: false,
   };
 
+  let moduleFixture: TestingModule;
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
@@ -50,6 +53,11 @@ describe("AuthController", () => {
 
     controller = moduleFixture.get<AuthController>(AuthController);
     authService = moduleFixture.get(AuthService);
+  });
+
+  afterEach(() => {
+    moduleFixture.close();
+    jest.clearAllMocks();
   });
 
   describe("login", () => {
