@@ -7,6 +7,11 @@ import { Role } from "../enum/role.enum";
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
+  /**
+   * Determines if the user has the required roles to access the route.
+   * @param context - The execution context.
+   * @returns True if the user has the required roles, false otherwise.
+   */
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),

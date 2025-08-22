@@ -14,6 +14,10 @@ export class DuckDBService implements OnModuleDestroy {
     this.initialize();
   }
 
+  /**
+   * Initializes the DuckDB connection.
+   */
+
   private async initialize() {
     if (this.initializationPromise) {
       return this.initializationPromise;
@@ -43,6 +47,9 @@ export class DuckDBService implements OnModuleDestroy {
     return this.initializationPromise;
   }
 
+  /**
+   * Gets the DuckDB connection.
+   */
   async getConnection(): Promise<DuckDBConnection> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -50,6 +57,9 @@ export class DuckDBService implements OnModuleDestroy {
     return this.connection;
   }
 
+  /**
+   * Closes the DuckDB connection.
+   */
   async onModuleDestroy() {
     if (this.connection) {
       this.connection.closeSync();

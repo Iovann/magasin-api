@@ -27,6 +27,9 @@ export class CacheService {
     }
   }
 
+  /** 
+   * Basic TTL validation to avoid subtle runtime issues.
+   */
   private validateTTL(ttl?: number, context?: string) {
     if (
       ttl !== undefined &&

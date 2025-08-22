@@ -13,6 +13,12 @@ export class TemplateService {
     "templates",
   );
 
+  /**
+   * Renders an EJS template with the provided data.
+   * @param templateName The name of the template to render.
+   * @param data The data to pass to the template.
+   * @returns The rendered template as a string.
+   */
   async render(
     templateName: string,
     data: Record<string, any>,

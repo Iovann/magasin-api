@@ -28,6 +28,10 @@ export class EmailService {
     this.verifyConnection();
   }
 
+  /**
+   * Verifies the connection to the SMTP server.
+   * @returns A Promise that resolves when the connection is verified.
+   */
   private async verifyConnection(): Promise<void> {
     try {
       await this.transporter.verify();
@@ -38,6 +42,13 @@ export class EmailService {
     }
   }
 
+  /**
+   * Sends an email to the specified recipient.
+   * @param to The recipient's email address.
+   * @param subject The subject of the email.
+   * @param html The HTML content of the email.
+   * @returns A Promise that resolves to true when the email is sent successfully.
+   */
   async sendMail(to: string, subject: string, html: string): Promise<boolean> {
     const context = { to, subject };
 
@@ -74,6 +85,14 @@ export class EmailService {
     }
   }
 
+  /**
+   * Sends a welcome email to the specified recipient.
+   * @param email The recipient's email address.
+   * @param name The name of the recipient.
+   * @param role The role of the recipient.
+   * @param password The password of the recipient.
+   * @returns A Promise that resolves to true when the email is sent successfully.
+   */
   async sendWelcomeEmail(
     email: string,
     name: string,

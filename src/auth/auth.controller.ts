@@ -28,6 +28,7 @@ import { Throttle } from "@nestjs/throttler";
 
 @ApiTags("auth")
 @Controller("auth")
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -36,7 +37,7 @@ export class AuthController {
    * @param req The HTTP request.
    * @returns The JWT tokens.
    */
-  // @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(LocalAuthGuard)
   @Post("login")
   @HttpCode(HttpStatus.OK)
