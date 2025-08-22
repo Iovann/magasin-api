@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { Logger } from "@nestjs/common";
 import { DuckDBService } from "./duckdb.service";
 import { join } from "path";
 
@@ -37,7 +38,16 @@ describe("DuckDBService", () => {
     mockDuckDB = { DuckDBInstance };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DuckDBService],
+      providers: [
+        DuckDBService,
+        {
+          provide: Logger,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<DuckDBService>(DuckDBService);

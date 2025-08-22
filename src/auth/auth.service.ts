@@ -5,7 +5,8 @@ import { User } from "../core/users/entities/user.entity";
 import { ConfigService } from "@nestjs/config";
 import { ErrorHandlingService } from "../common/response/error-handling";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
-import { BcryptService } from "../utils/bcrypt/bcrypt.service"; // Added import
+import { BcryptService } from "../utils/bcrypt/bcrypt.service";
+import { Logger } from "@nestjs/common";
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly errorHandlingService: ErrorHandlingService,
     private readonly tokenBlacklistService: TokenBlacklistService,
-    private readonly bcryptService: BcryptService, // Injected
+    private readonly bcryptService: BcryptService,
+    private readonly logger: Logger,
   ) {}
 
   /**
@@ -84,15 +86,17 @@ export class AuthService {
         if (ttl > 0) {
           await this.tokenBlacklistService.addToBlacklist(accessToken, ttl);
           blacklistSuccess = true;
-          // console.log(`[AuthService] Token successfully blacklisted for user ${userId} with TTL: ${ttl}s`);
+          this.logger.log(
+            `[AuthService] Token successfully blacklisted for user ${userId} with TTL: ${ttl}s`,
+          );
         } else {
-          console.log(
+          this.logger.log(
             `[AuthService] Token already expired for user ${userId}, skipping blacklist`,
           );
         }
       }
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[AuthService] Error blacklisting token for user ${userId}:`,
         error,
       );
@@ -101,9 +105,9 @@ export class AuthService {
     try {
       // Toujours supprimer le refresh token de la base de données
       await this.usersService.removeRefreshToken(userId);
-      console.log(`[AuthService] Refresh token removed for user ${userId}`);
+      this.logger.log(`[AuthService] Refresh token removed for user ${userId}`);
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[AuthService] Error removing refresh token for user ${userId}:`,
         error,
       );
@@ -115,7 +119,7 @@ export class AuthService {
     }
 
     if (!blacklistSuccess) {
-      console.warn(
+      this.logger.log(
         `[AuthService] Warning: Token blacklisting failed for user ${userId}, but logout completed`,
       );
     }

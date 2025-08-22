@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, Logger } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { PassportModule } from "@nestjs/passport";
@@ -27,7 +27,13 @@ import { BcryptModule } from "../utils/bcrypt/bcrypt.module";
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, LocalStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    LocalStrategy,
+    Logger,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })

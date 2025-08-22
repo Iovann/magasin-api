@@ -1,8 +1,6 @@
-import { Test, TestingModule } from "@nestjs/testing";
 import { DatabaseModule } from "./database.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MongooseModule } from "@nestjs/mongoose";
-import { ConfigService } from "@nestjs/config";
 
 // Mocking the modules
 jest.mock("@nestjs/typeorm", () => ({
@@ -19,15 +17,6 @@ jest.mock("@nestjs/mongoose", () => ({
 }));
 
 describe("DatabaseModule", () => {
-  let configService: ConfigService;
-
-  beforeEach(() => {
-    configService = {
-      get: jest.fn(),
-      getOrThrow: jest.fn(),
-    } as any;
-  });
-
   afterEach(() => {
     delete process.env.DB_TYPE;
     jest.clearAllMocks();
@@ -74,14 +63,11 @@ describe("DatabaseModule", () => {
       expect(TypeOrmModule.forFeature).not.toHaveBeenCalled();
     });
 
-    it("should return a simple module and warn for other types", () => {
+    it("should return a simple module for other types", () => {
       process.env.DB_TYPE = "mongodb";
-      const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
       const module = DatabaseModule.forFeature([]);
       expect(module.module).toBe(DatabaseModule);
       expect(TypeOrmModule.forFeature).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalled();
-      consoleWarnSpy.mockRestore();
     });
   });
 });

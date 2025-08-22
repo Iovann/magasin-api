@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from "@nestjs/common";
 import { ErrorHandlingService } from "../common/response/error-handling";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
@@ -24,6 +25,8 @@ describe("AuthService", () => {
 
   const mockUser: User = {
     id: "1",
+    firstName: "John",
+    lastName: "Doe",
     email: "test@example.com",
     role: Role.Vendeur,
     createdAt: new Date(),
@@ -39,6 +42,13 @@ describe("AuthService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        {
+          provide: Logger,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+          },
+        },
         {
           provide: UsersService,
           useValue: {

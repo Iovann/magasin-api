@@ -1,4 +1,4 @@
-import { DynamicModule, Global, Module } from "@nestjs/common";
+import { DynamicModule, Global, Logger, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EntityClassOrSchema } from "@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type";
@@ -6,10 +6,13 @@ import { ConfigifyModule } from "@itgorillaz/configify";
 import { ConfigService } from "@nestjs/config";
 import { PostgresProduct } from "../../core/products/entities/postgres-product.entity";
 import { PostgresUser } from "../../core/users/entities/postgres-user.entity";
-// import { DuckDBService } from "./duckdb.service";
+import { DuckDBService } from "./duckdb.service";
 
 @Global()
-@Module({})
+@Module({
+  providers: [Logger],
+  exports: [Logger],
+})
 export class DatabaseModule {
   static forRootAsync(): DynamicModule {
     const imports: any[] = [ConfigifyModule.forRootAsync()];
@@ -64,14 +67,10 @@ export class DatabaseModule {
       );
     }
 
-    if (process.env.DB_TYPE === "txt") {
-      console.log("Using file-based database (txt). No ORM module needed.");
-    }
 
-    // if (process.env.DB_TYPE === "duckdb") {
-    //   console.log("Using DuckDB database. Configuration is handled by repository.");
-    //   providers.push(DuckDBService);
-    // }
+    if (process.env.DB_TYPE === "duckdb") {
+      providers.push(DuckDBService);
+    }
 
     return {
       module: DatabaseModule,
@@ -84,16 +83,7 @@ export class DatabaseModule {
   static forFeature(models: EntityClassOrSchema[]): DynamicModule {
     if (process.env.DB_TYPE === "postgres") {
       return TypeOrmModule.forFeature(models);
-    } else if (process.env.DB_TYPE === "duckdb") {
-      return {
-        module: DatabaseModule,
-        providers: [],
-        exports: [],
-      };
     } else {
-      console.warn(
-        "DatabaseModule.forFeature is primarily for TypeORM (Postgres).",
-      );
       return {
         module: DatabaseModule,
         providers: [],

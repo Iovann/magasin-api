@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { DuckDBInstance, DuckDBConnection } from "@duckdb/node-api";
 import { join } from "path";
+import { Logger } from "@nestjs/common";
 
 @Injectable()
 export class DuckDBService implements OnModuleDestroy {
@@ -9,7 +10,7 @@ export class DuckDBService implements OnModuleDestroy {
   private isInitialized = false;
   private initializationPromise: Promise<void>;
 
-  constructor() {
+  constructor(private readonly logger: Logger) {
     this.initialize();
   }
 
@@ -32,9 +33,9 @@ export class DuckDBService implements OnModuleDestroy {
         await this.connection.run("PRAGMA enable_profiling='json'");
 
         this.isInitialized = true;
-        console.log("DuckDB connection initialized");
+        this.logger.log("DuckDB connection initialized");
       } catch (error) {
-        console.error("Failed to initialize DuckDB:", error);
+        this.logger.error("Failed to initialize DuckDB:", error);
         throw error;
       }
     })();
