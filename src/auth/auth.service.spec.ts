@@ -22,102 +22,6 @@ describe("AuthService", () => {
   let errorHandlingService: jest.Mocked<ErrorHandlingService>;
   let tokenBlacklistService: jest.Mocked<TokenBlacklistService>;
   let bcryptService: jest.Mocked<passwordHash>;
-
-  const mockUser: User = {
-    id: "1",
-    firstName: "John",
-    lastName: "Doe",
-    email: "test@example.com",
-    role: Role.Vendeur,
-    createdAt: new Date(),
-    isBlocked: false,
-  };
-
-  beforeEach(async () => {
-    const mockpasswordHash = {
-      hashPassword: jest.fn().mockResolvedValue("hashedpassword"),
-      comparePassword: jest.fn().mockResolvedValue(true),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        {
-          provide: Logger,
-          useValue: {
-            log: jest.fn(),
-            error: jest.fn(),
-          },
-        },
-        {
-          provide: UsersService,
-          useValue: {
-            findByEmailWithPassword: jest.fn(),
-            setCurrentRefreshToken: jest.fn(),
-            removeRefreshToken: jest.fn(),
-            findByIdWithPassword: jest.fn(),
-            updatePasswordHash: jest.fn(),
-          },
-        },
-        {
-          provide: JwtService,
-          useValue: {
-            signAsync: jest.fn(),
-            decode: jest.fn(),
-          },
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) => {
-              if (key === "JWT_SECRET") return "secret";
-              if (key === "JWT_REFRESH_SECRET") return "refresh-secret";
-              if (key === "JWT_EXPIRATION_TIME") return "15m";
-              if (key === "JWT_REFRESH_EXPIRATION_TIME") return "7d";
-              return null;
-            }),
-          },
-        },
-        {
-          provide: ErrorHandlingService,
-          useValue: {
-            returnOnAuthorized: jest.fn((code, message) => {
-              throw new UnauthorizedException(message);
-            }),
-            returnErrorOnNotFound: jest.fn((code, message) => {
-              throw new NotFoundException(message);
-            }),
-            returnErrorOnInternalServerError: jest.fn((code, message) => {
-              throw new InternalServerErrorException(message);
-            }),
-          },
-        },
-        {
-          provide: TokenBlacklistService,
-          useValue: {
-            addToBlacklist: jest.fn(),
-            isBlacklisted: jest.fn(),
-            ["cacheService"]: {
-              set: jest.fn(),
-              get: jest.fn(),
-              has: jest.fn(),
-              delete: jest.fn(),
-            },
-          },
-        },
-        {
-          provide: passwordHash,
-          useValue: mockpasswordHash,
-        },
-      ],
-    }).compile();
-
-    authService = module.get<AuthService>(AuthService);
-    usersService = module.get(UsersService);
-    jwtService = module.get(JwtService);
-    errorHandlingService = module.get(ErrorHandlingService);
-    tokenBlacklistService = module.get(TokenBlacklistService);
-    let bcryptService: jest.Mocked<passwordHash>;
   let module: TestingModule;
 
   const mockUser: User = {
@@ -217,8 +121,8 @@ describe("AuthService", () => {
     bcryptService = module.get(passwordHash) as jest.Mocked<passwordHash>;
   });
 
-  afterEach(() => {
-    module.close();
+  afterEach(async () => {
+    await module.close();
     jest.clearAllMocks();
   });
 
